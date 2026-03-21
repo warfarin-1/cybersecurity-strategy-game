@@ -1,7 +1,10 @@
 // src/App.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 import type { ChapterState, StageGameState, Sector, RiskLevel } from "./types";
+import type { Control, Threat } from "./utils/dataLoader";
+import { loadControls, loadThreats } from "./utils/dataLoader";
+import { getStageConfig } from "./data/stageData";
 
 // --- Helpers (mirrored from Layout.tsx) ---
 
@@ -18,7 +21,15 @@ const BASE_SECTORS: Sector[] = [
     { id: "computing", name: "Computing Environment",  controlsApplied: 0, riskLevel: "High" },
 ];
 
-const CONTROL_COST = 10_000;
+/** Map a control's category to the sector it logically protects. */
+function controlToSector(control: Control): string {
+    switch (control.category) {
+        case "Network":  return "boundary";
+        case "Identity": return "computing";
+        case "Data":     return "physical";
+        default:         return "computing"; // Awareness, Governance, System, Monitoring, etc.
+    }
+}
 
 function makeStageGameState(stageId: string): StageGameState {
     return {
@@ -91,6 +102,26 @@ const App: React.FC = () => {
     const [view, setView] = useState<View>({ type: "map" });
     const [chapterState, setChapterState] = useState<ChapterState | null>(null);
     const [activeStageState, setActiveStageState] = useState<StageGameState | null>(null);
+    const [stageThreats, setStageThreats] = useState<Threat[]>([]);
+    const [stageControls, setStageControls] = useState<Control[]>([]);
+
+    // Load threats and controls whenever the active stage changes
+    useEffect(() => {
+        if (view.type !== "stage") {
+            setStageThreats([]);
+            setStageControls([]);
+            return;
+        }
+        const config = getStageConfig(view.stageId);
+        if (!config) return;
+
+        Promise.all([loadThreats(view.chapter), loadControls()]).then(
+            ([allThreats, allControls]) => {
+                setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
+                setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
+            }
+        );
+    }, [view]);
 
     const handleChapterClick = (chapterId: ChapterLevel) => {
         setView({ type: "chapter", chapter: chapterId });
@@ -117,10 +148,15 @@ const App: React.FC = () => {
         setView({ type: "stage", chapter, stageId });
     };
 
-    const handleDeployControl = (sectorId: string) => {
+    const handleDeployControl = (controlId: string) => {
         if (!activeStageState) return;
 
-        if (activeStageState.budget < CONTROL_COST) {
+        const control = stageControls.find((c) => c.controlId === controlId);
+        if (!control) return;
+
+        const cost = control.cost * 10_000;
+
+        if (activeStageState.budget < cost) {
             const newStageState: StageGameState = {
                 ...activeStageState,
                 logs: [...activeStageState.logs, `[T${activeStageState.turn}] Deployment skipped: insufficient budget.`],
@@ -132,19 +168,20 @@ const App: React.FC = () => {
             return;
         }
 
+        const sectorId = controlToSector(control);
         const updatedSectors = activeStageState.sectors.map((sector) => {
             if (sector.id !== sectorId) return sector;
             const newControls = sector.controlsApplied + 1;
             return { ...sector, controlsApplied: newControls, riskLevel: calculateRiskLevel(newControls) };
         });
-        const newBudget = activeStageState.budget - CONTROL_COST;
+        const newBudget = activeStageState.budget - cost;
         const newStageState: StageGameState = {
             ...activeStageState,
             budget: newBudget,
             sectors: updatedSectors,
             logs: [
                 ...activeStageState.logs,
-                `[T${activeStageState.turn}] Deployed control to "${sectorId}". Budget: £${newBudget.toLocaleString()}.`,
+                `[T${activeStageState.turn}] Deployed "${control.name}". Budget: £${newBudget.toLocaleString()}.`,
             ],
         };
 
@@ -153,7 +190,7 @@ const App: React.FC = () => {
             prev
                 ? {
                       ...prev,
-                      remainingBudget: prev.remainingBudget - CONTROL_COST,
+                      remainingBudget: prev.remainingBudget - cost,
                       stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState },
                   }
                 : prev
@@ -320,10 +357,20 @@ const App: React.FC = () => {
                 <aside className="stage-sidebar-left">
                     <div className="sidebar-section">
                         <div className="sidebar-title">Security Measures</div>
-                        <button className="sidebar-pill" onClick={() => handleDeployControl("boundary")}>Firewall</button>
-                        <button className="sidebar-pill" onClick={() => handleDeployControl("network")}>VPN Gateway</button>
-                        <button className="sidebar-pill" onClick={() => handleDeployControl("computing")}>MFA for Remote Access</button>
-                        <button className="sidebar-pill" onClick={() => handleDeployControl("physical")}>Encrypted Backup</button>
+                        {stageControls.length === 0 ? (
+                            <div className="sidebar-loading">Loading...</div>
+                        ) : (
+                            stageControls.map((control) => (
+                                <button
+                                    key={control.controlId}
+                                    className="sidebar-pill"
+                                    onClick={() => handleDeployControl(control.controlId)}
+                                >
+                                    {control.name}
+                                    <span>£{(control.cost * 10_000).toLocaleString()}</span>
+                                </button>
+                            ))
+                        )}
                     </div>
                 </aside>
 
@@ -348,8 +395,19 @@ const App: React.FC = () => {
                     </div>
                     <div className="sidebar-section">
                         <div className="sidebar-title">Threats</div>
-                        <button className="sidebar-pill sidebar-pill-danger">High Risk Threat</button>
-                        <button className="sidebar-pill">Medium Risk Threat</button>
+                        {stageThreats.length === 0 ? (
+                            <div className="sidebar-loading">Loading...</div>
+                        ) : (
+                            stageThreats.map((threat) => (
+                                <div
+                                    key={threat.threatId}
+                                    className={`sidebar-pill ${threat.severity === "High" ? "sidebar-pill-danger" : ""}`}
+                                >
+                                    {threat.scenarioName}
+                                    <span className="threat-severity">{threat.severity}</span>
+                                </div>
+                            ))
+                        )}
                     </div>
                 </aside>
             </main>

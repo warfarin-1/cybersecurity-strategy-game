@@ -164,3 +164,75 @@ Exports `StageConfig` interface, `STAGE_CONFIGS: Record<string, StageConfig>`, a
 Each L2 stage has 6 relevant controls + 2 distractors in `availableControlIds`. Threats are selected with a Low → Low → Medium → High severity gradient.
 
 **L3 and L4 stages:** 7 placeholder configs with empty arrays; `passingScore` set to 65 (L3) and 70 (L4) for future use.
+
+---
+
+## Change Log — 2026-03-21 (Data Layer → UI Integration)
+
+### `src/App.tsx`
+
+#### New imports
+
+| Import | Source |
+|--------|--------|
+| `useEffect` | `react` |
+| `Control`, `Threat` (types) | `./utils/dataLoader` |
+| `loadControls`, `loadThreats` | `./utils/dataLoader` |
+| `getStageConfig` | `./data/stageData` |
+
+#### New state
+
+```typescript
+const [stageThreats, setStageThreats] = useState<Threat[]>([]);
+const [stageControls, setStageControls] = useState<Control[]>([]);
+```
+
+#### New `useEffect` — data loading
+
+Fires whenever `view` changes. When `view.type === "stage"`:
+1. Calls `getStageConfig(view.stageId)` to get the stage's threat/control ID lists
+2. Parallel-fetches `loadThreats(view.chapter)` and `loadControls()`
+3. Filters results to only the IDs listed in the config
+4. Stores into `stageThreats` and `stageControls`
+
+When leaving a stage view, both arrays are reset to `[]`.
+
+#### `handleDeployControl` — signature and cost change
+
+| Before | After |
+|--------|-------|
+| Parameter: `sectorId: string` | Parameter: `controlId: string` |
+| Fixed cost: `CONTROL_COST = £10,000` | Variable cost: `control.cost * 10_000` |
+| Sector from parameter | Sector derived via `controlToSector(control)` |
+| Log: `Deployed control to "${sectorId}"` | Log: `Deployed "${control.name}"` |
+
+**`controlToSector` mapping** (new module-level helper):
+
+| Control category | Sector updated |
+|-----------------|---------------|
+| Network | `boundary` |
+| Identity | `computing` |
+| Data | `physical` |
+| All others | `computing` |
+
+The `CONTROL_COST` constant has been removed.
+
+#### Stage view JSX — left sidebar (Security Measures)
+
+Replaced 4 hardcoded buttons with a dynamic list:
+- Renders one `<button>` per entry in `stageControls`
+- Each button shows the control name and cost (`£{cost * 10,000}`)
+- Clicking calls `handleDeployControl(control.controlId)`
+- Displays `"Loading..."` while `stageControls` is empty
+
+#### Stage view JSX — right sidebar (Threats)
+
+Replaced 2 hardcoded buttons with a dynamic list:
+- Renders one `<div>` per entry in `stageThreats`
+- `severity === "High"` adds `sidebar-pill-danger` class (red border)
+- Each item shows scenario name and a `<span className="threat-severity">` badge
+- Displays `"Loading..."` while `stageThreats` is empty
+
+#### Security Requirements section
+
+Left unchanged (still hardcoded placeholder).
