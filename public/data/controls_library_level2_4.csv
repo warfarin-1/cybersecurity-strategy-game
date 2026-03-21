@@ -1,0 +1,42 @@
+ControlID,Name,Description,Cost,Category,ApplicableRiskTypes,CAF_Principle
+C-AWARE-01,Staff Phishing Awareness Training,Quarterly training on recognising phishing emails and reporting suspicious messages.,2,Awareness,Phishing;IAM,B6
+C-AWARE-02,Security Induction for New Starters,Basic cyber hygiene training for all new staff members.,2,Awareness,Phishing;Data;Endpoint,B6
+C-AWARE-03,Targeted Awareness for High-Risk Roles,"Additional security guidance for finance, HR and system administrators.",3,Awareness,Phishing;IAM;Data,B6
+C-GOV-01,Documented Security Policies,"Maintain clear written security policies covering accounts, data and acceptable use.",2,Governance,Phishing;IAM;Data;Network,A1;B1
+C-GOV-02,Joiners-Movers-Leavers Process,"Formal process to create, change and remove user accounts when staff join, move or leave.",3,Governance,IAM,A1;B2
+C-GOV-03,Incident Reporting & Escalation Procedure,Clear steps for staff to report suspected incidents and for IT to triage them.,3,Governance,Phishing;IAM;Data;Network,D1
+C-IAM-01,Password Complexity Policy,Enforce minimum password length and complexity for all accounts.,2,Identity,IAM,B2
+C-IAM-02,Account Lockout Policy,Lock accounts after several failed login attempts to reduce brute force attacks.,2,Identity,IAM,B2a
+C-IAM-03,Multi-Factor Authentication for Remote Access,Require MFA for all VPN and remote access connections.,4,Identity,IAM;Network;Cloud,B2a
+C-IAM-04,MFA for Admin and High-Privilege Accounts,Apply MFA to all administrator and privileged accounts.,5,Identity,IAM;Endpoint,B2c
+C-IAM-05,Regular Access Rights Review,Review user and admin access rights at least quarterly.,3,Identity,IAM;Data,B2d
+C-IAM-06,Individual Named Accounts Only,Eliminate shared accounts in favour of uniquely assigned user IDs.,3,Identity,IAM,B2d
+C-IAM-07,Privileged Access Workstations,Use separate hardened devices for admin tasks.,5,Identity,IAM;Endpoint,B2b
+C-IAM-08,Strong Identity Verification for New Accounts,Verify staff identity before issuing accounts with access to critical systems.,3,Identity,IAM,B2a
+C-DATA-01,Data Classification Scheme,"Label data as Public, Internal, Confidential or Highly Confidential.",2,Data,Data,B3a
+C-DATA-02,Centralised File Storage,Store important data on managed central file services instead of local devices.,3,Data,Data;Endpoint;Cloud,B3a
+C-DATA-03,Full Disk Encryption on Laptops,Encrypt all managed laptops using full-disk encryption.,4,Data,Data;Endpoint,B3c
+C-DATA-04,Encrypted Removable Media Only,Allow only approved encrypted USB drives on endpoints.,3,Data,Data;Endpoint,B3d
+C-DATA-05,Secure Backup with Offline Copies,Maintain regular backups with at least one offline or immutable copy.,4,Data,Data,B3c;B5a
+C-DATA-06,Access Control on Shared Folders,Apply least-privilege access permissions on network shares.,3,Data,Data;IAM,B3a
+C-DATA-07,Secure Disposal of Media,Sanitise or destroy storage devices before disposal.,3,Data,Data;Endpoint,B3e
+C-DATA-08,Cloud Storage Configuration Review,Regularly review access and sharing settings for cloud storage services.,3,Data,Data;Cloud,B3a;A2
+C-SYS-01,Baseline Secure Configuration,Apply a hardened baseline configuration to servers and endpoints.,4,System,Endpoint;Network,B4b
+C-SYS-02,Patch Management Process,"Apply security patches on a regular schedule, prioritising critical updates.",4,System,Endpoint;Network;Cloud,B4d
+C-SYS-03,Antivirus / Endpoint Protection,Run centrally managed anti-malware on endpoints and servers.,3,System,Endpoint,B4c
+C-SYS-04,Application Allowlisting for Critical Systems,Restrict critical servers to run only approved applications.,5,System,Endpoint;Network,B4b
+C-SYS-05,Remove Default and Shared System Accounts,Disable or change default accounts and remove shared admin accounts.,3,System,IAM;Endpoint,B4b
+C-SYS-06,Secure Remote Administration,Use secure protocols and jump hosts for remote admin access.,4,System,Endpoint;Network,B4c
+C-SYS-07,Configuration Change Control,Formal approval and logging for security-relevant configuration changes.,3,System,Endpoint;Network;Cloud,B4b;A2
+C-NET-01,Perimeter Firewall Ruleset,Block unnecessary inbound and outbound traffic at the network perimeter.,3,Network,Network,B4a
+C-NET-02,Internal Network Segmentation,Separate user networks from server and management networks.,4,Network,Network;Endpoint,B4a;B5
+C-NET-03,Secure Wi-Fi Configuration,Use strong encryption and separate guest Wi-Fi from internal networks.,3,Network,Network;Endpoint,B4a
+C-NET-04,VPN for Remote Access,Require secure VPN for staff connecting from the internet.,3,Network,Network;IAM,B4a;B2
+C-NET-05,Network Device Hardening,"Harden routers and switches, disabling unused services and ports.",4,Network,Network,B4b
+C-MON-01,Central Log Collection,Forward security logs from key systems to a central log server.,3,Monitoring,Endpoint;Network;IAM;Data,C1
+C-MON-02,Basic Alerting on Suspicious Events,Generate alerts for repeated failed logins and unusual admin activity.,3,Monitoring,IAM;Endpoint;Network,C1
+C-MON-03,Regular Log Review,Review key security logs on at least a weekly basis.,2,Monitoring,IAM;Endpoint;Network;Data,C1
+C-SUP-01,Approved Supplier List,Use an approved list of IT suppliers with basic security checks.,2,SupplyChain,SupplyChain;Cloud,A4
+C-SUP-02,Software from Trusted Sources Only,Install software only from trusted repositories or vendors.,3,SupplyChain,Endpoint;System,A4;B4b
+C-IR-01,Basic Incident Response Plan,Documented steps to contain and recover from common cyber incidents.,3,Resilience,Phishing;Endpoint;Data;Network,D1
+C-IR-02,Backup Restore Testing,Regularly test restoration of backups for critical systems.,3,Resilience,Data;Endpoint;Network,B5a;D1
