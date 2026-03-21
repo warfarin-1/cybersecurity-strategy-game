@@ -99,3 +99,68 @@ Additionally, `handleDeployControl` now deducts `CONTROL_COST` from `chapterStat
 `Budget Left` and `Score` in the Chapter view TopBar previously showed hardcoded values.
 
 **Fix:** Now reads `chapterState?.remainingBudget ?? 1_000_000` and `chapterState?.score ?? 100`, falling back to defaults when `chapterState` is `null` (i.e. the chapter has not been entered yet).
+
+---
+
+## Change Log — 2026-03-21 (Data Layer)
+
+### New files added
+
+#### `src/utils/dataLoader.ts`
+
+Async data loader utility using `fetch()` to read files from `public/data/`.
+
+Exports three interfaces and three loader functions:
+
+| Export | Kind | Description |
+|--------|------|-------------|
+| `Control` | interface | controlId, name, description, cost (number), category, applicableRiskTypes (string[]), cafPrinciple |
+| `Threat` | interface | threatId, level, riskType, scenarioName, severity, description, recommendedControlIds (string[]), cafPrinciple |
+| `Level4Scenario` | interface | scenarioId, level, primaryRiskType, scenarioName, severity, description, subThreatIds, requiredControls, cafPrinciples |
+| `loadControls()` | async fn | Fetches and parses `controls_library_level2_4.csv` → `Control[]` |
+| `loadThreats(level)` | async fn | Fetches and parses `level{N}_threats.csv` → `Threat[]` |
+| `loadLevel4Tree()` | async fn | Fetches `level4_threat_trees.json` → `Level4Scenario[]` |
+
+CSV parsing handles double-quoted commas; semicolon-separated fields are split into string arrays; `cost` and `level` are cast to `number`.
+
+#### `public/data/` — data files (served statically by Vite)
+
+Copied from `src/data/` so they are accessible via `fetch()` at runtime:
+
+- `controls_library_level2_4.csv` — 41 controls across 9 categories (Awareness, Governance, Identity, Data, System, Network, Monitoring, SupplyChain, Resilience)
+- `level2_threats.csv` — 28 threats (Phishing / IAM / Data / Network)
+- `level3_threats.csv` — 40 threats (Phishing / IAM / Data / Network / Endpoint)
+- `level4_threats.csv` — 26 threats including 9 threat-tree sub-nodes
+- `level4_threat_trees.json` — 3 scenario trees (IAM / Data / Network), each with 3 sub-threats and 3 required controls
+
+#### `src/data/stageData.ts`
+
+Static per-stage configuration registry.
+
+Exports `StageConfig` interface, `STAGE_CONFIGS: Record<string, StageConfig>`, and `getStageConfig(stageId)`.
+
+**`StageConfig` fields:**
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `stageId` | string | e.g. `"L2-1"` |
+| `stageName` | string | Display name |
+| `chapter` | 2 \| 3 \| 4 | Parent chapter |
+| `budgetAllocation` | number | Starting budget for the stage |
+| `threatIds` | string[] | Threats that appear in this stage |
+| `availableControlIds` | string[] | Controls shown in the sidebar (includes distractors) |
+| `requiredControlIds` | string[] | Controls that must be deployed to pass |
+| `passingScore` | number | Minimum score to complete |
+
+**L2 stage configurations (fully populated):**
+
+| Stage | Threat IDs | Required Controls | Passing Score |
+|-------|-----------|-------------------|---------------|
+| L2-1 Phishing Basics | L2-PH-01/02/04/07 | C-AWARE-01/02, C-GOV-03 | 60 |
+| L2-2 Identity & Access | L2-IAM-01/03/05/07 | C-IAM-01/02/06 | 60 |
+| L2-3 Data Handling | L2-DATA-01/03/05/07 | C-DATA-01/04/05 | 60 |
+| L2-4 Network Hygiene | L2-NET-01/03/04/07 | C-NET-01/03/05 | 60 |
+
+Each L2 stage has 6 relevant controls + 2 distractors in `availableControlIds`. Threats are selected with a Low → Low → Medium → High severity gradient.
+
+**L3 and L4 stages:** 7 placeholder configs with empty arrays; `passingScore` set to 65 (L3) and 70 (L4) for future use.
