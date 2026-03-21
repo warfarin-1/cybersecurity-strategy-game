@@ -1,0 +1,29 @@
+ThreatID,Level,RiskType,ScenarioName,Severity,Description,RecommendedControlID,CAF_Principle
+L2-PH-01,2,Phishing,Basic Phishing Email Scam,Low,Generic phishing email asks users to verify their account via a link.,C-AWARE-01,B6
+L2-PH-02,2,Phishing,Overly Trusting Link Clicks,Low,Users click unknown links without checking the destination.,C-AWARE-02,B6
+L2-PH-03,2,Phishing,Fake Invoice Email,Low,Finance or admin staff receive fake invoice emails from bogus suppliers.,C-AWARE-03,B6
+L2-PH-04,2,Phishing,Simple Credential Harvest Page,Medium,A phishing email directs staff to a fake but obviously poor login page.,C-IAM-01,B2
+L2-PH-05,2,Phishing,Phishing Report Ignored,Medium,Staff spot suspicious emails but are unsure how to report them.,C-GOV-03,D1
+L2-PH-06,2,Phishing,Phone-Based Social Engineering,Medium,Callers pretend to be IT support asking for temporary passwords.,C-GOV-01,A1;B6
+L2-PH-07,2,Phishing,Malicious Attachment Opened,High,User opens an attachment that attempts to drop basic malware.,C-SYS-03,B4c
+L2-IAM-01,2,IAM,Weak Password Practices,Low,Users choose simple or reused passwords for internal systems.,C-IAM-01,B2
+L2-IAM-02,2,IAM,Passwords on Sticky Notes,Low,Passwords are written on sticky notes near desks or screens.,C-AWARE-02,B6
+L2-IAM-03,2,IAM,Shared Departmental Accounts,Low,Teams share single logins for shared mailboxes or apps.,C-IAM-06,B2d
+L2-IAM-04,2,IAM,Stale Leaver Accounts,Medium,Accounts for staff who left months ago are still enabled.,C-GOV-02,A1;B2
+L2-IAM-05,2,IAM,No Lockout on Repeated Logins,Medium,Accounts do not lock after many failed login attempts.,C-IAM-02,B2
+L2-IAM-06,2,IAM,Unprotected Cloud Admin Account,Medium,Cloud admin portals only require a password with no extra checks.,C-IAM-08,B2a
+L2-IAM-07,2,IAM,No MFA for VPN Access,High,Remote VPN access relies only on passwords and is widely used.,C-IAM-03,B2a
+L2-DATA-01,2,Data,Unclassified Important Data,Low,Teams store information without any sensitivity labels.,C-DATA-01,B3a
+L2-DATA-02,2,Data,Sensitive Files on Laptops,Low,Staff keep small datasets of personal data on unencrypted laptops.,C-DATA-03,B3c
+L2-DATA-03,2,Data,Public Link Sharing by Default,Low,Cloud sharing links are sometimes created with 'anyone with the link' access.,C-DATA-08,B3a
+L2-DATA-04,2,Data,Duplicate Copies of Data,Medium,The same spreadsheets exist on multiple unmanaged devices.,C-DATA-02,B3a
+L2-DATA-05,2,Data,Unencrypted USB Drives,Medium,Staff use standard USB sticks to move data between home and office.,C-DATA-04,B3d
+L2-DATA-06,2,Data,Over-Broad Shared Folder Access,Medium,Shared network folders grant 'everyone' read access by default.,C-DATA-06,B3a
+L2-DATA-07,2,Data,Backups Stored on Shared Drive Only,High,Backups are stored as simple copies on a shared drive without protection.,C-DATA-05,B3c
+L2-NET-01,2,Network,Open Administrative Ports,Low,Non-critical servers expose RDP/SSH to the internal network without justification.,C-NET-01,B4a
+L2-NET-02,2,Network,Default Device Passwords,Low,Printers and minor network devices use factory default credentials.,C-SYS-05,B4b
+L2-NET-03,2,Network,Weak Guest Wi-Fi Password,Low,Guest Wi-Fi uses a simple password shared widely over time.,C-NET-03,B4a
+L2-NET-04,2,Network,Flat Internal Network,Medium,User PCs and servers share the same network segment.,C-NET-02,B4a;B5
+L2-NET-05,2,Network,Delayed OS Patching,Medium,Some endpoints run OS versions that have not been patched for several months.,C-SYS-02,B4d
+L2-NET-06,2,Network,Unmanaged IoT Devices,Medium,Smart TVs or cameras are connected without security review.,C-NET-05,B4b
+L2-NET-07,2,Network,Unsupported Router Firmware,High,Internet edge router runs out-of-support firmware with known issues.,C-NET-05,B4d
