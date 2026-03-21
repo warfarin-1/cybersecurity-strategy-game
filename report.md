@@ -76,6 +76,26 @@ const [activeStageState, setActiveStageState] = useState<StageGameState | null>(
 ## Known Limitations (pre-existing, not introduced by this change)
 
 - `handleNextTurn` is only accessible via the temporary button in `stage-main-area`; a proper `BottomBar` integration is not yet done
-- Stage progress is not persisted back to `chapterState.stageStates` after `handleDeployControl` / `handleNextTurn` — only the initial state snapshot is saved
-- Chapter view TopBar still shows hardcoded `£ 1,000,000` / `100 / 100` instead of reading from `chapterState`
+- ~~Stage progress is not persisted back to `chapterState.stageStates` after `handleDeployControl` / `handleNextTurn` — only the initial state snapshot is saved~~ **Fixed (2026-03-21)**
+- ~~Chapter view TopBar still shows hardcoded `£ 1,000,000` / `100 / 100` instead of reading from `chapterState`~~ **Fixed (2026-03-21)**
 - `StageStatus` is set to `"in_progress"` on entry but never transitions to `"completed"`
+
+---
+
+## Change Log — 2026-03-21 (State Sync Fix)
+
+### `src/App.tsx`
+
+#### `handleDeployControl` and `handleNextTurn` — state sync fix
+
+Both handlers previously updated only `activeStageState` via a functional setter, leaving `chapterState.stageStates` stale.
+
+**Fix:** Both handlers now compute the new `StageGameState` directly from the current `activeStageState`, then call both `setActiveStageState` and `setChapterState` in the same event handler, keeping the two in sync.
+
+Additionally, `handleDeployControl` now deducts `CONTROL_COST` from `chapterState.remainingBudget` on each successful deployment.
+
+#### Chapter view TopBar — live data
+
+`Budget Left` and `Score` in the Chapter view TopBar previously showed hardcoded values.
+
+**Fix:** Now reads `chapterState?.remainingBudget ?? 1_000_000` and `chapterState?.score ?? 100`, falling back to defaults when `chapterState` is `null` (i.e. the chapter has not been entered yet).

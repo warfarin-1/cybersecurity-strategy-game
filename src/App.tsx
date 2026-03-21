@@ -118,41 +118,61 @@ const App: React.FC = () => {
     };
 
     const handleDeployControl = (sectorId: string) => {
-        setActiveStageState((prev) => {
-            if (!prev) return prev;
-            if (prev.budget < CONTROL_COST) {
-                return {
-                    ...prev,
-                    logs: [...prev.logs, `[T${prev.turn}] Deployment skipped: insufficient budget.`],
-                };
-            }
-            const updatedSectors = prev.sectors.map((sector) => {
-                if (sector.id !== sectorId) return sector;
-                const newControls = sector.controlsApplied + 1;
-                return { ...sector, controlsApplied: newControls, riskLevel: calculateRiskLevel(newControls) };
-            });
-            const newBudget = prev.budget - CONTROL_COST;
-            return {
-                ...prev,
-                budget: newBudget,
-                sectors: updatedSectors,
-                logs: [
-                    ...prev.logs,
-                    `[T${prev.turn}] Deployed control to "${sectorId}". Budget: £${newBudget.toLocaleString()}.`,
-                ],
+        if (!activeStageState) return;
+
+        if (activeStageState.budget < CONTROL_COST) {
+            const newStageState: StageGameState = {
+                ...activeStageState,
+                logs: [...activeStageState.logs, `[T${activeStageState.turn}] Deployment skipped: insufficient budget.`],
             };
+            setActiveStageState(newStageState);
+            setChapterState((prev) =>
+                prev ? { ...prev, stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState } } : prev
+            );
+            return;
+        }
+
+        const updatedSectors = activeStageState.sectors.map((sector) => {
+            if (sector.id !== sectorId) return sector;
+            const newControls = sector.controlsApplied + 1;
+            return { ...sector, controlsApplied: newControls, riskLevel: calculateRiskLevel(newControls) };
         });
+        const newBudget = activeStageState.budget - CONTROL_COST;
+        const newStageState: StageGameState = {
+            ...activeStageState,
+            budget: newBudget,
+            sectors: updatedSectors,
+            logs: [
+                ...activeStageState.logs,
+                `[T${activeStageState.turn}] Deployed control to "${sectorId}". Budget: £${newBudget.toLocaleString()}.`,
+            ],
+        };
+
+        setActiveStageState(newStageState);
+        setChapterState((prev) =>
+            prev
+                ? {
+                      ...prev,
+                      remainingBudget: prev.remainingBudget - CONTROL_COST,
+                      stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState },
+                  }
+                : prev
+        );
     };
 
     const handleNextTurn = () => {
-        setActiveStageState((prev) => {
-            if (!prev) return prev;
-            return {
-                ...prev,
-                turn: prev.turn + 1,
-                logs: [...prev.logs, `[T${prev.turn + 1}] New turn started.`],
-            };
-        });
+        if (!activeStageState) return;
+
+        const newStageState: StageGameState = {
+            ...activeStageState,
+            turn: activeStageState.turn + 1,
+            logs: [...activeStageState.logs, `[T${activeStageState.turn + 1}] New turn started.`],
+        };
+
+        setActiveStageState(newStageState);
+        setChapterState((prev) =>
+            prev ? { ...prev, stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState } } : prev
+        );
     };
 
     const goBackToMap = () => setView({ type: "map" });
@@ -196,11 +216,13 @@ const App: React.FC = () => {
                     <div className="top-bar-right">
                         <div className="top-bar-stat">
                             <span className="stat-label">Budget Left</span>
-                            <span className="stat-value">£ 1,000,000</span>
+                            <span className="stat-value">
+                                £ {(chapterState?.remainingBudget ?? 1_000_000).toLocaleString()}
+                            </span>
                         </div>
                         <div className="top-bar-stat">
                             <span className="stat-label">Score</span>
-                            <span className="stat-value">100 / 100</span>
+                            <span className="stat-value">{chapterState?.score ?? 100} / 100</span>
                         </div>
                     </div>
                 </header>
