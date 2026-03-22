@@ -704,3 +704,161 @@ setChapterState((prev) =>
 ```
 
 Same-chapter navigation preserves existing state; different-chapter navigation initialises a fresh `ChapterState` immediately.
+
+---
+
+## Change Log — 2026-03-22 (L4 Stage Configs)
+
+**Commit:** `22d0b91` (partial — stageData.ts portion)
+
+### `src/data/stageData.ts`
+
+All three L4 stage configs populated with real threat and control data (previously empty arrays). Budget allocation raised from £200,000 to £300,000 for all L4 stages.
+
+Each stage uses the following structure:
+- **3 scenario sub-threats** (threat-tree nodes) + **2 standalone threats** (one High, one Medium)
+- **3 scenario-required controls** + **2 supporting controls** + **2 distractors** = 7 `availableControlIds`
+- **3 `requiredControlIds`** (matching the scenario's `requiredControls`)
+- **`passingScore`: 70**
+
+| Stage | Scenario | subThreatIds | requiredControlIds |
+|-------|----------|-------------|-------------------|
+| L4-1 High-Risk Identity Chain | L4-B2-SCENARIO-01 (IAM) | L4-IAM-C1-R1/R2/R3 | C-IAM-04, C-IAM-01, C-GOV-02 |
+| L4-2 Large Data Exposure | L4-B3-SCENARIO-01 (Data) | L4-DATA-C2-R1/R2/R3 | C-DATA-08, C-DATA-03, C-DATA-06 |
+| L4-3 Critical Service Compromise | L4-B4-SCENARIO-01 (Network) | L4-NET-C3-R1/R2/R3 | C-SYS-02, C-NET-02, C-MON-01 |
+
+**Standalone threats per stage:**
+
+| Stage | High threat | Medium threat |
+|-------|------------|--------------|
+| L4-1 | L4-IAM-01 (Multiple Privileged Accounts Compromised) | L4-IAM-02 (No Separation Between Admin and User Accounts) |
+| L4-2 | L4-DATA-01 (Large-Scale Exposure of Personal Data) | L4-DATA-03 (Untracked Copies of Highly Confidential Data) |
+| L4-3 | L4-NET-01 (Critical System Directly Exposed to Internet) | L4-NET-04 (Inadequate Monitoring of Critical Network Segments) |
+
+All IDs verified against `level4_threats.csv` and `controls_library_level2_4.csv`. `requiredControlIds ⊆ availableControlIds` confirmed for all three stages.
+
+---
+
+## Change Log — 2026-03-22 (L4 Threat Tree Visualisation)
+
+**Commit:** `22d0b91`
+
+### `src/App.tsx`
+
+#### New import
+
+`Level4Scenario` type and `loadLevel4Tree` function imported from `./utils/dataLoader`.
+
+#### New state
+
+```typescript
+const [level4Scenario, setLevel4Scenario] = useState<Level4Scenario | null>(null);
+```
+
+Holds the active scenario for L4 stages; `null` when not in an L4 stage or while loading.
+
+#### `useEffect` — L4 data loading branch
+
+The existing `useEffect` (fires on `view` change) now branches on `view.chapter`:
+
+- **Chapter 4:** `Promise.all([loadThreats(4), loadControls(), loadLevel4Tree()])`, then maps `stageId` to `scenarioId` via a local lookup table and stores the matching scenario in `level4Scenario`.
+- **Chapter 2 / 3:** original `Promise.all([loadThreats(chapter), loadControls()])`, sets `level4Scenario` to `null`.
+- **Non-stage view:** sets `level4Scenario` to `null` immediately and returns.
+
+StageId → ScenarioId mapping:
+
+| stageId | scenarioId |
+|---------|-----------|
+| `L4-1` | `L4-B2-SCENARIO-01` |
+| `L4-2` | `L4-B3-SCENARIO-01` |
+| `L4-3` | `L4-B4-SCENARIO-01` |
+
+#### `stage-main-board` — conditional rendering
+
+`stage-main-board` now renders differently based on chapter:
+
+**When `view.chapter === 4` and `level4Scenario !== null`** — renders a `.threat-tree-panel` containing:
+
+1. **Scenario header** (`.threat-scenario-header`): scenario name in red, description in grey.
+2. **"Attack Chain" label** (`.threat-chain-label`).
+3. **One node per `subThreatId`** (`.threat-node`): displays the sub-threat ID, its `scenarioName` (looked up from `stageThreats`), and a live mitigated/unresolved badge. A node is mitigated when at least one of the threat's `recommendedControlIds` appears in `deployedControlIds`.
+4. **Score warning banner** (`.stage-status-warning`) if score is below passing threshold.
+5. **Completion banner** (`.stage-status-success`) if stage is completed.
+
+**Otherwise (L2 / L3)** — existing banners + placeholder text unchanged.
+
+### `src/App.css`
+
+New rules appended for the threat tree UI:
+
+| Class | Purpose |
+|-------|---------|
+| `.threat-tree-panel` | Flex column container, scrollable, padding 16px |
+| `.threat-scenario-header` | Red-bordered card for scenario title and description |
+| `.threat-scenario-title` | Red (`#f87171`) 14px bold label |
+| `.threat-scenario-desc` | Grey (`#9ca3af`) 12px description text |
+| `.threat-chain-label` | Small grey uppercase section label |
+| `.threat-node` | Base node style: flex row, space-between, rounded border |
+| `.threat-node-unresolved` | Red border + faint red background |
+| `.threat-node-mitigated` | Green border + faint green background |
+| `.threat-node-id` | Grey 11px sub-label showing the threat ID |
+| `.threat-node-name` | 13px threat scenario name |
+| `.threat-node-status-resolved` | Green (`#4ade80`) status badge |
+| `.threat-node-status-unresolved` | Red (`#f87171`) status badge |
+
+---
+
+## Change Log — 2026-03-22 (L4 Threat Tree Completion Logic)
+
+**Commit:** `6237e35`
+
+### `src/App.tsx`
+
+#### `handleDeployControl` — chapter-specific completion check
+
+The inline completion check now branches on chapter:
+
+**L2 / L3 (chapter ≠ 4):**
+```
+allRequiredDeployed = stageConfig.requiredControlIds.every(id => newDeployedIds.includes(id))
+```
+Behaviour unchanged from previous implementation.
+
+**L4 (chapter === 4, `level4Scenario` loaded):**
+```
+allSubThreatsMitigated = level4Scenario.subThreatIds.every(subThreatId => {
+    threat = stageThreats.find(t => t.threatId === subThreatId)
+    return threat?.recommendedControlIds.some(cId => newDeployedIds.includes(cId))
+})
+```
+
+A sub-threat is considered mitigated when at least one of its `recommendedControlIds` has been deployed. All three sub-threats must be mitigated for `stageJustCompleted` to become `true`.
+
+If `level4Scenario` is `null` (still loading), the L4 check is skipped entirely — the stage cannot be marked complete while data is absent.
+
+Both paths share the same `stageJustCompleted` flag and downstream logic (writing `isCompleted: true`, `status: "completed"`, updating `chapterState`, triggering chapter-unlock check).
+
+**Completion log messages:**
+
+| Chapter | Log entry |
+|---------|-----------|
+| L2 / L3 | `"✓ Stage complete! All required controls deployed."` |
+| L4 | `"✓ Attack chain neutralised! All sub-threats mitigated."` |
+
+#### `stage-main-board` — L4 completion banner text
+
+L4 completion banner changed from the generic message to:
+
+> ✓ Attack Chain Neutralised! All sub-threats have been mitigated. The scenario has been contained.
+
+L2 / L3 completion banner text unchanged.
+
+#### Static validation (L4-1 trace)
+
+Deploying `C-IAM-04 → C-IAM-01 → C-GOV-02` against scenario `L4-B2-SCENARIO-01`:
+
+| Step | newDeployedIds | R1 (→C-IAM-04) | R2 (→C-IAM-01) | R3 (→C-GOV-02) | allSubThreatsMitigated |
+|------|---------------|---------------|---------------|---------------|----------------------|
+| Deploy C-IAM-04 | [C-IAM-04] | ✓ | ✗ | ✗ | false |
+| Deploy C-IAM-01 | [C-IAM-04, C-IAM-01] | ✓ | ✓ | ✗ | false |
+| Deploy C-GOV-02 | [C-IAM-04, C-IAM-01, C-GOV-02] | ✓ | ✓ | ✓ | **true → stage complete** |

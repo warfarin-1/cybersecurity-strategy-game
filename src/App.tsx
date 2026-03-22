@@ -129,6 +129,7 @@ const App: React.FC = () => {
     // Tracks which stageId has finished loading — derived dataLoading avoids sync setState in effect
     const [loadedForStageId, setLoadedForStageId] = useState<string | null>(null);
     const [level4Scenario, setLevel4Scenario] = useState<Level4Scenario | null>(null);
+    const [gameMode, setGameMode] = useState<"beginner" | "expert">("beginner");
     const dataLoading = view.type === "stage" && loadedForStageId !== view.stageId;
 
     // Load threats and controls whenever the active stage changes
@@ -390,6 +391,26 @@ const App: React.FC = () => {
                     <div className="top-bar-subtitle">Select a Level to Begin</div>
                 </header>
                 <main className="map-container">
+                    <div className="mode-selector">
+                        <span className="mode-label">Game Mode:</span>
+                        <button
+                            className={`mode-btn ${gameMode === "beginner" ? "mode-btn-active" : ""}`}
+                            onClick={() => setGameMode("beginner")}
+                        >
+                            Beginner
+                        </button>
+                        <button
+                            className={`mode-btn ${gameMode === "expert" ? "mode-btn-active" : ""}`}
+                            onClick={() => setGameMode("expert")}
+                        >
+                            Expert
+                        </button>
+                    </div>
+                    <p className="mode-description">
+                        {gameMode === "beginner"
+                            ? "Recommended controls are highlighted to guide your decisions."
+                            : "No hints provided. Analyse threats and choose controls independently."}
+                    </p>
                     {CHAPTERS.map((chapter) => {
                         const unlocked = isChapterUnlocked(chapter.id);
                         const completed = completedChapters.has(chapter.id);
@@ -625,14 +646,20 @@ const App: React.FC = () => {
                         ) : (
                             stageControls.map((control) => {
                                 const deployed = deployedControlIds.includes(control.controlId);
+                                const isRecommended = stageThreats.some((t) =>
+                                    t.recommendedControlIds.includes(control.controlId)
+                                );
+                                const label = deployed
+                                    ? `${control.name} ✓`
+                                    : `${gameMode === "beginner" && isRecommended ? "⭐ " : ""}${control.name}`;
                                 return (
                                     <button
                                         key={control.controlId}
-                                        className="sidebar-pill"
+                                        className={`sidebar-pill${gameMode === "beginner" && isRecommended && !deployed ? " control-recommended" : ""}`}
                                         onClick={() => handleDeployControl(control.controlId)}
                                         disabled={deployed}
                                     >
-                                        {deployed ? `${control.name} ✓` : control.name}
+                                        {label}
                                         <span>£{(control.cost * 10_000).toLocaleString()}</span>
                                     </button>
                                 );
@@ -658,6 +685,11 @@ const App: React.FC = () => {
                                     const mitigated = threat
                                         ? threat.recommendedControlIds.some((id) => deployedControlIds.includes(id))
                                         : false;
+                                    const deployHintControl = gameMode === "beginner" && threat
+                                        ? stageControls.find((c) =>
+                                            threat.recommendedControlIds.includes(c.controlId)
+                                          )
+                                        : undefined;
                                     return (
                                         <div
                                             key={subId}
@@ -666,6 +698,9 @@ const App: React.FC = () => {
                                             <div>
                                                 <div className="threat-node-id">{subId}</div>
                                                 <div className="threat-node-name">{threat?.scenarioName ?? subId}</div>
+                                                {deployHintControl && (
+                                                    <div className="threat-hint">Deploy: {deployHintControl.name}</div>
+                                                )}
                                             </div>
                                             <div className={mitigated ? "threat-node-status-resolved" : "threat-node-status-unresolved"}>
                                                 {mitigated ? "✓ Mitigated" : "⚠ Unresolved"}
@@ -731,15 +766,27 @@ const App: React.FC = () => {
                         ) : stageThreats.length === 0 ? (
                             <div className="sidebar-loading">No threats available</div>
                         ) : (
-                            stageThreats.map((threat) => (
-                                <div
-                                    key={threat.threatId}
-                                    className={`sidebar-pill ${threat.severity === "High" ? "sidebar-pill-danger" : ""}`}
-                                >
-                                    {threat.scenarioName}
-                                    <span className="threat-severity">{threat.severity}</span>
-                                </div>
-                            ))
+                            stageThreats.map((threat) => {
+                                const hintControl = gameMode === "beginner"
+                                    ? stageControls.find((c) =>
+                                        threat.recommendedControlIds.includes(c.controlId)
+                                      )
+                                    : undefined;
+                                return (
+                                    <div
+                                        key={threat.threatId}
+                                        className={`sidebar-pill ${threat.severity === "High" ? "sidebar-pill-danger" : ""}`}
+                                    >
+                                        <div>
+                                            {threat.scenarioName}
+                                            {hintControl && (
+                                                <div className="threat-hint">Hint: {hintControl.name}</div>
+                                            )}
+                                        </div>
+                                        <span className="threat-severity">{threat.severity}</span>
+                                    </div>
+                                );
+                            })
                         )}
                     </div>
                 </aside>
