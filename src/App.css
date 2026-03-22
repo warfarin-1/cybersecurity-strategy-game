@@ -492,6 +492,21 @@
     white-space: nowrap;
 }
 
+.threat-status-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.threat-node-severity {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
 /* ─── Beginner / Expert Mode ─────────────────────────────────────────────────── */
 
 .mode-selector {

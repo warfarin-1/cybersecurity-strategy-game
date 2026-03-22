@@ -862,3 +862,141 @@ Deploying `C-IAM-04 → C-IAM-01 → C-GOV-02` against scenario `L4-B2-SCENARIO-
 | Deploy C-IAM-04 | [C-IAM-04] | ✓ | ✗ | ✗ | false |
 | Deploy C-IAM-01 | [C-IAM-04, C-IAM-01] | ✓ | ✓ | ✗ | false |
 | Deploy C-GOV-02 | [C-IAM-04, C-IAM-01, C-GOV-02] | ✓ | ✓ | ✓ | **true → stage complete** |
+
+---
+
+## Change Log — 2026-03-22 (Beginner / Expert Mode)
+
+**Commit:** `3ebb572`
+
+### `src/App.tsx`
+
+#### New state
+
+```typescript
+const [gameMode, setGameMode] = useState<"beginner" | "expert">("beginner");
+```
+
+Defaults to `"beginner"`. Persists for the session; resets to Beginner on page refresh.
+
+#### Map view — mode selector
+
+A mode selector UI is rendered above the chapter cards:
+
+- Two toggle buttons (`Beginner` / `Expert`) using `.mode-btn` / `.mode-btn-active` classes.
+- A `.mode-description` paragraph below the selector that updates based on the active mode:
+
+| Mode | Description shown |
+|------|------------------|
+| Beginner | "Recommended controls are highlighted to guide your decisions." |
+| Expert | "No hints provided. Analyse threats and choose controls independently." |
+
+#### Stage view — left sidebar (Security Measures)
+
+Control buttons now reflect `gameMode`:
+
+**Beginner mode:** For each control, checks whether its `controlId` appears in any `stageThreats[n].recommendedControlIds`. If so:
+- Button label prefixed with `⭐ `
+- Button receives additional class `.control-recommended` (orange border and text)
+
+**Expert mode:** No prefix, no extra class. Buttons display control name only.
+
+Already-deployed controls show `{name} ✓` regardless of mode.
+
+#### Stage view — right sidebar (Threats)
+
+Threat items now reflect `gameMode`:
+
+**Beginner mode:** For each threat, looks up `stageControls.find(c => threat.recommendedControlIds.includes(c.controlId))`. If found, renders a `.threat-hint` line below the threat name:
+```
+Hint: {control.name}
+```
+
+**Expert mode:** No hint line rendered. Only threat name and severity badge shown.
+
+#### Stage view — L4 threat tree nodes
+
+Sub-threat nodes now reflect `gameMode`:
+
+**Beginner mode:** For each sub-threat node, looks up the matching control from `stageControls` and renders a `.threat-hint` line inside the node:
+```
+Deploy: {control.name}
+```
+
+**Expert mode:** Node displays threat ID, scenario name, and mitigated/unresolved status only — no deployment hint.
+
+### `src/App.css`
+
+New rules appended:
+
+| Class | Purpose |
+|-------|---------|
+| `.mode-selector` | Flex row, centred, gap 8px, margin-bottom 24px |
+| `.mode-label` | Small grey label ("Game Mode:") |
+| `.mode-btn` | Pill-shaped toggle button, transparent background, grey border |
+| `.mode-btn:hover` | Blue border and text on hover |
+| `.mode-btn-active` | Blue fill (`#7dd3fc`), dark text — active mode indicator |
+| `.mode-description` | Small italic grey text below selector |
+| `.threat-hint` | 11px italic grey hint text inside threat / node items |
+| `.control-recommended` | Orange border and text for beginner-highlighted control buttons |
+
+---
+
+## Change Log — 2026-03-22 (L2/L3 Threat Status Visualisation)
+
+**Commit:** `feat: L2/L3 threat status visualization in stage-main-board`
+
+### `src/App.tsx`
+
+#### `stage-main-board` — L2/L3 else branch
+
+Replaced the static placeholder text with a live threat status panel.
+
+**Before:**
+```tsx
+<div className="stage-main-placeholder">
+    Here we will visualise where controls are deployed and how threats are mitigated.
+</div>
+```
+
+**After:** A `.threat-status-panel` containing one `.threat-node` per entry in `stageThreats`, using the same node components as the L4 threat tree:
+
+| Element | Content |
+|---------|---------|
+| `.threat-node-name` | `threat.scenarioName` |
+| `.threat-node-severity` | `"Severity: {threat.severity}"` |
+| `.threat-hint` (Beginner only) | `"Hint: Deploy {recommendedControl.name}"` |
+| Status badge | `"✓ Mitigated"` (green) or `"⚠ Unresolved"` (red) |
+
+A threat is considered **mitigated** when any of its `recommendedControlIds` appears in `deployedControlIds` — identical logic to the L4 sub-threat check.
+
+An empty-state fallback renders `"Loading threats..."` when `stageThreats.length === 0`.
+
+The Beginner hint looks up `stageControls.find(c => threat.recommendedControlIds.includes(c.controlId))` — same pattern as the right sidebar hint, but rendered inside the central panel node instead.
+
+### `src/App.css`
+
+Two new rules appended (inserted before the Beginner/Expert Mode section):
+
+| Class | Purpose |
+|-------|---------|
+| `.threat-status-panel` | Flex column, gap 8px, padding 12px, full height, scrollable |
+| `.threat-node-severity` | 11px grey severity label inside each node |
+
+---
+
+## Change Log — 2026-03-22 (ESLint setState-in-effect Fix)
+
+**Commit:** `feat: L2/L3 threat status visualization in stage-main-board` (same commit)
+
+### `src/App.tsx`
+
+#### `useEffect` — removed synchronous `setState` calls
+
+ESLint rule `react-hooks/set-state-in-effect` flagged two synchronous `setLevel4Scenario(null)` calls inside the data-loading `useEffect`:
+
+1. **Non-stage branch** (`view.type !== "stage"`): the call was removed entirely. The render is already guarded by `view.chapter === 4 && level4Scenario !== null`, so a stale `level4Scenario` value is never rendered when outside a stage view.
+
+2. **L2/L3 branch** (`chapter !== 4`): `setLevel4Scenario(null)` was moved from the synchronous effect body into the `.then()` callback, alongside the other state updates.
+
+All `setState` calls inside the effect are now exclusively inside `.then()` callbacks, satisfying the rule. Functional behaviour is unchanged.

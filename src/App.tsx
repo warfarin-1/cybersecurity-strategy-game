@@ -134,10 +134,7 @@ const App: React.FC = () => {
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
-        if (view.type !== "stage") {
-            setLevel4Scenario(null);
-            return;
-        }
+        if (view.type !== "stage") return;
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
@@ -160,11 +157,11 @@ const App: React.FC = () => {
                 }
             );
         } else {
-            setLevel4Scenario(null);
             Promise.all([loadThreats(chapter), loadControls()]).then(
                 ([allThreats, allControls]) => {
                     setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
                     setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
+                    setLevel4Scenario(null);
                     setLoadedForStageId(stageId);
                 }
             );
@@ -731,8 +728,38 @@ const App: React.FC = () => {
                                         ⚠ Score below passing threshold ({stageConfig.passingScore}). Deploy more controls to recover score.
                                     </div>
                                 )}
-                                <div className="stage-main-placeholder">
-                                    Here we will visualise where controls are deployed and how threats are mitigated.
+                                <div className="threat-status-panel">
+                                    <div className="threat-chain-label">Threat Status</div>
+                                    {stageThreats.map((threat) => {
+                                        const mitigated = threat.recommendedControlIds.some((id) =>
+                                            deployedControlIds.includes(id)
+                                        );
+                                        const recommendedControl = gameMode === "beginner"
+                                            ? stageControls.find((c) =>
+                                                threat.recommendedControlIds.includes(c.controlId)
+                                              )
+                                            : undefined;
+                                        return (
+                                            <div
+                                                key={threat.threatId}
+                                                className={`threat-node ${mitigated ? "threat-node-mitigated" : "threat-node-unresolved"}`}
+                                            >
+                                                <div>
+                                                    <div className="threat-node-name">{threat.scenarioName}</div>
+                                                    <div className="threat-node-severity">Severity: {threat.severity}</div>
+                                                    {recommendedControl && (
+                                                        <div className="threat-hint">Hint: Deploy {recommendedControl.name}</div>
+                                                    )}
+                                                </div>
+                                                <div className={mitigated ? "threat-node-status-resolved" : "threat-node-status-unresolved"}>
+                                                    {mitigated ? "✓ Mitigated" : "⚠ Unresolved"}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {stageThreats.length === 0 && (
+                                        <div className="sidebar-loading">Loading threats...</div>
+                                    )}
                                 </div>
                             </>
                         )}
