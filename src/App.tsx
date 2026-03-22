@@ -114,7 +114,14 @@ type View =
 const App: React.FC = () => {
     const [view, setView] = useState<View>({ type: "map" });
     const [chapterState, setChapterState] = useState<ChapterState | null>(null);
-    const [completedChapters, setCompletedChapters] = useState<Set<number>>(new Set());
+    const [completedChapters, setCompletedChapters] = useState<Set<number>>(() => {
+        try {
+            const saved = localStorage.getItem("completedChapters");
+            return saved ? new Set<number>(JSON.parse(saved)) : new Set<number>();
+        } catch {
+            return new Set<number>();
+        }
+    });
     const [activeStageState, setActiveStageState] = useState<StageGameState | null>(null);
     const [stageThreats, setStageThreats] = useState<Threat[]>([]);
     const [stageControls, setStageControls] = useState<Control[]>([]);
@@ -271,7 +278,11 @@ const App: React.FC = () => {
                     chapterState?.stageStates[s.id]?.status === "completed"
             );
             if (allChapterDone) {
-                setCompletedChapters((prev) => new Set([...prev, view.chapter]));
+                setCompletedChapters((prev) => {
+                    const next = new Set([...prev, view.chapter]);
+                    localStorage.setItem("completedChapters", JSON.stringify([...next]));
+                    return next;
+                });
             }
         }
     };
@@ -546,7 +557,7 @@ const App: React.FC = () => {
                         </span>
                     </div>
                     <div className="top-bar-stat">
-                        <span className="stat-label">Score</span>
+                        <span className="stat-label">Chapter Score</span>
                         <span className="stat-value">
                             {chapterState ? chapterState.score : 100} / 100
                         </span>
