@@ -327,6 +327,37 @@ const App: React.FC = () => {
         const meta = CHAPTERS.find((c) => c.id === view.chapter)!;
         const stages = STAGES_BY_CHAPTER[view.chapter];
 
+        // Panel 1: control IDs from all completed stages (deduplicated)
+        const knownControlIds: string[] = [];
+        for (const stage of stages) {
+            if (chapterState?.stageStates[stage.id]?.status === "completed") {
+                const cfg = getStageConfig(stage.id);
+                if (cfg) {
+                    for (const id of cfg.requiredControlIds) {
+                        if (!knownControlIds.includes(id)) knownControlIds.push(id);
+                    }
+                }
+            }
+        }
+
+        // Panel 2: unique risk type labels across all stages in this chapter
+        const knownThreatTypes = [
+            ...new Set(
+                stages.map((s) => getRiskTypeLabel(s.id)).filter((t) => t !== "TBD")
+            ),
+        ];
+
+        // Panel 3: budget figures
+        const totalBudget      = chapterState?.totalBudget      ?? 1_000_000;
+        const remainingBudget  = chapterState?.remainingBudget  ?? 1_000_000;
+        const spentBudget      = totalBudget - remainingBudget;
+
+        // Panel 4: score figures
+        const currentScore       = chapterState?.score ?? 100;
+        const chapterPassingScore = Math.max(
+            ...stages.map((s) => getStageConfig(s.id)?.passingScore ?? 60)
+        );
+
         return (
             <div className="app-root">
                 <header className="top-bar">
@@ -356,13 +387,25 @@ const App: React.FC = () => {
                                 <div className="control-room-box">
                                     <div className="box-title">Known Security Measures</div>
                                     <div className="box-text">
-                                        List of controls the player has already seen in this chapter.
+                                        {knownControlIds.length === 0 ? (
+                                            <span>No controls deployed yet</span>
+                                        ) : (
+                                            knownControlIds.map((id) => (
+                                                <div key={id}>✓ {id}</div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                                 <div className="control-room-box">
                                     <div className="box-title">Known Threat Types</div>
                                     <div className="box-text">
-                                        Summary of threat types encountered so far.
+                                        {knownThreatTypes.length === 0 ? (
+                                            <span>No threats encountered yet</span>
+                                        ) : (
+                                            knownThreatTypes.map((t) => (
+                                                <div key={t}>⚠ {t}</div>
+                                            ))
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -370,13 +413,22 @@ const App: React.FC = () => {
                                 <div className="control-room-box">
                                     <div className="box-title">Budget Overview</div>
                                     <div className="box-text">
-                                        Per-level spending and remaining funds for this chapter.
+                                        <div>Total:     £{totalBudget.toLocaleString()}</div>
+                                        <div>Remaining: £{remainingBudget.toLocaleString()}</div>
+                                        <div>Spent:     £{spentBudget.toLocaleString()}</div>
                                     </div>
                                 </div>
                                 <div className="control-room-box">
-                                    <div className="box-title">Score Deductions</div>
+                                    <div className="box-title">Score &amp; Deductions</div>
                                     <div className="box-text">
-                                        High/medium/low risk penalties for each completed level.
+                                        <div>Current Score: {currentScore}/100</div>
+                                        <div>Passing Score: {chapterPassingScore}</div>
+                                        <div>
+                                            Status:{" "}
+                                            {currentScore >= chapterPassingScore
+                                                ? "✓ On track"
+                                                : "⚠ At risk"}
+                                        </div>
                                     </div>
                                 </div>
                             </div>
