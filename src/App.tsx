@@ -137,7 +137,22 @@ const App: React.FC = () => {
             return "beginner";
         }
     });
-    const dataLoading = view.type === "stage" && loadedForStageId !== view.stageId;
+    const [language, setLanguage] = useState<"en" | "zh">(() => {
+        try {
+            const saved = localStorage.getItem("language");
+            return saved === "zh" ? "zh" : "en";
+        } catch {
+            return "en";
+        }
+    });
+
+    // Translation helper
+    const t = (en: string, zh: string) => language === "zh" ? zh : en;
+    // Bilingual display helpers
+    const controlName = (c: Control) => language === "zh" && c.nameZh ? c.nameZh : c.name;
+    const threatName  = (th: Threat) => language === "zh" && th.scenarioNameZh ? th.scenarioNameZh : th.scenarioName;
+
+    const dataLoading = view.type === "stage" && loadedForStageId !== `${view.stageId}:${language}`;
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
@@ -154,26 +169,26 @@ const App: React.FC = () => {
                 "L4-2": "L4-B3-SCENARIO-01",
                 "L4-3": "L4-B4-SCENARIO-01",
             };
-            Promise.all([loadThreats(4), loadControls(), loadLevel4Tree()]).then(
+            Promise.all([loadThreats(4, language), loadControls(language), loadLevel4Tree(language)]).then(
                 ([allThreats, allControls, scenarios]) => {
-                    setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
+                    setStageThreats(allThreats.filter((th) => config.threatIds.includes(th.threatId)));
                     setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
                     const scenarioId = SCENARIO_MAP[stageId];
                     setLevel4Scenario(scenarios.find((s) => s.scenarioId === scenarioId) ?? null);
-                    setLoadedForStageId(stageId);
+                    setLoadedForStageId(`${stageId}:${language}`);
                 }
             );
         } else {
-            Promise.all([loadThreats(chapter), loadControls()]).then(
+            Promise.all([loadThreats(chapter, language), loadControls(language)]).then(
                 ([allThreats, allControls]) => {
-                    setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
+                    setStageThreats(allThreats.filter((th) => config.threatIds.includes(th.threatId)));
                     setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
                     setLevel4Scenario(null);
-                    setLoadedForStageId(stageId);
+                    setLoadedForStageId(`${stageId}:${language}`);
                 }
             );
         }
-    }, [view]);
+    }, [view, language]);
 
     const isChapterUnlocked = (chapter: ChapterLevel): boolean => {
         if (chapter === 2) return true;
@@ -391,30 +406,45 @@ const App: React.FC = () => {
         return (
             <div className="app-root">
                 <header className="top-bar">
-                    <div className="top-bar-title">Cybersecurity Command Center</div>
-                    <div className="top-bar-subtitle">Select a Level to Begin</div>
+                    <div className="top-bar-title">{t("Cybersecurity Command Center", "网络安全指挥中心")}</div>
+                    <div className="top-bar-subtitle">{t("Select a Level to Begin", "选择关卡开始")}</div>
                 </header>
                 <main className="map-container">
                     <div className="mode-selector">
-                        <span className="mode-label">Game Mode:</span>
+                        <span className="mode-label">{t("Game Mode:", "游戏模式：")}</span>
                         <button
                             className={`mode-btn ${gameMode === "beginner" ? "mode-btn-active" : ""}`}
                             onClick={() => { setGameMode("beginner"); localStorage.setItem("gameMode", "beginner"); }}
                         >
-                            Beginner
+                            {t("Beginner", "新手")}
                         </button>
                         <button
                             className={`mode-btn ${gameMode === "expert" ? "mode-btn-active" : ""}`}
                             onClick={() => { setGameMode("expert"); localStorage.setItem("gameMode", "expert"); }}
                         >
-                            Expert
+                            {t("Expert", "专家")}
                         </button>
                     </div>
                     <p className="mode-description">
                         {gameMode === "beginner"
-                            ? "Recommended controls are highlighted to guide your decisions."
-                            : "No hints provided. Analyse threats and choose controls independently."}
+                            ? t("Recommended controls are highlighted to guide your decisions.", "推荐的控制措施已高亮显示以引导您的决策。")
+                            : t("No hints provided. Analyse threats and choose controls independently.", "不提供提示。请自行分析威胁并选择控制措施。")}
                     </p>
+                    <div className="mode-selector">
+                        <span className="mode-label">Language:</span>
+                        <button
+                            className={`mode-btn ${language === "en" ? "mode-btn-active" : ""}`}
+                            onClick={() => { setLanguage("en"); localStorage.setItem("language", "en"); }}
+                        >
+                            English
+                        </button>
+                        <button
+                            className={`mode-btn ${language === "zh" ? "mode-btn-active" : ""}`}
+                            onClick={() => { setLanguage("zh"); localStorage.setItem("language", "zh"); }}
+                        >
+                            中文
+                        </button>
+                    </div>
                     {CHAPTERS.map((chapter) => {
                         const unlocked = isChapterUnlocked(chapter.id);
                         const completed = completedChapters.has(chapter.id);
@@ -433,11 +463,11 @@ const App: React.FC = () => {
                                 <div className="chapter-text-sub">{chapter.subtitle}</div>
                                 {!unlocked && (
                                     <div className="chapter-lock-label">
-                                        🔒 Complete Level {chapter.id - 1} to unlock
+                                        🔒 {t(`Complete Level ${chapter.id - 1} to unlock`, `完成第 ${chapter.id - 1} 关解锁`)}
                                     </div>
                                 )}
                                 {unlocked && completed && (
-                                    <div className="chapter-complete-label">✓ Completed</div>
+                                    <div className="chapter-complete-label">{t("✓ Completed", "✓ 已完成")}</div>
                                 )}
                             </button>
                         );
@@ -491,13 +521,13 @@ const App: React.FC = () => {
                     <div className="top-bar-title">{meta.title}</div>
                     <div className="top-bar-right">
                         <div className="top-bar-stat">
-                            <span className="stat-label">Budget Left</span>
+                            <span className="stat-label">{t("Budget Left", "剩余预算")}</span>
                             <span className="stat-value">
                                 £ {(chapterState?.remainingBudget ?? 1_000_000).toLocaleString()}
                             </span>
                         </div>
                         <div className="top-bar-stat">
-                            <span className="stat-label">Score</span>
+                            <span className="stat-label">{t("Score", "得分")}</span>
                             <span className="stat-value">{chapterState?.score ?? 100} / 100</span>
                         </div>
                     </div>
@@ -505,14 +535,14 @@ const App: React.FC = () => {
 
                 <main className="chapter-layout">
                     <section className="control-center">
-                        <div className="control-center-header">Control Room</div>
+                        <div className="control-center-header">{t("Control Room", "控制室")}</div>
                         <div className="control-center-body">
                             <div className="control-room-column">
                                 <div className="control-room-box">
-                                    <div className="box-title">Known Security Measures</div>
+                                    <div className="box-title">{t("Known Security Measures", "已知安全措施")}</div>
                                     <div className="box-text">
                                         {knownControlIds.length === 0 ? (
-                                            <span>No controls deployed yet</span>
+                                            <span>{t("No controls deployed yet", "尚未部署控制措施")}</span>
                                         ) : (
                                             knownControlIds.map((id) => (
                                                 <div key={id}>✓ {id}</div>
@@ -521,13 +551,13 @@ const App: React.FC = () => {
                                     </div>
                                 </div>
                                 <div className="control-room-box">
-                                    <div className="box-title">Known Threat Types</div>
+                                    <div className="box-title">{t("Known Threat Types", "已知威胁类型")}</div>
                                     <div className="box-text">
                                         {knownThreatTypes.length === 0 ? (
-                                            <span>No threats encountered yet</span>
+                                            <span>{t("No threats encountered yet", "尚未遇到威胁")}</span>
                                         ) : (
-                                            knownThreatTypes.map((t) => (
-                                                <div key={t}>⚠ {t}</div>
+                                            knownThreatTypes.map((tt) => (
+                                                <div key={tt}>⚠ {tt}</div>
                                             ))
                                         )}
                                     </div>
@@ -535,23 +565,23 @@ const App: React.FC = () => {
                             </div>
                             <div className="control-room-column">
                                 <div className="control-room-box">
-                                    <div className="box-title">Budget Overview</div>
+                                    <div className="box-title">{t("Budget Overview", "预算概览")}</div>
                                     <div className="box-text">
-                                        <div>Total:     £{totalBudget.toLocaleString()}</div>
-                                        <div>Remaining: £{remainingBudget.toLocaleString()}</div>
-                                        <div>Spent:     £{spentBudget.toLocaleString()}</div>
+                                        <div>{t("Total", "总计")}:     £{totalBudget.toLocaleString()}</div>
+                                        <div>{t("Remaining", "剩余")}: £{remainingBudget.toLocaleString()}</div>
+                                        <div>{t("Spent", "已用")}:     £{spentBudget.toLocaleString()}</div>
                                     </div>
                                 </div>
                                 <div className="control-room-box">
-                                    <div className="box-title">Score &amp; Deductions</div>
+                                    <div className="box-title">{t("Score & Deductions", "得分与扣分")}</div>
                                     <div className="box-text">
-                                        <div>Current Score: {currentScore}/100</div>
-                                        <div>Passing Score: {chapterPassingScore}</div>
+                                        <div>{t("Current Score", "当前得分")}: {currentScore}/100</div>
+                                        <div>{t("Passing Score", "通关分数")}: {chapterPassingScore}</div>
                                         <div>
-                                            Status:{" "}
+                                            {t("Status", "状态")}:{" "}
                                             {currentScore >= chapterPassingScore
-                                                ? "✓ On track"
-                                                : "⚠ At risk"}
+                                                ? t("✓ On track", "✓ 进展顺利")
+                                                : t("⚠ At risk", "⚠ 存在风险")}
                                         </div>
                                     </div>
                                 </div>
@@ -565,10 +595,10 @@ const App: React.FC = () => {
                             const status = stageState?.status ?? "not_started";
                             const unlocked = isStageUnlocked(stage.id);
                             const statusLabel =
-                                !unlocked                ? "🔒 Locked"    :
-                                status === "completed"   ? "✓ Completed"  :
-                                status === "in_progress" ? "In progress"  :
-                                                           "Not started";
+                                !unlocked                ? t("🔒 Locked", "🔒 已锁定")    :
+                                status === "completed"   ? t("✓ Completed", "✓ 已完成")  :
+                                status === "in_progress" ? t("In progress", "进行中")    :
+                                                           t("Not started", "未开始");
                             const statusColor =
                                 !unlocked                ? "#6b7280"  :
                                 status === "completed"   ? "#4ade80"  :
@@ -625,13 +655,13 @@ const App: React.FC = () => {
                         <span className="stat-value">Lv.{chapterMeta.id}</span>
                     </div>
                     <div className="top-bar-stat">
-                        <span className="stat-label">Budget Left</span>
+                        <span className="stat-label">{t("Budget Left", "剩余预算")}</span>
                         <span className="stat-value">
                             £ {activeStageState ? activeStageState.budget.toLocaleString() : "200,000"}
                         </span>
                     </div>
                     <div className="top-bar-stat">
-                        <span className="stat-label">Chapter Score</span>
+                        <span className="stat-label">{t("Chapter Score", "章节得分")}</span>
                         <span className="stat-value">
                             {chapterState ? chapterState.score : 100} / 100
                         </span>
@@ -642,20 +672,21 @@ const App: React.FC = () => {
             <main className="stage-layout">
                 <aside className="stage-sidebar-left">
                     <div className="sidebar-section">
-                        <div className="sidebar-title">Security Measures</div>
+                        <div className="sidebar-title">{t("Security Measures", "安全措施")}</div>
                         {dataLoading ? (
-                            <div className="sidebar-loading">Loading...</div>
+                            <div className="sidebar-loading">{t("Loading...", "加载中...")}</div>
                         ) : stageControls.length === 0 ? (
-                            <div className="sidebar-loading">No controls available</div>
+                            <div className="sidebar-loading">{t("No controls available", "无可用控制措施")}</div>
                         ) : (
                             stageControls.map((control) => {
                                 const deployed = deployedControlIds.includes(control.controlId);
-                                const isRecommended = stageThreats.some((t) =>
-                                    t.recommendedControlIds.includes(control.controlId)
+                                const isRecommended = stageThreats.some((th) =>
+                                    th.recommendedControlIds.includes(control.controlId)
                                 );
+                                const cName = controlName(control);
                                 const label = deployed
-                                    ? `${control.name} ✓`
-                                    : `${gameMode === "beginner" && isRecommended ? "⭐ " : ""}${control.name}`;
+                                    ? `${cName} ✓`
+                                    : `${gameMode === "beginner" && isRecommended ? "⭐ " : ""}${cName}`;
                                 return (
                                     <button
                                         key={control.controlId}
@@ -673,19 +704,21 @@ const App: React.FC = () => {
                 </aside>
 
                 <section className="stage-main-area">
-                    <div className="stage-main-title">Secure Area Boundaries</div>
+                    <div className="stage-main-title">{t("Secure Area Boundaries", "安全区域边界")}</div>
                     <div className="stage-main-board">
                         {view.chapter === 4 && level4Scenario !== null ? (
                             <div className="threat-tree-panel">
                                 <div className="threat-scenario-header">
                                     <div className="threat-scenario-title">
-                                        Scenario: {level4Scenario.scenarioName}
+                                        {t("Scenario", "场景")}: {language === "zh" && level4Scenario.scenarioNameZh ? level4Scenario.scenarioNameZh : level4Scenario.scenarioName}
                                     </div>
-                                    <div className="threat-scenario-desc">{level4Scenario.description}</div>
+                                    <div className="threat-scenario-desc">
+                                        {language === "zh" && level4Scenario.descriptionZh ? level4Scenario.descriptionZh : level4Scenario.description}
+                                    </div>
                                 </div>
-                                <div className="threat-chain-label">Attack Chain</div>
+                                <div className="threat-chain-label">{t("Attack Chain", "攻击链")}</div>
                                 {level4Scenario.subThreatIds.map((subId) => {
-                                    const threat = stageThreats.find((t) => t.threatId === subId);
+                                    const threat = stageThreats.find((th) => th.threatId === subId);
                                     const mitigated = threat
                                         ? threat.recommendedControlIds.some((id) => deployedControlIds.includes(id))
                                         : false;
@@ -701,25 +734,31 @@ const App: React.FC = () => {
                                         >
                                             <div>
                                                 <div className="threat-node-id">{subId}</div>
-                                                <div className="threat-node-name">{threat?.scenarioName ?? subId}</div>
+                                                <div className="threat-node-name">{threat ? threatName(threat) : subId}</div>
                                                 {deployHintControl && (
-                                                    <div className="threat-hint">Deploy: {deployHintControl.name}</div>
+                                                    <div className="threat-hint">{t("Deploy", "部署")}: {controlName(deployHintControl)}</div>
                                                 )}
                                             </div>
                                             <div className={mitigated ? "threat-node-status-resolved" : "threat-node-status-unresolved"}>
-                                                {mitigated ? "✓ Mitigated" : "⚠ Unresolved"}
+                                                {mitigated ? t("✓ Mitigated", "✓ 已缓解") : t("⚠ Unresolved", "⚠ 未解决")}
                                             </div>
                                         </div>
                                     );
                                 })}
                                 {chapterState && stageConfig && chapterState.score < stageConfig.passingScore && (
                                     <div className="stage-status-warning">
-                                        ⚠ Score below passing threshold ({stageConfig.passingScore}). Deploy more controls to recover score.
+                                        {t(
+                                            `⚠ Score below passing threshold (${stageConfig.passingScore}). Deploy more controls to recover score.`,
+                                            `⚠ 得分低于通关分数（${stageConfig.passingScore}）。请部署更多控制措施以恢复得分。`
+                                        )}
                                     </div>
                                 )}
                                 {activeStageState?.isCompleted && (
                                     <div className="stage-status-success">
-                                        ✓ Attack Chain Neutralised! All sub-threats have been mitigated. The scenario has been contained.
+                                        {t(
+                                            "✓ Attack Chain Neutralised! All sub-threats have been mitigated. The scenario has been contained.",
+                                            "✓ 攻击链已瓦解！所有子威胁均已缓解，场景已成功遏制。"
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -727,16 +766,22 @@ const App: React.FC = () => {
                             <>
                                 {activeStageState?.isCompleted && (
                                     <div className="stage-status-success">
-                                        ✓ Stage Complete — All required controls deployed. Proceed to the next stage.
+                                        {t(
+                                            "✓ Stage Complete — All required controls deployed. Proceed to the next stage.",
+                                            "✓ 关卡完成——所有必要控制措施已部署。请继续进入下一关卡。"
+                                        )}
                                     </div>
                                 )}
                                 {chapterState && stageConfig && chapterState.score < stageConfig.passingScore && (
                                     <div className="stage-status-warning">
-                                        ⚠ Score below passing threshold ({stageConfig.passingScore}). Deploy more controls to recover score.
+                                        {t(
+                                            `⚠ Score below passing threshold (${stageConfig.passingScore}). Deploy more controls to recover score.`,
+                                            `⚠ 得分低于通关分数（${stageConfig.passingScore}）。请部署更多控制措施以恢复得分。`
+                                        )}
                                     </div>
                                 )}
                                 <div className="threat-status-panel">
-                                    <div className="threat-chain-label">Threat Status</div>
+                                    <div className="threat-chain-label">{t("Threat Status", "威胁状态")}</div>
                                     {stageThreats.map((threat) => {
                                         const mitigated = threat.recommendedControlIds.some((id) =>
                                             deployedControlIds.includes(id)
@@ -752,20 +797,20 @@ const App: React.FC = () => {
                                                 className={`threat-node ${mitigated ? "threat-node-mitigated" : "threat-node-unresolved"}`}
                                             >
                                                 <div>
-                                                    <div className="threat-node-name">{threat.scenarioName}</div>
-                                                    <div className="threat-node-severity">Severity: {threat.severity}</div>
+                                                    <div className="threat-node-name">{threatName(threat)}</div>
+                                                    <div className="threat-node-severity">{t("Severity", "严重度")}: {threat.severity}</div>
                                                     {recommendedControl && (
-                                                        <div className="threat-hint">Hint: Deploy {recommendedControl.name}</div>
+                                                        <div className="threat-hint">{t("Hint: Deploy", "提示：部署")} {controlName(recommendedControl)}</div>
                                                     )}
                                                 </div>
                                                 <div className={mitigated ? "threat-node-status-resolved" : "threat-node-status-unresolved"}>
-                                                    {mitigated ? "✓ Mitigated" : "⚠ Unresolved"}
+                                                    {mitigated ? t("✓ Mitigated", "✓ 已缓解") : t("⚠ Unresolved", "⚠ 未解决")}
                                                 </div>
                                             </div>
                                         );
                                     })}
                                     {stageThreats.length === 0 && (
-                                        <div className="sidebar-loading">Loading threats...</div>
+                                        <div className="sidebar-loading">{t("Loading threats...", "加载威胁中...")}</div>
                                     )}
                                 </div>
                             </>
@@ -775,7 +820,7 @@ const App: React.FC = () => {
 
                 <aside className="stage-sidebar-right">
                     <div className="sidebar-section">
-                        <div className="sidebar-title">Security Requirements</div>
+                        <div className="sidebar-title">{t("Security Requirements", "安全要求")}</div>
                         {stageConfig ? (
                             stageConfig.requiredControlIds.map((reqId) => {
                                 const deployed = deployedControlIds.includes(reqId);
@@ -785,20 +830,20 @@ const App: React.FC = () => {
                                         key={reqId}
                                         className={`sidebar-pill ${deployed ? "sidebar-pill-success" : "sidebar-pill-danger"}`}
                                     >
-                                        {deployed ? "✓" : "✗"} {control?.name ?? reqId}
+                                        {deployed ? "✓" : "✗"} {control ? controlName(control) : reqId}
                                     </div>
                                 );
                             })
                         ) : (
-                            <div className="sidebar-loading">Loading...</div>
+                            <div className="sidebar-loading">{t("Loading...", "加载中...")}</div>
                         )}
                     </div>
                     <div className="sidebar-section">
-                        <div className="sidebar-title">Threats</div>
+                        <div className="sidebar-title">{t("Threats", "威胁")}</div>
                         {dataLoading ? (
-                            <div className="sidebar-loading">Loading...</div>
+                            <div className="sidebar-loading">{t("Loading...", "加载中...")}</div>
                         ) : stageThreats.length === 0 ? (
-                            <div className="sidebar-loading">No threats available</div>
+                            <div className="sidebar-loading">{t("No threats available", "无可用威胁")}</div>
                         ) : (
                             stageThreats.map((threat) => {
                                 const hintControl = gameMode === "beginner"
@@ -812,9 +857,9 @@ const App: React.FC = () => {
                                         className={`sidebar-pill ${threat.severity === "High" ? "sidebar-pill-danger" : ""}`}
                                     >
                                         <div>
-                                            {threat.scenarioName}
+                                            {threatName(threat)}
                                             {hintControl && (
-                                                <div className="threat-hint">Hint: {hintControl.name}</div>
+                                                <div className="threat-hint">{t("Hint", "提示")}: {controlName(hintControl)}</div>
                                             )}
                                         </div>
                                         <span className="threat-severity">{threat.severity}</span>
@@ -833,6 +878,7 @@ const App: React.FC = () => {
                 isLoading={dataLoading}
                 onNextTurn={handleNextTurn}
                 onRunAttackSimulation={() => {}}
+                language={language}
             />
         </div>
     );

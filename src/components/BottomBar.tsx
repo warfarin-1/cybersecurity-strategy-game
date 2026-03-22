@@ -9,6 +9,7 @@ interface BottomBarProps {
     isCompleted?: boolean;
     isLoading?: boolean;
     score?: number;
+    language?: "en" | "zh";
 }
 
 export const BottomBar: React.FC<BottomBarProps> = ({
@@ -19,17 +20,19 @@ export const BottomBar: React.FC<BottomBarProps> = ({
     isCompleted = false,
     isLoading = false,
     score,
+    language = "en",
 }) => {
+    const t = (en: string, zh: string) => language === "zh" ? zh : en;
     return (
         <footer className="bottombar">
             <div className="bottombar-left">
-                <span>Turn: {turn}</span>
+                <span>{t("Turn", "回合")}: {turn}</span>
                 <span className="bottombar-separator">|</span>
-                <span>Budget: £{budget.toLocaleString()}</span>
+                <span>{t("Budget", "预算")}: £{budget.toLocaleString()}</span>
                 {score !== undefined && (
                     <>
                         <span className="bottombar-separator">|</span>
-                        <span>Score: {score}/100</span>
+                        <span>{t("Score", "得分")}: {score}/100</span>
                     </>
                 )}
             </div>
@@ -39,14 +42,18 @@ export const BottomBar: React.FC<BottomBarProps> = ({
                     onClick={onNextTurn}
                     disabled={isCompleted || isLoading}
                 >
-                    {isLoading ? "Loading..." : isCompleted ? "Stage Complete" : `Next Turn (T${turn})`}
+                    {isLoading
+                        ? t("Loading...", "加载中...")
+                        : isCompleted
+                        ? t("Stage Complete", "关卡完成")
+                        : `${t("Next Turn", "下一回合")} (T${turn})`}
                 </button>
                 <button
                     className="btn-small"
                     onClick={onRunAttackSimulation}
                     disabled
                 >
-                    Attack Sim (Coming Soon)
+                    {t("Attack Sim (Coming Soon)", "攻击模拟（即将推出）")}
                 </button>
             </div>
         </footer>
