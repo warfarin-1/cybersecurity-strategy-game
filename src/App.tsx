@@ -264,10 +264,32 @@ const App: React.FC = () => {
         // Completion check — compute new deployed set synchronously
         const newDeployedIds = [...deployedControlIds, controlId];
         const stageConfig = getStageConfig(activeStageState.stageId);
-        const allRequiredDeployed =
-            stageConfig != null &&
-            stageConfig.requiredControlIds.length > 0 &&
-            stageConfig.requiredControlIds.every((id) => newDeployedIds.includes(id));
+
+        // L4: all scenario subThreatIds mitigated; L2/L3: all requiredControlIds deployed
+        const isL4 = view.type === "stage" && view.chapter === 4;
+        let stageJustCompleted = false;
+        let completionLog = "";
+
+        if (isL4 && level4Scenario) {
+            const allSubThreatsMitigated = level4Scenario.subThreatIds.every((subThreatId) => {
+                const threat = stageThreats.find((t) => t.threatId === subThreatId);
+                if (!threat) return false;
+                return threat.recommendedControlIds.some((cId) => newDeployedIds.includes(cId));
+            });
+            if (allSubThreatsMitigated && !activeStageState.isCompleted) {
+                stageJustCompleted = true;
+                completionLog = "✓ Attack chain neutralised! All sub-threats mitigated.";
+            }
+        } else {
+            const allRequiredDeployed =
+                stageConfig != null &&
+                stageConfig.requiredControlIds.length > 0 &&
+                stageConfig.requiredControlIds.every((id) => newDeployedIds.includes(id));
+            if (allRequiredDeployed && !activeStageState.isCompleted) {
+                stageJustCompleted = true;
+                completionLog = "✓ Stage complete! All required controls deployed.";
+            }
+        }
 
         const deployLog = `[T${activeStageState.turn}] Deployed "${control.name}". Budget: £${newBudget.toLocaleString()}.`;
         const newStageState: StageGameState = {
@@ -275,14 +297,12 @@ const App: React.FC = () => {
             budget: newBudget,
             sectors: updatedSectors,
             deployedControlIds: newDeployedIds,
-            isCompleted: allRequiredDeployed ? true : activeStageState.isCompleted,
-            status: allRequiredDeployed ? "completed" : activeStageState.status,
+            isCompleted: stageJustCompleted ? true : activeStageState.isCompleted,
+            status: stageJustCompleted ? "completed" : activeStageState.status,
             logs: [
                 ...activeStageState.logs,
                 deployLog,
-                ...(allRequiredDeployed
-                    ? ["✓ Stage complete! All required controls deployed."]
-                    : []),
+                ...(stageJustCompleted ? [completionLog] : []),
             ],
         };
 
@@ -299,7 +319,7 @@ const App: React.FC = () => {
         );
 
         // If this deploy completed the stage, check if all chapter stages are now done
-        if (allRequiredDeployed && view.type === "stage") {
+        if (stageJustCompleted && view.type === "stage") {
             const chapterStages = STAGES_BY_CHAPTER[view.chapter];
             const allChapterDone = chapterStages.every(
                 (s) =>
@@ -660,7 +680,7 @@ const App: React.FC = () => {
                                 )}
                                 {activeStageState?.isCompleted && (
                                     <div className="stage-status-success">
-                                        ✓ Stage Complete — All required controls deployed. Proceed to the next stage.
+                                        ✓ Attack Chain Neutralised! All sub-threats have been mitigated. The scenario has been contained.
                                     </div>
                                 )}
                             </div>
