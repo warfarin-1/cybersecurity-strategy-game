@@ -490,12 +490,13 @@ const App: React.FC = () => {
                         {stageConfig ? (
                             stageConfig.requiredControlIds.map((reqId) => {
                                 const deployed = deployedControlIds.includes(reqId);
+                                const control = stageControls.find((c) => c.controlId === reqId);
                                 return (
                                     <div
                                         key={reqId}
                                         className={`sidebar-pill ${deployed ? "sidebar-pill-success" : "sidebar-pill-danger"}`}
                                     >
-                                        {deployed ? "✓" : "✗"} {reqId}
+                                        {deployed ? "✓" : "✗"} {control?.name ?? reqId}
                                     </div>
                                 );
                             })
