@@ -53,6 +53,17 @@ function makeChapterState(chapterId: number): ChapterState {
     };
 }
 
+function getRiskTypeLabel(stageId: string): string {
+    const config = getStageConfig(stageId);
+    const firstThreat = config?.threatIds[0] ?? "";
+    if (firstThreat.startsWith("L2-PH"))   return "Phishing";
+    if (firstThreat.startsWith("L2-IAM"))  return "Identity & Access";
+    if (firstThreat.startsWith("L2-DATA")) return "Data Handling";
+    if (firstThreat.startsWith("L2-NET"))  return "Network";
+    if (firstThreat === "")                return "TBD";
+    return "Mixed";
+}
+
 type ChapterLevel = 2 | 3 | 4;
 
 interface ChapterMeta {
@@ -358,20 +369,36 @@ const App: React.FC = () => {
                     </section>
 
                     <section className="stage-grid">
-                        {stages.map((stage) => (
-                            <button
-                                key={stage.id}
-                                className="stage-card"
-                                onClick={() => handleStageClick(view.chapter, stage.id)}
-                            >
-                                <div className="stage-title">{stage.name}</div>
-                                <div className="stage-desc">{stage.description}</div>
-                                <div className="stage-meta-row">
-                                    <span className="stage-meta-tag">Risk Type: TBD</span>
-                                    <span className="stage-meta-tag">Status: Not started</span>
-                                </div>
-                            </button>
-                        ))}
+                        {stages.map((stage) => {
+                            const stageState = chapterState?.stageStates[stage.id];
+                            const status = stageState?.status ?? "not_started";
+                            const statusLabel =
+                                status === "completed"   ? "✓ Completed" :
+                                status === "in_progress" ? "In progress"  :
+                                                           "Not started";
+                            const statusColor =
+                                status === "completed"   ? "#4ade80" :
+                                status === "in_progress" ? "#ffb84d" :
+                                                           undefined;
+                            return (
+                                <button
+                                    key={stage.id}
+                                    className={`stage-card${status === "completed" ? " stage-card-completed" : ""}`}
+                                    onClick={() => handleStageClick(view.chapter, stage.id)}
+                                >
+                                    <div className="stage-title">{stage.name}</div>
+                                    <div className="stage-desc">{stage.description}</div>
+                                    <div className="stage-meta-row">
+                                        <span className="stage-meta-tag">
+                                            Risk Type: {getRiskTypeLabel(stage.id)}
+                                        </span>
+                                        <span className="stage-meta-tag" style={{ color: statusColor }}>
+                                            Status: {statusLabel}
+                                        </span>
+                                    </div>
+                                </button>
+                            );
+                        })}
                     </section>
                 </main>
             </div>
