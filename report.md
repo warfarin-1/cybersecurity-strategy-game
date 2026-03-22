@@ -236,3 +236,186 @@ Replaced 2 hardcoded buttons with a dynamic list:
 #### Security Requirements section
 
 Left unchanged (still hardcoded placeholder).
+
+---
+
+## Change Log — 2026-03-22 (Duplicate Deploy Guard)
+
+**Commit:** `0417ca4`
+
+### `src/App.tsx`
+
+#### New state
+
+```typescript
+const [deployedControlIds, setDeployedControlIds] = useState<string[]>([]);
+```
+
+Tracks which control IDs have been successfully deployed in the current stage session.
+
+#### `handleStageClick` — reset on stage entry
+
+`deployedControlIds` is reset to `[]` whenever a stage is entered, ensuring each stage starts with a clean deployment record.
+
+#### `handleDeployControl` — duplicate guard
+
+A check is performed at the start of the handler before any cost or sector logic:
+
+- If `controlId` is already in `deployedControlIds`, a log entry `"Already deployed: {name}."` is appended and the function returns early.
+- On successful deployment, `controlId` is added to `deployedControlIds` via `setDeployedControlIds((prev) => [...prev, controlId])`.
+
+#### Stage view JSX — left sidebar button state
+
+Control buttons now check `deployedControlIds.includes(control.controlId)`:
+
+| State | `disabled` | Label |
+|-------|-----------|-------|
+| Not yet deployed | `false` | `{name}` |
+| Already deployed | `true` | `{name} ✓` |
+
+---
+
+## Change Log — 2026-03-22 (Stage Completion & Scoring)
+
+**Commit:** `6b54349`
+
+### `src/App.tsx`
+
+#### `handleDeployControl` — inline completion check
+
+After computing `newDeployedIds = [...deployedControlIds, controlId]`:
+
+1. Calls `getStageConfig(activeStageState.stageId)` to retrieve `requiredControlIds`.
+2. If all required IDs are present in `newDeployedIds` (`Array.every`), marks the stage as complete:
+   - `isCompleted: true`
+   - `status: "completed"`
+   - Appends log: `"✓ Stage complete! All required controls deployed."`
+3. The completed state is written into both `activeStageState` and `chapterState.stageStates`.
+
+#### `handleNextTurn` — score deduction
+
+Each turn, unmitigated threats incur a score penalty against `chapterState.score`:
+
+| Severity | Deduction per unmitigated threat |
+|----------|----------------------------------|
+| High | −10 pts |
+| Medium | −3 pts |
+| Low | −1 pt |
+
+A threat is considered **mitigated** if any of its `recommendedControlIds` appears in `deployedControlIds`.
+
+Score floor is `0` (`Math.max(0, prev.score - totalDeduction)`).
+
+Log format: `"[T{n+1}] New turn. -{total} pts (High: {h}×10, Medium: {m}×3, Low: {l}×1)"`
+
+If no stage config is found, turn advances with no deduction.
+
+#### Stage view JSX — status banners
+
+Two conditional banners added inside `stage-main-board`:
+
+| Condition | Banner class | Message |
+|-----------|-------------|---------|
+| `activeStageState.isCompleted === true` | `.stage-status-success` | ✓ Stage Complete — All required controls deployed. |
+| `chapterState.score < stageConfig.passingScore` | `.stage-status-warning` | ⚠ Score below passing threshold ({n}). |
+
+#### Stage view JSX — Security Requirements (dynamic)
+
+Replaced 3 hardcoded buttons with a dynamic list from `stageConfig.requiredControlIds`:
+
+| Deploy state | Class | Prefix |
+|-------------|-------|--------|
+| Deployed | `.sidebar-pill-success` | `✓` |
+| Not yet deployed | `.sidebar-pill-danger` | `✗` |
+
+Control IDs are displayed directly (e.g. `C-AWARE-01`); human-readable names deferred to a later pass.
+
+### `src/App.css`
+
+New rules appended:
+
+| Class | Purpose |
+|-------|---------|
+| `.sidebar-pill-success` | Green border/text/background for deployed requirement items |
+| `.stage-status-success` | Green bordered banner for stage completion |
+| `.stage-status-warning` | Red bordered banner for below-threshold score |
+
+---
+
+## Change Log — 2026-03-22 (Chapter Card Live Status)
+
+**Commit:** `966e6fe`
+
+### `src/App.tsx`
+
+#### New helper — `getRiskTypeLabel(stageId)`
+
+Module-level function. Reads `stageConfig.threatIds[0]` and maps its prefix to a human-readable label:
+
+| Threat ID prefix | Label |
+|-----------------|-------|
+| `L2-PH` | Phishing |
+| `L2-IAM` | Identity & Access |
+| `L2-DATA` | Data Handling |
+| `L2-NET` | Network |
+| Empty / no config | TBD |
+| Other | Mixed |
+
+#### Chapter view — Stage card rendering
+
+Stage cards now derive their display values from live state:
+
+- **Risk Type:** `getRiskTypeLabel(stage.id)` (was hardcoded `"TBD"`)
+- **Status:** read from `chapterState?.stageStates[stage.id]?.status`:
+
+  | `StageStatus` value | Display text | Colour |
+  |---------------------|-------------|--------|
+  | `"not_started"` | Not started | Default |
+  | `"in_progress"` | In progress | `#ffb84d` |
+  | `"completed"` | ✓ Completed | `#4ade80` |
+
+- **Completed card styling:** `stage-card-completed` class appended when `status === "completed"`.
+
+### `src/App.css`
+
+New rule appended:
+
+| Class | Effect |
+|-------|--------|
+| `.stage-card-completed` | Green border (`#4ade80`), `opacity: 0.85` |
+
+---
+
+## Change Log — 2026-03-22 (BottomBar Integration)
+
+**Commit:** `ac729a4`
+
+### `src/components/BottomBar.tsx`
+
+Interface extended with two optional props:
+
+| Prop | Type | Default | Purpose |
+|------|------|---------|---------|
+| `isCompleted` | `boolean` | `false` | Disables Next Turn when stage is complete |
+| `score` | `number` | — | Displays current score in the status bar |
+
+**Rendering changes:**
+
+- **Next Turn button:** `disabled` when `isCompleted`; label switches to `"Stage Complete"` (was always `"Next Turn"`); otherwise shows `"Next Turn (T{turn})"`.
+- **Attack Sim button:** always `disabled`; label changed to `"Attack Sim (Coming Soon)"`.
+- **Left status bar:** `budget` now formatted as `£{budget.toLocaleString()}`; `score` displayed as `"Score: {score}/100"` when the prop is present; removed hardcoded `totalBudget = 100`.
+
+### `src/App.tsx`
+
+- Imported `BottomBar` from `./components/BottomBar`.
+- Removed the temporary `Next Turn` button from inside `stage-main-board`.
+- `<BottomBar>` rendered at the bottom of the stage view with live props:
+
+  | Prop | Source |
+  |------|--------|
+  | `turn` | `activeStageState?.turn ?? 1` |
+  | `budget` | `activeStageState?.budget ?? 200_000` |
+  | `score` | `chapterState?.score` |
+  | `isCompleted` | `activeStageState?.isCompleted ?? false` |
+  | `onNextTurn` | `handleNextTurn` |
+  | `onRunAttackSimulation` | `() => {}` (no-op) |

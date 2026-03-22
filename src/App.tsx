@@ -113,6 +113,7 @@ type View =
 const App: React.FC = () => {
     const [view, setView] = useState<View>({ type: "map" });
     const [chapterState, setChapterState] = useState<ChapterState | null>(null);
+    const [completedChapters, setCompletedChapters] = useState<Set<number>>(new Set());
     const [activeStageState, setActiveStageState] = useState<StageGameState | null>(null);
     const [stageThreats, setStageThreats] = useState<Threat[]>([]);
     const [stageControls, setStageControls] = useState<Control[]>([]);
@@ -136,7 +137,15 @@ const App: React.FC = () => {
         );
     }, [view]);
 
+    const isChapterUnlocked = (chapter: ChapterLevel): boolean => {
+        if (chapter === 2) return true;
+        if (chapter === 3) return completedChapters.has(2);
+        if (chapter === 4) return completedChapters.has(3);
+        return true;
+    };
+
     const handleChapterClick = (chapterId: ChapterLevel) => {
+        if (!isChapterUnlocked(chapterId)) return;
         setView({ type: "chapter", chapter: chapterId });
     };
 
@@ -251,6 +260,19 @@ const App: React.FC = () => {
                   }
                 : prev
         );
+
+        // If this deploy completed the stage, check if all chapter stages are now done
+        if (allRequiredDeployed && view.type === "stage") {
+            const chapterStages = STAGES_BY_CHAPTER[view.chapter];
+            const allChapterDone = chapterStages.every(
+                (s) =>
+                    s.id === activeStageState.stageId ||
+                    chapterState?.stageStates[s.id]?.status === "completed"
+            );
+            if (allChapterDone) {
+                setCompletedChapters((prev) => new Set([...prev, view.chapter]));
+            }
+        }
     };
 
     const handleNextTurn = () => {
@@ -307,17 +329,33 @@ const App: React.FC = () => {
                     <div className="top-bar-subtitle">Select a Level to Begin</div>
                 </header>
                 <main className="map-container">
-                    {CHAPTERS.map((chapter) => (
-                        <button
-                            key={chapter.id}
-                            className="chapter-card"
-                            onClick={() => handleChapterClick(chapter.id)}
-                        >
-                            <div className="chapter-icon">Lv.{chapter.id}</div>
-                            <div className="chapter-text-main">{chapter.title}</div>
-                            <div className="chapter-text-sub">{chapter.subtitle}</div>
-                        </button>
-                    ))}
+                    {CHAPTERS.map((chapter) => {
+                        const unlocked = isChapterUnlocked(chapter.id);
+                        const completed = completedChapters.has(chapter.id);
+                        const cardClass = [
+                            "chapter-card",
+                            !unlocked ? "chapter-card-locked" : "",
+                        ].filter(Boolean).join(" ");
+                        return (
+                            <button
+                                key={chapter.id}
+                                className={cardClass}
+                                onClick={() => handleChapterClick(chapter.id)}
+                            >
+                                <div className="chapter-icon">Lv.{chapter.id}</div>
+                                <div className="chapter-text-main">{chapter.title}</div>
+                                <div className="chapter-text-sub">{chapter.subtitle}</div>
+                                {!unlocked && (
+                                    <div className="chapter-lock-label">
+                                        🔒 Complete Level {chapter.id - 1} to unlock
+                                    </div>
+                                )}
+                                {unlocked && completed && (
+                                    <div className="chapter-complete-label">✓ Completed</div>
+                                )}
+                            </button>
+                        );
+                    })}
                 </main>
             </div>
         );
