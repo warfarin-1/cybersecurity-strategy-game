@@ -41,6 +41,7 @@ function makeStageGameState(stageId: string): StageGameState {
         sectors: BASE_SECTORS.map((s) => ({ ...s })),
         logs: [],
         isCompleted: false,
+        deployedControlIds: [],
     };
 }
 
@@ -118,6 +119,7 @@ const App: React.FC = () => {
     const [stageThreats, setStageThreats] = useState<Threat[]>([]);
     const [stageControls, setStageControls] = useState<Control[]>([]);
     const [deployedControlIds, setDeployedControlIds] = useState<string[]>([]);
+    const [dataLoading, setDataLoading] = useState(false);
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
@@ -125,10 +127,12 @@ const App: React.FC = () => {
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
+        setDataLoading(true);
         Promise.all([loadThreats(view.chapter), loadControls()]).then(
             ([allThreats, allControls]) => {
                 setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
                 setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
+                setDataLoading(false);
             }
         );
     }, [view]);
@@ -177,7 +181,7 @@ const App: React.FC = () => {
             );
         }
 
-        setDeployedControlIds([]);
+        setDeployedControlIds(stageState.deployedControlIds);
         setView({ type: "stage", chapter, stageId });
     };
 
@@ -234,6 +238,7 @@ const App: React.FC = () => {
             ...activeStageState,
             budget: newBudget,
             sectors: updatedSectors,
+            deployedControlIds: newDeployedIds,
             isCompleted: allRequiredDeployed ? true : activeStageState.isCompleted,
             status: allRequiredDeployed ? "completed" : activeStageState.status,
             logs: [
@@ -636,6 +641,7 @@ const App: React.FC = () => {
                 budget={activeStageState?.budget ?? 200_000}
                 score={chapterState?.score}
                 isCompleted={activeStageState?.isCompleted ?? false}
+                isLoading={dataLoading}
                 onNextTurn={handleNextTurn}
                 onRunAttackSimulation={() => {}}
             />

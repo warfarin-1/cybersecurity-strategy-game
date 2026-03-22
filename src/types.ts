@@ -31,6 +31,7 @@ export interface StageGameState {
     sectors: Sector[];
     logs: string[];
     isCompleted: boolean;
+    deployedControlIds: string[];
 }
 
 // Per-chapter state tracking all its stages

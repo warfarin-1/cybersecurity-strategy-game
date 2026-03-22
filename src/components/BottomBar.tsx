@@ -7,6 +7,7 @@ interface BottomBarProps {
     onNextTurn: () => void;
     onRunAttackSimulation: () => void;
     isCompleted?: boolean;
+    isLoading?: boolean;
     score?: number;
 }
 
@@ -16,6 +17,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
     onNextTurn,
     onRunAttackSimulation,
     isCompleted = false,
+    isLoading = false,
     score,
 }) => {
     return (
@@ -35,9 +37,9 @@ export const BottomBar: React.FC<BottomBarProps> = ({
                 <button
                     className="btn-small btn-outline"
                     onClick={onNextTurn}
-                    disabled={isCompleted}
+                    disabled={isCompleted || isLoading}
                 >
-                    {isCompleted ? "Stage Complete" : `Next Turn (T${turn})`}
+                    {isLoading ? "Loading..." : isCompleted ? "Stage Complete" : `Next Turn (T${turn})`}
                 </button>
                 <button
                     className="btn-small"
