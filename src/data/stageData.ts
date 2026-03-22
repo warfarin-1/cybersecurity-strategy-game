@@ -21,8 +21,9 @@ const L2_1: StageConfig = {
     stageName: "Phishing Basics",
     chapter: 2,
     budgetAllocation: 200_000,
-    // Phishing threats: Low → Low → Medium → High
-    threatIds: ["L2-PH-01", "L2-PH-02", "L2-PH-04", "L2-PH-07"],
+    // Phishing threats: Low × 2, Medium × 2, High × 1
+    // L2-PH-05 added to give C-GOV-03 (required) a direct threat recommendation
+    threatIds: ["L2-PH-01", "L2-PH-02", "L2-PH-04", "L2-PH-05", "L2-PH-07"],
     availableControlIds: [
         // Core — Phishing / Awareness / Governance
         "C-AWARE-01",   // Staff Phishing Awareness Training
@@ -35,7 +36,7 @@ const L2_1: StageConfig = {
         "C-NET-01",     // Perimeter Firewall Ruleset
         "C-DATA-03",    // Full Disk Encryption on Laptops
     ],
-    requiredControlIds: ["C-AWARE-01", "C-AWARE-02", "C-GOV-03"],
+    requiredControlIds: ["C-AWARE-01", "C-AWARE-02", "C-GOV-03", "C-SYS-03"],
     passingScore: 60,
 };
 
@@ -58,7 +59,7 @@ const L2_2: StageConfig = {
         "C-DATA-01",    // Data Classification Scheme
         "C-NET-04",     // VPN for Remote Access
     ],
-    requiredControlIds: ["C-IAM-01", "C-IAM-02", "C-IAM-06"],
+    requiredControlIds: ["C-IAM-01", "C-IAM-02", "C-IAM-06", "C-IAM-03"],
     passingScore: 60,
 };
 
@@ -117,24 +118,28 @@ const L3_1: StageConfig = {
     stageName: "Targeted Phishing",
     chapter: 3,
     budgetAllocation: 250_000,
-    // Phishing threats: Medium×3 + High×1
-    // L3-PH-01 Medium — Spear Phishing to Finance Team       → C-AWARE-03
-    // L3-PH-04 Medium — Multiple Unreported Phishing Attempts → C-GOV-03
-    // L3-PH-05 Medium — Phishing Bypass of Simple Filters     → C-MON-01
-    // L3-PH-07 High   — Phishing Used to Access Cloud Admin   → C-IAM-04
-    threatIds: ["L3-PH-01", "L3-PH-04", "L3-PH-05", "L3-PH-07"],
+    // Phishing threats: Medium×4 + High×2
+    // L3-PH-01 Medium — Spear Phishing to Finance Team         → C-AWARE-03
+    // L3-PH-03 Medium — Link to Convincing Fake Login Page     → C-IAM-03
+    // L3-PH-04 Medium — Multiple Unreported Phishing Attempts  → C-GOV-03
+    // L3-PH-05 Medium — Phishing Bypass of Simple Filters      → C-MON-01
+    // L3-PH-06 High   — Credential Theft → Mailbox Rule Abuse  → C-MON-02
+    // L3-PH-07 High   — Phishing Used to Access Cloud Admin    → C-IAM-04
+    threatIds: ["L3-PH-01", "L3-PH-03", "L3-PH-04", "L3-PH-05", "L3-PH-06", "L3-PH-07"],
     availableControlIds: [
         // Core — Phishing / Awareness / Monitoring
         "C-AWARE-03",   // Targeted Awareness for High-Risk Roles  (counters L3-PH-01)
+        "C-IAM-03",     // MFA for Remote Access                   (counters L3-PH-03)
         "C-GOV-03",     // Incident Reporting & Escalation          (counters L3-PH-04)
         "C-MON-01",     // Central Log Collection                   (counters L3-PH-05)
+        "C-MON-02",     // Basic Alerting on Suspicious Events      (counters L3-PH-06)
         "C-IAM-04",     // MFA for Admin and High-Privilege Accounts (counters L3-PH-07)
         "C-AWARE-01",   // Staff Phishing Awareness Training
         // Distractors — plausible but address different risks
         "C-DATA-04",    // Encrypted Removable Media Only (Data category)
         "C-NET-02",     // Internal Network Segmentation  (Network category)
     ],
-    requiredControlIds: ["C-AWARE-03", "C-GOV-03", "C-IAM-04"],
+    requiredControlIds: ["C-AWARE-03", "C-GOV-03", "C-IAM-04", "C-MON-02"],
     passingScore: 65,
 };
 
@@ -143,24 +148,28 @@ const L3_2: StageConfig = {
     stageName: "Cloud Identity",
     chapter: 3,
     budgetAllocation: 250_000,
-    // IAM threats: Medium×3 + High×1
+    // IAM threats: Medium×4 + High×2
     // L3-IAM-01 Medium — Common Password Reuse Across Systems          → C-IAM-01
     // L3-IAM-02 Medium — No Regular Access Review                      → C-IAM-05
+    // L3-IAM-05 Medium — Cloud Accounts Without Conditional Access     → C-IAM-03
     // L3-IAM-07 Medium — Self-Registered Third-Party Accounts          → C-SUP-01
+    // L3-IAM-06 High   — Dormant Admin Accounts Not Removed            → C-GOV-02
     // L3-IAM-08 High   — No MFA for High-Risk Cloud Apps               → C-IAM-04
-    threatIds: ["L3-IAM-01", "L3-IAM-02", "L3-IAM-07", "L3-IAM-08"],
+    threatIds: ["L3-IAM-01", "L3-IAM-02", "L3-IAM-05", "L3-IAM-06", "L3-IAM-07", "L3-IAM-08"],
     availableControlIds: [
         // Core — Identity / Cloud
-        "C-IAM-01",     // Password Complexity Policy            (counters L3-IAM-01)
-        "C-IAM-05",     // Regular Access Rights Review          (counters L3-IAM-02)
-        "C-SUP-01",     // Approved Supplier List                (counters L3-IAM-07)
+        "C-IAM-01",     // Password Complexity Policy                (counters L3-IAM-01)
+        "C-IAM-05",     // Regular Access Rights Review              (counters L3-IAM-02)
+        "C-IAM-03",     // MFA for Remote Access                     (counters L3-IAM-05)
+        "C-GOV-02",     // Joiners-Movers-Leavers Process            (counters L3-IAM-06)
+        "C-SUP-01",     // Approved Supplier List                    (counters L3-IAM-07)
         "C-IAM-04",     // MFA for Admin and High-Privilege Accounts (counters L3-IAM-08)
-        "C-IAM-03",     // MFA for Remote Access (also relevant to cloud)
+        "C-MON-03",     // Regular Log Review (supports access monitoring)
         // Distractors — plausible but wrong focus
         "C-NET-01",     // Perimeter Firewall Ruleset (Network category)
         "C-DATA-01",    // Data Classification Scheme (Data category)
     ],
-    requiredControlIds: ["C-IAM-04", "C-IAM-05", "C-IAM-01"],
+    requiredControlIds: ["C-IAM-04", "C-IAM-05", "C-IAM-01", "C-GOV-02"],
     passingScore: 65,
 };
 
@@ -169,24 +178,27 @@ const L3_3: StageConfig = {
     stageName: "Data at Scale",
     chapter: 3,
     budgetAllocation: 250_000,
-    // Data threats: Medium×3 + High×1
-    // L3-DATA-02 Medium — Large Sensitive Dataset in Personal OneDrive → C-DATA-02
-    // L3-DATA-03 Medium — Unencrypted Backups Taken Offsite on USB     → C-DATA-04
-    // L3-DATA-06 Medium — Infrequently Tested Backups                  → C-IR-02
+    // Data threats: Medium×4 + High×2
+    // L3-DATA-02 Medium — Large Sensitive Dataset in Personal OneDrive  → C-DATA-02
+    // L3-DATA-03 Medium — Unencrypted Backups Taken Offsite on USB      → C-DATA-04
+    // L3-DATA-04 Medium — Inadequate Retention Controls                 → C-DATA-01
+    // L3-DATA-06 Medium — Infrequently Tested Backups                   → C-IR-02
     // L3-DATA-07 High   — Highly Sensitive Data on Shared Network Drive → C-DATA-06
-    threatIds: ["L3-DATA-02", "L3-DATA-03", "L3-DATA-06", "L3-DATA-07"],
+    // L3-DATA-08 High   — No Clear Process for Data Breach Handling     → C-IR-01
+    threatIds: ["L3-DATA-02", "L3-DATA-03", "L3-DATA-04", "L3-DATA-06", "L3-DATA-07", "L3-DATA-08"],
     availableControlIds: [
         // Core — Data protection / Resilience
         "C-DATA-02",    // Centralised File Storage              (counters L3-DATA-02)
         "C-DATA-04",    // Encrypted Removable Media Only        (counters L3-DATA-03)
+        "C-DATA-01",    // Data Classification Scheme            (counters L3-DATA-04)
         "C-IR-02",      // Backup Restore Testing                (counters L3-DATA-06)
         "C-DATA-06",    // Access Control on Shared Folders      (counters L3-DATA-07)
-        "C-DATA-01",    // Data Classification Scheme (foundational hygiene)
+        "C-IR-01",      // Basic Incident Response Plan          (counters L3-DATA-08)
         // Distractors — plausible but address different risks
         "C-IAM-03",     // MFA for Remote Access   (Identity category)
         "C-NET-01",     // Perimeter Firewall Ruleset (Network category)
     ],
-    requiredControlIds: ["C-DATA-06", "C-DATA-02", "C-DATA-04"],
+    requiredControlIds: ["C-DATA-06", "C-DATA-02", "C-DATA-04", "C-IR-01"],
     passingScore: 65,
 };
 
@@ -195,24 +207,28 @@ const L3_4: StageConfig = {
     stageName: "Network Exposure",
     chapter: 3,
     budgetAllocation: 250_000,
-    // Network + Endpoint threats: Medium×3 + High×1
+    // Network + Endpoint threats: Medium×4 + High×2
     // L3-NET-02 Medium — Flat Network with Exposed Management Interfaces → C-NET-02
     // L3-NET-06 Medium — No Central Logging for Firewall or VPN          → C-MON-01
     // L3-END-01 Medium — Local Admin Rights for Most Staff               → C-SYS-01
-    // L3-NET-09 High   — Remote Admin Interface Exposed from Internet     → C-SYS-06
-    threatIds: ["L3-NET-02", "L3-NET-06", "L3-END-01", "L3-NET-09"],
+    // L3-END-05 Medium — Outdated Anti-Malware Signatures                → C-SYS-03
+    // L3-NET-07 High   — Malware Outbreak on Several PCs                 → C-SYS-03
+    // L3-NET-09 High   — Remote Admin Interface Exposed from Internet    → C-SYS-06
+    threatIds: ["L3-NET-02", "L3-NET-06", "L3-END-01", "L3-END-05", "L3-NET-07", "L3-NET-09"],
     availableControlIds: [
         // Core — Network / System hardening
         "C-NET-02",     // Internal Network Segmentation         (counters L3-NET-02)
         "C-MON-01",     // Central Log Collection                (counters L3-NET-06)
         "C-SYS-01",     // Baseline Secure Configuration         (counters L3-END-01)
+        "C-SYS-03",     // Antivirus / Endpoint Protection       (counters L3-END-05, L3-NET-07)
         "C-SYS-06",     // Secure Remote Administration          (counters L3-NET-09)
         "C-NET-01",     // Perimeter Firewall Ruleset (general network hardening)
+        "C-SUP-02",     // Software from Trusted Sources Only (endpoint supply chain)
         // Distractors — plausible but wrong focus
         "C-AWARE-01",   // Staff Phishing Awareness Training (Awareness category)
         "C-DATA-08",    // Cloud Storage Configuration Review (Data category)
     ],
-    requiredControlIds: ["C-NET-02", "C-MON-01", "C-SYS-06"],
+    requiredControlIds: ["C-NET-02", "C-MON-01", "C-SYS-06", "C-SYS-03"],
     passingScore: 65,
 };
 
