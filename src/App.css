@@ -371,3 +371,14 @@
     border-color: #4ade80;
     opacity: 0.85;
 }
+
+.stage-card-locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    border-color: #444;
+}
+
+.stage-card-locked:hover {
+    transform: none;
+    border-color: #444;
+}

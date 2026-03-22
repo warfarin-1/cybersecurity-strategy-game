@@ -140,7 +140,21 @@ const App: React.FC = () => {
         setView({ type: "chapter", chapter: chapterId });
     };
 
+    const isStageUnlocked = (stageId: string): boolean => {
+        // Find which chapter this stage belongs to
+        for (const [, stages] of Object.entries(STAGES_BY_CHAPTER) as [string, StageMeta[]][]) {
+            const index = stages.findIndex((s) => s.id === stageId);
+            if (index === -1) continue;
+            if (index === 0) return true;
+            const prevStageId = stages[index - 1].id;
+            return chapterState?.stageStates[prevStageId]?.status === "completed";
+        }
+        return true; // unknown stage — don't block
+    };
+
     const handleStageClick = (chapter: ChapterLevel, stageId: string) => {
+        if (!isStageUnlocked(stageId)) return;
+
         // Initialise (or reuse) chapter state
         let current = chapterState;
         if (!current || current.chapterId !== chapter) {
@@ -373,19 +387,28 @@ const App: React.FC = () => {
                         {stages.map((stage) => {
                             const stageState = chapterState?.stageStates[stage.id];
                             const status = stageState?.status ?? "not_started";
+                            const unlocked = isStageUnlocked(stage.id);
                             const statusLabel =
-                                status === "completed"   ? "✓ Completed" :
+                                !unlocked                ? "🔒 Locked"    :
+                                status === "completed"   ? "✓ Completed"  :
                                 status === "in_progress" ? "In progress"  :
                                                            "Not started";
                             const statusColor =
-                                status === "completed"   ? "#4ade80" :
-                                status === "in_progress" ? "#ffb84d" :
+                                !unlocked                ? "#6b7280"  :
+                                status === "completed"   ? "#4ade80"  :
+                                status === "in_progress" ? "#ffb84d"  :
                                                            undefined;
+                            const cardClass = [
+                                "stage-card",
+                                !unlocked              ? "stage-card-locked"    : "",
+                                status === "completed" ? "stage-card-completed" : "",
+                            ].filter(Boolean).join(" ");
                             return (
                                 <button
                                     key={stage.id}
-                                    className={`stage-card${status === "completed" ? " stage-card-completed" : ""}`}
+                                    className={cardClass}
                                     onClick={() => handleStageClick(view.chapter, stage.id)}
+                                    style={!unlocked ? { cursor: "not-allowed" } : undefined}
                                 >
                                     <div className="stage-title">{stage.name}</div>
                                     <div className="stage-desc">{stage.description}</div>
