@@ -56,12 +56,12 @@ function makeChapterState(chapterId: number): ChapterState {
 
 function getRiskTypeLabel(stageId: string): string {
     const config = getStageConfig(stageId);
-    const firstThreat = config?.threatIds[0] ?? "";
-    if (firstThreat.startsWith("L2-PH"))   return "Phishing";
-    if (firstThreat.startsWith("L2-IAM"))  return "Identity & Access";
-    if (firstThreat.startsWith("L2-DATA")) return "Data Handling";
-    if (firstThreat.startsWith("L2-NET"))  return "Network";
-    if (firstThreat === "")                return "TBD";
+    const firstThreatId = config?.threatIds[0] ?? "";
+    if (firstThreatId.includes("-PH"))   return "Phishing";
+    if (firstThreatId.includes("-IAM"))  return "Identity & Access";
+    if (firstThreatId.includes("-DATA")) return "Data Handling";
+    if (firstThreatId.includes("-NET"))  return "Network";
+    if (firstThreatId.includes("-END"))  return "Endpoint";
     return "Mixed";
 }
 
