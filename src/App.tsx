@@ -121,11 +121,7 @@ const App: React.FC = () => {
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
-        if (view.type !== "stage") {
-            setStageThreats([]);
-            setStageControls([]);
-            return;
-        }
+        if (view.type !== "stage") return;
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
