@@ -405,3 +405,10 @@
     transform: none;
     border-color: #444;
 }
+
+.sidebar-loading {
+    font-size: 12px;
+    color: #6b7280;
+    padding: 4px 8px;
+    font-style: italic;
+}

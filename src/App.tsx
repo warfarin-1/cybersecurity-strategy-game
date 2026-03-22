@@ -126,7 +126,9 @@ const App: React.FC = () => {
     const [stageThreats, setStageThreats] = useState<Threat[]>([]);
     const [stageControls, setStageControls] = useState<Control[]>([]);
     const [deployedControlIds, setDeployedControlIds] = useState<string[]>([]);
-    const [dataLoading, setDataLoading] = useState(false);
+    // Tracks which stageId has finished loading — derived dataLoading avoids sync setState in effect
+    const [loadedForStageId, setLoadedForStageId] = useState<string | null>(null);
+    const dataLoading = view.type === "stage" && loadedForStageId !== view.stageId;
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
@@ -134,12 +136,12 @@ const App: React.FC = () => {
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
-        setDataLoading(true);
+        const stageId = view.stageId;
         Promise.all([loadThreats(view.chapter), loadControls()]).then(
             ([allThreats, allControls]) => {
                 setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
                 setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
-                setDataLoading(false);
+                setLoadedForStageId(stageId);
             }
         );
     }, [view]);
@@ -153,6 +155,9 @@ const App: React.FC = () => {
 
     const handleChapterClick = (chapterId: ChapterLevel) => {
         if (!isChapterUnlocked(chapterId)) return;
+        setChapterState((prev) =>
+            prev?.chapterId === chapterId ? prev : makeChapterState(chapterId)
+        );
         setView({ type: "chapter", chapter: chapterId });
     };
 
@@ -569,8 +574,10 @@ const App: React.FC = () => {
                 <aside className="stage-sidebar-left">
                     <div className="sidebar-section">
                         <div className="sidebar-title">Security Measures</div>
-                        {stageControls.length === 0 ? (
+                        {dataLoading ? (
                             <div className="sidebar-loading">Loading...</div>
+                        ) : stageControls.length === 0 ? (
+                            <div className="sidebar-loading">No controls available</div>
                         ) : (
                             stageControls.map((control) => {
                                 const deployed = deployedControlIds.includes(control.controlId);
@@ -631,8 +638,10 @@ const App: React.FC = () => {
                     </div>
                     <div className="sidebar-section">
                         <div className="sidebar-title">Threats</div>
-                        {stageThreats.length === 0 ? (
+                        {dataLoading ? (
                             <div className="sidebar-loading">Loading...</div>
+                        ) : stageThreats.length === 0 ? (
+                            <div className="sidebar-loading">No threats available</div>
                         ) : (
                             stageThreats.map((threat) => (
                                 <div
