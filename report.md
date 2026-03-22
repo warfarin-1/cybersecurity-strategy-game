@@ -1036,3 +1036,137 @@ onClick={() => { setGameMode("expert");   localStorage.setItem("gameMode", "expe
 ```
 
 **Effect:** Mode selection survives page refresh. Consistent with the existing persistence pattern used for `completedChapters`.
+
+---
+
+## Change Log — 2026-03-22 (Bilingual Data Loader)
+
+**Commit:** `feat: extend dataLoader interfaces and functions with bilingual support`
+
+### `src/utils/dataLoader.ts`
+
+#### Interface extensions
+
+All three exported interfaces extended with Chinese text fields:
+
+| Interface | New fields added |
+|-----------|-----------------|
+| `Control` | `nameZh: string`, `descriptionZh: string` |
+| `Threat` | `scenarioNameZh: string`, `descriptionZh: string` |
+| `Level4Scenario` | `scenarioNameZh: string`, `descriptionZh: string` |
+
+#### Loader signature changes
+
+All three loader functions now accept an optional `lang?: "en" | "zh"` parameter:
+
+| Function | English file | Chinese file |
+|----------|-------------|-------------|
+| `loadControls(lang?)` | `controls_library_level2_4.csv` | `controls_library_level2_4_bilingual.csv` |
+| `loadThreats(level, lang?)` | `level{N}_threats.csv` | `level{N}_threats_bilingual.csv` |
+| `loadLevel4Tree(lang?)` | `level4_threat_trees.json` | `level4_threat_trees_bilingual.json` |
+
+#### Bilingual CSV column layouts
+
+Bilingual files insert additional columns relative to the English layout:
+
+**Controls bilingual** (`ControlID, Name, Name_ZH, Description, Description_ZH, Cost, Category, ApplicableRiskTypes, CAF_Principle`):
+- `f[2]` = `nameZh`, `f[4]` = `descriptionZh`, indices 5–8 shift right by 2
+
+**Threats bilingual** (`ThreatID, Level, RiskType, ScenarioName, ScenarioName_ZH, Severity, Description, Description_ZH, RecommendedControlID, CAF_Principle`):
+- `f[4]` = `scenarioNameZh`, `f[7]` = `descriptionZh`, indices 8–9 shift right
+
+**L4 JSON bilingual**: adds `scenarioName_ZH` and `description_ZH` fields, mapped to `scenarioNameZh` / `descriptionZh` via `?? ""`.
+
+#### English mode behaviour
+
+When `lang` is `"en"` or omitted, the existing English-only files are loaded and all ZH fields are set to `""`.
+
+---
+
+## Change Log — 2026-03-22 (EN/ZH Language Switching)
+
+**Commit:** `feat: add EN/ZH language switching with bilingual data loading`
+
+### `src/App.tsx`
+
+#### New state
+
+```typescript
+const [language, setLanguage] = useState<"en" | "zh">(() => {
+    try {
+        const saved = localStorage.getItem("language");
+        return saved === "zh" ? "zh" : "en";
+    } catch { return "en"; }
+});
+```
+
+Persisted to `localStorage`; defaults to English.
+
+#### Translation helpers (module-level within component)
+
+```typescript
+const t = (en: string, zh: string) => language === "zh" ? zh : en;
+const controlName = (c: Control) => language === "zh" && c.nameZh ? c.nameZh : c.name;
+const threatName  = (th: Threat) => language === "zh" && th.scenarioNameZh ? th.scenarioNameZh : th.scenarioName;
+```
+
+#### `dataLoading` derived value — language-aware key
+
+```typescript
+const dataLoading = view.type === "stage" && loadedForStageId !== `${view.stageId}:${language}`;
+```
+
+`loadedForStageId` is now stored as `"${stageId}:${language}"` (e.g. `"L2-1:zh"`). Switching language while inside a stage triggers a fresh data load with the new locale.
+
+#### `useEffect` — loaders receive `language`
+
+All three loader calls updated to pass the current language:
+
+```typescript
+Promise.all([loadThreats(4, language), loadControls(language), loadLevel4Tree(language)])
+Promise.all([loadThreats(chapter, language), loadControls(language)])
+```
+
+Effect dependency array extended: `[view, language]`.
+
+#### Language selector UI
+
+A second mode-selector row added to the map view (below the mode-description paragraph):
+
+```tsx
+<div className="mode-selector">
+    <span className="mode-label">Language:</span>
+    <button className={`mode-btn ${language === "en" ? "mode-btn-active" : ""}`} ...>English</button>
+    <button className={`mode-btn ${language === "zh" ? "mode-btn-active" : ""}`} ...>中文</button>
+</div>
+```
+
+Reuses existing `.mode-selector` / `.mode-btn` / `.mode-btn-active` CSS — no new stylesheet rules needed.
+
+#### Text translations applied
+
+All visible UI text is now routed through `t()`, `controlName()`, or `threatName()`:
+
+| View | Translated elements |
+|------|-------------------|
+| Map | Title, subtitle, Game Mode label/buttons, mode description, chapter lock/complete labels |
+| Chapter | TopBar labels, Control Room panel titles and content labels, stage status tags |
+| Stage (TopBar) | "Budget Left" → 剩余预算, "Chapter Score" → 章节得分 |
+| Stage (left sidebar) | "Security Measures" title, loading/empty states, control button labels via `controlName()` |
+| Stage (center L4) | Scenario name/description ZH fields, "Attack Chain", threat node names via `threatName()`, deploy hint via `controlName()`, status badges, banners |
+| Stage (center L2/L3) | "Threat Status", threat node names via `threatName()`, severity label, hint via `controlName()`, status badges, banners |
+| Stage (right sidebar) | "Security Requirements" / "Threats" titles, requirement names via `controlName()`, threat names via `threatName()`, hint control via `controlName()`, loading states |
+
+### `src/components/BottomBar.tsx`
+
+New optional prop `language?: "en" | "zh"` (default `"en"`). A local `t()` helper translates:
+
+| Element | English | Chinese |
+|---------|---------|---------|
+| Turn label | Turn | 回合 |
+| Budget label | Budget | 预算 |
+| Score label | Score | 得分 |
+| Next Turn button | Next Turn (T{n}) | 下一回合 (T{n}) |
+| Loading state | Loading... | 加载中... |
+| Completed state | Stage Complete | 关卡完成 |
+| Attack Sim button | Attack Sim (Coming Soon) | 攻击模拟（即将推出） |
