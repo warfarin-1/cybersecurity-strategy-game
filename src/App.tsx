@@ -129,7 +129,14 @@ const App: React.FC = () => {
     // Tracks which stageId has finished loading — derived dataLoading avoids sync setState in effect
     const [loadedForStageId, setLoadedForStageId] = useState<string | null>(null);
     const [level4Scenario, setLevel4Scenario] = useState<Level4Scenario | null>(null);
-    const [gameMode, setGameMode] = useState<"beginner" | "expert">("beginner");
+    const [gameMode, setGameMode] = useState<"beginner" | "expert">(() => {
+        try {
+            const saved = localStorage.getItem("gameMode");
+            return saved === "expert" ? "expert" : "beginner";
+        } catch {
+            return "beginner";
+        }
+    });
     const dataLoading = view.type === "stage" && loadedForStageId !== view.stageId;
 
     // Load threats and controls whenever the active stage changes
@@ -392,13 +399,13 @@ const App: React.FC = () => {
                         <span className="mode-label">Game Mode:</span>
                         <button
                             className={`mode-btn ${gameMode === "beginner" ? "mode-btn-active" : ""}`}
-                            onClick={() => setGameMode("beginner")}
+                            onClick={() => { setGameMode("beginner"); localStorage.setItem("gameMode", "beginner"); }}
                         >
                             Beginner
                         </button>
                         <button
                             className={`mode-btn ${gameMode === "expert" ? "mode-btn-active" : ""}`}
-                            onClick={() => setGameMode("expert")}
+                            onClick={() => { setGameMode("expert"); localStorage.setItem("gameMode", "expert"); }}
                         >
                             Expert
                         </button>

@@ -1000,3 +1000,39 @@ ESLint rule `react-hooks/set-state-in-effect` flagged two synchronous `setLevel4
 2. **L2/L3 branch** (`chapter !== 4`): `setLevel4Scenario(null)` was moved from the synchronous effect body into the `.then()` callback, alongside the other state updates.
 
 All `setState` calls inside the effect are now exclusively inside `.then()` callbacks, satisfying the rule. Functional behaviour is unchanged.
+
+---
+
+## Change Log — 2026-03-22 (gameMode localStorage Persistence)
+
+**Commit:** `feat: persist gameMode to localStorage`
+
+### `src/App.tsx`
+
+#### `gameMode` state — lazy initialiser
+
+`useState` changed from a plain default to a lazy initialiser that reads `localStorage`:
+
+```typescript
+const [gameMode, setGameMode] = useState<"beginner" | "expert">(() => {
+    try {
+        const saved = localStorage.getItem("gameMode");
+        return saved === "expert" ? "expert" : "beginner";
+    } catch {
+        return "beginner";
+    }
+});
+```
+
+Only `"expert"` is matched explicitly; any other value (missing key, `null`, or unexpected string) falls back to `"beginner"`. Wrapped in try/catch for environments where `localStorage` access throws.
+
+#### Mode toggle buttons — write on change
+
+Both mode buttons' `onClick` handlers now write to `localStorage` immediately after calling `setGameMode`:
+
+```typescript
+onClick={() => { setGameMode("beginner"); localStorage.setItem("gameMode", "beginner"); }}
+onClick={() => { setGameMode("expert");   localStorage.setItem("gameMode", "expert");   }}
+```
+
+**Effect:** Mode selection survives page refresh. Consistent with the existing persistence pattern used for `completedChapters`.
