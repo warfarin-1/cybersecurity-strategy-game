@@ -189,18 +189,33 @@ const App: React.FC = () => {
             return { ...sector, controlsApplied: newControls, riskLevel: calculateRiskLevel(newControls) };
         });
         const newBudget = activeStageState.budget - cost;
+
+        // Completion check — compute new deployed set synchronously
+        const newDeployedIds = [...deployedControlIds, controlId];
+        const stageConfig = getStageConfig(activeStageState.stageId);
+        const allRequiredDeployed =
+            stageConfig != null &&
+            stageConfig.requiredControlIds.length > 0 &&
+            stageConfig.requiredControlIds.every((id) => newDeployedIds.includes(id));
+
+        const deployLog = `[T${activeStageState.turn}] Deployed "${control.name}". Budget: £${newBudget.toLocaleString()}.`;
         const newStageState: StageGameState = {
             ...activeStageState,
             budget: newBudget,
             sectors: updatedSectors,
+            isCompleted: allRequiredDeployed ? true : activeStageState.isCompleted,
+            status: allRequiredDeployed ? "completed" : activeStageState.status,
             logs: [
                 ...activeStageState.logs,
-                `[T${activeStageState.turn}] Deployed "${control.name}". Budget: £${newBudget.toLocaleString()}.`,
+                deployLog,
+                ...(allRequiredDeployed
+                    ? ["✓ Stage complete! All required controls deployed."]
+                    : []),
             ],
         };
 
         setActiveStageState(newStageState);
-        setDeployedControlIds((prev) => [...prev, controlId]);
+        setDeployedControlIds(newDeployedIds);
         setChapterState((prev) =>
             prev
                 ? {
@@ -215,16 +230,44 @@ const App: React.FC = () => {
     const handleNextTurn = () => {
         if (!activeStageState) return;
 
+        const config = getStageConfig(activeStageState.stageId);
+
+        let totalDeduction = 0;
+        let h = 0, m = 0, l = 0;
+
+        if (config) {
+            for (const threat of stageThreats) {
+                const mitigated = threat.recommendedControlIds.some((id) =>
+                    deployedControlIds.includes(id)
+                );
+                if (!mitigated) {
+                    if (threat.severity === "High")        { h++; totalDeduction += 10; }
+                    else if (threat.severity === "Medium") { m++; totalDeduction += 3; }
+                    else                                   { l++; totalDeduction += 1; }
+                }
+            }
+        }
+
+        const turnLog = config
+            ? `[T${activeStageState.turn + 1}] New turn. -${totalDeduction} pts (High: ${h}×10, Medium: ${m}×3, Low: ${l}×1)`
+            : `[T${activeStageState.turn + 1}] New turn started.`;
+
         const newStageState: StageGameState = {
             ...activeStageState,
             turn: activeStageState.turn + 1,
-            logs: [...activeStageState.logs, `[T${activeStageState.turn + 1}] New turn started.`],
+            logs: [...activeStageState.logs, turnLog],
         };
 
         setActiveStageState(newStageState);
-        setChapterState((prev) =>
-            prev ? { ...prev, stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState } } : prev
-        );
+        setChapterState((prev) => {
+            if (!prev) return prev;
+            const newScore = Math.max(0, prev.score - totalDeduction);
+            return {
+                ...prev,
+                score: newScore,
+                stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState },
+            };
+        });
     };
 
     const goBackToMap = () => setView({ type: "map" });
@@ -340,6 +383,7 @@ const App: React.FC = () => {
     const stageMeta = STAGES_BY_CHAPTER[view.chapter].find(
         (s) => s.id === view.stageId
     )!;
+    const stageConfig = getStageConfig(view.stageId);
 
     return (
         <div className="app-root">
@@ -396,6 +440,16 @@ const App: React.FC = () => {
                 <section className="stage-main-area">
                     <div className="stage-main-title">Secure Area Boundaries</div>
                     <div className="stage-main-board">
+                        {activeStageState?.isCompleted && (
+                            <div className="stage-status-success">
+                                ✓ Stage Complete — All required controls deployed. Proceed to the next stage.
+                            </div>
+                        )}
+                        {chapterState && stageConfig && chapterState.score < stageConfig.passingScore && (
+                            <div className="stage-status-warning">
+                                ⚠ Score below passing threshold ({stageConfig.passingScore}). Deploy more controls to recover score.
+                            </div>
+                        )}
                         <div className="stage-main-placeholder">
                             Here we will visualise where controls are deployed and how threats are mitigated.
                         </div>
@@ -408,9 +462,21 @@ const App: React.FC = () => {
                 <aside className="stage-sidebar-right">
                     <div className="sidebar-section">
                         <div className="sidebar-title">Security Requirements</div>
-                        <button className="sidebar-pill">Boundary Protection</button>
-                        <button className="sidebar-pill">Access Control</button>
-                        <button className="sidebar-pill">Logging / Monitoring</button>
+                        {stageConfig ? (
+                            stageConfig.requiredControlIds.map((reqId) => {
+                                const deployed = deployedControlIds.includes(reqId);
+                                return (
+                                    <div
+                                        key={reqId}
+                                        className={`sidebar-pill ${deployed ? "sidebar-pill-success" : "sidebar-pill-danger"}`}
+                                    >
+                                        {deployed ? "✓" : "✗"} {reqId}
+                                    </div>
+                                );
+                            })
+                        ) : (
+                            <div className="sidebar-loading">Loading...</div>
+                        )}
                     </div>
                     <div className="sidebar-section">
                         <div className="sidebar-title">Threats</div>
