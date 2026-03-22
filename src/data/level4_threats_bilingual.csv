@@ -1,0 +1,26 @@
+ThreatID,Level,RiskType,ScenarioName,ScenarioName_ZH,Severity,Description,Description_ZH,RecommendedControlID,CAF_Principle
+L4-PH-01,4,Phishing,Highly Targeted Spear Phishing of Executives,针对高管的高度定向鱼叉式钓鱼攻击,High,Attackers craft bespoke emails to executives using internal project details.,攻击者利用内部项目信息精心定制钓鱼邮件攻击高管。,C-AWARE-03,B6;A1
+L4-PH-02,4,Phishing,Compromised Mailbox Used for Internal Phishing,被攻陷邮箱用于内部钓鱼传播,High,An internal mailbox is compromised and used to phish other staff.,内部邮箱被攻陷后被用于向其他员工发送钓鱼邮件。,C-MON-02,C1;B2
+L4-PH-03,4,Phishing,Phishing Combined with Phone and SMS,电话与短信配合的多渠道社会工程攻击,Medium,"Attackers use email, phone and SMS together to socially engineer staff.","攻击者联合使用邮件、电话和短信对员工实施社会工程攻击。",C-GOV-03,D1;B6
+L4-IAM-01,4,IAM,Multiple Privileged Accounts Compromised,多个特权账号同时遭受攻陷,High,Evidence suggests several admin accounts have been taken over.,有证据显示多个管理员账号已被攻击者接管。,C-IAM-04,B2c;C1
+L4-IAM-02,4,IAM,No Separation Between Admin and User Accounts,管理员账号与普通账号未分离,Medium,Admins use the same account for everyday work and administration.,管理员使用同一账号处理日常工作和执行管理操作。,C-IAM-07,B2b
+L4-IAM-03,4,IAM,Inadequate Identity Verification for Remote Joiners,远程入职员工身份核验不充分,Medium,New remote staff join without robust identity checks before account issue.,新远程员工在账号签发前未经过充分的身份核验。,C-IAM-08,B2a
+L4-DATA-01,4,Data,Large-Scale Exposure of Personal Data,大规模个人数据泄露事件,High,A large dataset of personal data is exposed due to misconfigured access controls.,因访问控制配置错误导致大量个人数据遭到泄露。,C-DATA-06,B3a;D1
+L4-DATA-02,4,Data,Backups Corrupted or Encrypted by Malware,备份数据遭勒索软件加密损毁,High,Backups are found to be unusable after a ransomware incident.,勒索软件事件后发现备份数据已不可用。,C-DATA-05,B3c;B5a
+L4-DATA-03,4,Data,Untracked Copies of Highly Confidential Data,高度机密数据的副本失控扩散,Medium,Highly confidential data exists in multiple locations outside central control.,高度机密数据以多份副本形式散存于集中管控范围之外。,C-DATA-02,B3a
+L4-NET-01,4,Network,Critical System Directly Exposed to Internet,关键系统管理接口直接暴露于互联网,High,A critical system has a management interface that is directly reachable from the internet.,关键系统的管理接口可从互联网直接访问。,C-SYS-06,B4c;B5
+L4-NET-02,4,Network,Multiple Unsupported Core Systems,多个核心系统运行存在严重漏洞的停止支持版本,High,Several core systems run unsupported OS versions with known serious vulnerabilities.,多个核心系统运行存在已知严重漏洞的停止支持操作系统版本。,C-SYS-02,B4d
+L4-NET-03,4,Network,Malware Persistence Despite Remediation Efforts,恶意软件修复后反复出现,Medium,"Malware repeatedly reappears across the estate, suggesting poor containment.","恶意软件在修复后多次重新出现，表明清除和隔离措施不到位。",C-SYS-01,B4b;C1
+L4-NET-04,4,Network,Inadequate Monitoring of Critical Network Segments,关键网络区段监控严重不足,Medium,There is little or no monitoring of traffic in and out of critical segments.,关键网络区段的进出流量几乎没有任何监控措施。,C-MON-01,C1
+L4-END-01,4,Endpoint,Critical System Administered from Personal Devices,关键系统从个人设备执行特权操作,High,Privileged operations are performed from unmanaged personal devices.,特权操作从非受管个人设备上执行。,C-IAM-07,B2b;B4b
+L4-END-02,4,Endpoint,No Assurance Over Third-Party Remote Access,第三方远程访问缺乏管控保障,Medium,Third-party remote access is not technically or procedurally supervised.,第三方远程访问在技术和流程层面均缺乏有效监督。,C-SUP-01,A4;D1
+L4-END-03,4,Endpoint,Key Security Logs Missing or Overwritten,关键安全日志缺失或被覆盖,Medium,Important security logs are not retained long enough for investigations.,重要安全日志保留时间不足以支撑安全调查需要。,C-MON-03,C1;D1
+L4-IAM-C1-R1,4,IAM,No MFA on Critical Cloud Admin Accounts,关键云管理账号未启用多因素认证,Medium,Cloud admin accounts for identity or email services do not require MFA.,身份服务或邮件服务的云管理账号未要求多因素认证。,C-IAM-04,B2a;B2c
+L4-IAM-C1-R2,4,IAM,Password Reuse with External Services,管理员口令在外部服务中复用,Medium,Admin or staff passwords are reused across external unmanaged services.,管理员或员工口令在非受管外部服务中重复使用。,C-IAM-01,B2
+L4-IAM-C1-R3,4,IAM,Dormant Privileged Accounts,休眠特权账号长期未处理,Low,Legacy privileged accounts remain enabled but unused.,遗留特权账号长期处于启用状态但从未使用。,C-GOV-02,A1;B2c
+L4-DATA-C2-R1,4,Data,Publicly Accessible Cloud Storage with Sensitive Data,含敏感数据的云存储桶公开暴露,High,A cloud bucket containing sensitive data is exposed to the public internet.,含敏感数据的云存储桶暴露于公共互联网。,C-DATA-08,B3a;D1
+L4-DATA-C2-R2,4,Data,No Encryption for Database at Rest,重要数据库静态存储未加密,Medium,Important customer database is stored without encryption at rest.,重要客户数据库在静态存储时未进行加密保护。,C-DATA-03,B3c
+L4-DATA-C2-R3,4,Data,Over-Broad Access to Reporting System,报表系统访问权限过于宽泛,Medium,Reporting tools allow many staff to export large amounts of data.,报表工具允许大量员工导出大规模数据。,C-DATA-06,B3a
+L4-NET-C3-R1,4,Network,Critical Vulnerability on Internet-Facing Service,面向互联网服务存在关键未修复漏洞,Medium,An internet-facing system has a critical unpatched vulnerability.,面向互联网的系统存在关键的未修复安全漏洞。,C-SYS-02,B4d
+L4-NET-C3-R2,4,Network,Weak Segmentation Around Critical System,关键系统周边网络隔离薄弱,Medium,Critical services share network zones with less trusted systems.,关键服务与可信度较低的系统共处同一网络区域。,C-NET-02,B4a;B5
+L4-NET-C3-R3,4,Network,Limited Logging of Access to Critical System,关键系统访问日志记录不完整,Low,Access to critical systems is not fully logged or centrally stored.,关键系统的访问日志记录不完整且未集中存储。,C-MON-01,C1

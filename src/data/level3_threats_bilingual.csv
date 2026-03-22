@@ -1,0 +1,40 @@
+ThreatID,Level,RiskType,ScenarioName,ScenarioName_ZH,Severity,Description,Description_ZH,RecommendedControlID,CAF_Principle
+L3-PH-01,3,Phishing,Spear Phishing to Finance Team,针对财务团队的鱼叉式网络钓鱼,Medium,Attackers send realistic emails to finance staff using known supplier names.,攻击者利用已知供应商名义向财务人员发送高度仿真的钓鱼邮件。,C-AWARE-03,B6
+L3-PH-02,3,Phishing,Lookalike Domain Phishing,仿冒域名钓鱼攻击,Medium,Emails come from a domain visually similar to the organisation's official one.,邮件来自与组织官方域名外观相似的仿冒域名。,C-DATA-08,B3a;A2
+L3-PH-03,3,Phishing,Link to Convincing Fake Login Page,高仿真仿冒登录页面凭据窃取,Medium,A realistic fake portal captures staff credentials when they sign in.,高度仿真的假冒门户页面在员工登录时窃取其凭据。,C-IAM-03,B2a
+L3-PH-04,3,Phishing,Multiple Unreported Phishing Attempts,多次钓鱼攻击均未上报,Medium,Several staff receive phishing messages but none are reported to IT.,多名员工收到钓鱼信息，但均未向IT部门上报。,C-GOV-03,D1
+L3-PH-05,3,Phishing,Phishing Bypass of Simple Filters,钓鱼邮件绕过基础过滤规则,Medium,Attackers slightly alter text and images to bypass basic email filters.,攻击者对文字和图片进行微调以绕过基础邮件过滤器。,C-MON-01,C1
+L3-PH-06,3,Phishing,Credential Theft Leads to Mailbox Rule Abuse,凭据窃取导致邮箱规则被滥用,High,Compromised mailbox is used to auto-forward or hide important emails.,被攻陷的邮箱被用于自动转发或隐藏重要邮件。,C-MON-02,C1;B2
+L3-PH-07,3,Phishing,Phishing Used to Access Cloud Admin Portal,钓鱼攻击获取云管理后台访问权,High,Stolen credentials are used to sign in to a cloud admin portal without MFA.,窃取的凭据被用于在无多因素认证的情况下登录云管理门户。,C-IAM-04,B2a;B2c
+L3-IAM-01,3,IAM,Common Password Reuse Across Systems,跨系统口令复用问题,Medium,"Users reuse the same password for email, VPN and third-party services.","用户对邮箱、VPN和第三方服务使用相同口令。",C-IAM-01,B2
+L3-IAM-02,3,IAM,No Regular Access Review,访问权限从未主动审查,Medium,"Access rights are only adjusted when staff complain, never proactively reviewed.","访问权限仅在员工投诉后调整，从未主动审查。",C-IAM-05,B2d
+L3-IAM-03,3,IAM,Admin Activities from Unhardened Laptops,使用未加固终端执行管理员操作,Medium,Administrators perform changes from standard user laptops used for email and web browsing.,管理员使用日常收发邮件和浏览网页的普通终端执行系统变更。,C-IAM-07,B2b
+L3-IAM-04,3,IAM,Generic Shared Admin Accounts,关键系统使用通用共享管理员账号,Medium,Critical systems are administered using shared 'admin' accounts.,关键系统使用共享的"admin"账号进行管理。,C-SYS-05,B4b;B2c
+L3-IAM-05,3,IAM,Cloud Accounts Without Conditional Access,云账号缺乏条件访问控制,Medium,Cloud accounts used by staff have no conditional access or geo restrictions.,员工云账号未设置条件访问策略或地理位置限制。,C-IAM-03,B2a
+L3-IAM-06,3,IAM,Dormant Admin Accounts Not Removed,休眠特权账号未及时清除,High,Old admin accounts remain enabled long after staff have moved role or left.,员工转岗或离职后，旧特权账号长期处于启用状态。,C-GOV-02,A1;B2c
+L3-IAM-07,3,IAM,Self-Registered Third-Party Accounts Using Work Email,员工用工作邮箱自行注册第三方服务,Medium,Staff use work email to sign up to unsanctioned cloud services.,员工使用工作邮箱注册未经审批的云服务。,C-SUP-01,A4
+L3-IAM-08,3,IAM,No MFA for High-Risk Cloud Apps,高风险云应用未启用多因素认证,High,"Key SaaS tools (HR, finance) are accessible from the internet with only passwords.","人力资源、财务等关键SaaS工具仅凭口令即可从互联网访问。",C-IAM-04,B2a
+L3-DATA-01,3,Data,Unclear Data Ownership,关键数据集缺乏明确责任人,Medium,No named owners for critical datasets used by essential functions.,核心业务所使用的关键数据集没有指定责任人。,C-DATA-01,B3a;A1
+L3-DATA-02,3,Data,Large Sensitive Dataset in Personal OneDrive,大量敏感数据存于个人云存储,Medium,A large export of personal data is stored in an individual's cloud storage.,大量个人数据导出后存储在员工个人云盘中。,C-DATA-02,B3a
+L3-DATA-03,3,Data,Unencrypted Backups Taken to Offsite on USB,未加密备份通过U盘转移至外部,Medium,Backups are periodically carried offsite on unencrypted USB drives.,备份数据定期通过未加密U盘转移至场外存储。,C-DATA-04,B3c
+L3-DATA-04,3,Data,Inadequate Retention Controls,数据留存管理机制不完善,Medium,Historic data is kept for many years without business or legal justification.,历史数据在无业务或法律依据的情况下被保留多年。,C-DATA-01,B3a
+L3-DATA-05,3,Data,Misconfigured Cloud Bucket Exposes Non-Critical Data,云存储桶配置错误导致非敏感数据泄露,Medium,A cloud storage bucket containing internal but non-sensitive documents is publicly reachable.,存有内部非敏感文档的云存储桶可被公开访问。,C-DATA-08,B3a
+L3-DATA-06,3,Data,Infrequently Tested Backups,备份数据从未进行恢复测试,Medium,Backups are taken but restoration tests rarely occur.,备份定期执行，但恢复测试极少进行。,C-IR-02,B5a;D1
+L3-DATA-07,3,Data,Highly Sensitive Data on Shared Network Drive,高度敏感数据存于宽泛权限的共享网盘,High,A shared drive holds highly sensitive data with broad read access.,共享网盘中存有高度敏感数据，且读取权限过于宽泛。,C-DATA-06,B3a
+L3-DATA-08,3,Data,No Clear Process for Data Breach Handling,缺乏数据泄露事件处置规程,High,Organisation lacks a defined approach to respond to potential data breaches.,组织缺乏应对潜在数据泄露事件的明确处置流程。,C-IR-01,D1
+L3-NET-01,3,Network,Internet-Facing Service with Weak TLS,面向互联网的服务使用弱TLS配置,Medium,A web service supporting staff uses outdated TLS configuration.,员工使用的Web服务采用过时的TLS配置。,C-NET-01,B4a
+L3-NET-02,3,Network,Flat Network with Exposed Management Interfaces,扁平网络导致管理接口暴露,Medium,Management interfaces for infrastructure are reachable from general user subnets.,基础设施管理接口可从普通用户子网直接访问。,C-NET-02,B4a;B5
+L3-NET-03,3,Network,Patch Delays on Internet-Facing Systems,面向互联网系统的补丁更新严重滞后,Medium,External services are patched only a few times per year.,外部服务每年仅修复补丁数次。,C-SYS-02,B4d
+L3-NET-04,3,Network,Unsupported OS on Internal File Server,内部文件服务器运行停止支持的操作系统,Medium,An internal file server runs an OS version past end-of-support.,内部文件服务器运行已超过支持期限的操作系统版本。,C-SYS-02,B4d
+L3-NET-05,3,Network,Weak Wi-Fi Controls for Staff Network,员工Wi-Fi采用预共享密钥认证,Medium,Staff Wi-Fi uses a pre-shared key rather than individual credentials.,员工Wi-Fi使用预共享密钥而非个人凭据进行认证。,C-NET-03,B4a;B2
+L3-NET-06,3,Network,No Central Logging for Firewall or VPN,防火墙和VPN缺乏集中日志收集,Medium,Key network devices do not send logs to a central collector.,关键网络设备未将日志发送至集中收集器。,C-MON-01,C1
+L3-NET-07,3,Network,Malware Outbreak on Several PCs,多台终端爆发恶意软件感染,High,Multiple endpoints show activity consistent with a malware outbreak.,多台终端出现与恶意软件爆发一致的异常活动。,C-SYS-03,B4c;C1
+L3-NET-08,3,Network,Critical External Service Without DDoS Consideration,关键外部服务未考虑DDoS防护,Medium,A public-facing service has no specific capacity or DDoS resilience planning.,面向公众的服务未制定任何容量规划或DDoS弹性方案。,C-IR-01,B5a
+L3-NET-09,3,Network,Remote Admin Interface Exposed from Internet,核心系统远程管理接口暴露于互联网,High,A management interface for a core system is reachable directly from the internet.,核心系统的管理接口可直接从互联网访问。,C-SYS-06,B4c
+L3-END-01,3,Endpoint,Local Admin Rights for Most Staff,大多数员工拥有本地管理员权限,Medium,Many staff devices run with local administrator privileges.,大量员工设备以本地管理员权限运行。,C-SYS-01,B4b
+L3-END-02,3,Endpoint,Shadow IT Apps Installed by Users,员工私自安装未审批软件,Medium,Users install unapproved software on their work devices.,员工在工作设备上安装未经审批的软件。,C-SUP-02,A4;B4b
+L3-END-03,3,Endpoint,No Regular Review of Security Logs,安全日志采集后未定期审查,Medium,Security logs are collected but not routinely reviewed.,安全日志已采集但未定期进行人工审查。,C-MON-03,C1
+L3-END-04,3,Endpoint,Third-Party Support Access Not Monitored,第三方远程支持访问缺乏监控,Medium,External suppliers connect for support without detailed monitoring.,外部供应商进行远程支持时缺乏详细监控记录。,C-SUP-01,A4
+L3-END-05,3,Endpoint,Outdated Anti-Malware Signatures,终端防恶意代码特征库更新滞后,Medium,Endpoint protection signatures have not been updated for weeks.,终端防护软件的特征库已数周未更新。,C-SYS-03,B4c
+L3-END-06,3,Endpoint,Poor Documentation of Network Topology,网络拓扑文档陈旧缺失,Medium,"Network diagrams are outdated, hindering incident response.","网络拓扑图已严重过时，影响安全事件响应效率。",C-SYS-07,B4c;A2
+L3-END-07,3,Endpoint,No Tested Disaster Recovery for Key System,关键系统灾难恢复计划从未演练,High,An essential system has never had its disaster recovery plan tested.,关键系统的灾难恢复方案从未进行过实际测试。,C-IR-02,B5a;D1

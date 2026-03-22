@@ -1,0 +1,42 @@
+ControlID,Name,Name_ZH,Description,Description_ZH,Cost,Category,ApplicableRiskTypes,CAF_Principle
+C-AWARE-01,Staff Phishing Awareness Training,员工钓鱼攻击安全意识培训,"Quarterly training on recognising phishing emails and reporting suspicious messages.",每季度开展识别钓鱼邮件与上报可疑信息的安全意识培训。,2,Awareness,Phishing;IAM,B6
+C-AWARE-02,Security Induction for New Starters,新员工网络安全入职培训,Basic cyber hygiene training for all new staff members.,面向全体新员工的基础网络安全卫生培训。,2,Awareness,Phishing;Data;Endpoint,B6
+C-AWARE-03,Targeted Awareness for High-Risk Roles,高风险岗位定向安全培训,"Additional security guidance for finance, HR and system administrators.","针对财务、人力资源和系统管理员等高风险岗位的专项安全指导。",3,Awareness,Phishing;IAM;Data,B6
+C-GOV-01,Documented Security Policies,网络安全管理制度建设,"Maintain clear written security policies covering accounts, data and acceptable use.","建立并维护涵盖账号管理、数据使用和可接受行为的书面安全制度。",2,Governance,Phishing;IAM;Data;Network,A1;B1
+C-GOV-02,Joiners-Movers-Leavers Process,账号全生命周期管理,"Formal process to create, change and remove user accounts when staff join, move or leave.","建立正式流程，在员工入职、转岗或离职时及时创建、变更或注销账号。",3,Governance,IAM,A1;B2
+C-GOV-03,Incident Reporting & Escalation Procedure,安全事件报告与处置规程,Clear steps for staff to report suspected incidents and for IT to triage them.,为员工提供明确的安全事件上报步骤，并规范IT部门的分级响应流程。,3,Governance,Phishing;IAM;Data;Network,D1
+C-IAM-01,Password Complexity Policy,口令复杂度策略,Enforce minimum password length and complexity for all accounts.,对所有账号强制执行最低口令长度与复杂度要求。,2,Identity,IAM,B2
+C-IAM-02,Account Lockout Policy,账号登录失败锁定策略,Lock accounts after several failed login attempts to reduce brute force attacks.,账号多次登录失败后自动锁定，防范暴力破解攻击。,2,Identity,IAM,B2a
+C-IAM-03,Multi-Factor Authentication for Remote Access,远程访问双因素认证,Require MFA for all VPN and remote access connections.,对所有VPN及远程访问连接强制启用多因素认证。,4,Identity,IAM;Network;Cloud,B2a
+C-IAM-04,MFA for Admin and High-Privilege Accounts,特权账号多因素鉴别,Apply MFA to all administrator and privileged accounts.,对所有管理员及特权账号启用多因素身份鉴别。,5,Identity,IAM;Endpoint,B2c
+C-IAM-05,Regular Access Rights Review,访问权限定期审查,Review user and admin access rights at least quarterly.,至少每季度对用户及管理员的访问权限进行一次审查。,3,Identity,IAM;Data,B2d
+C-IAM-06,Individual Named Accounts Only,禁止共享账号实名制管理,Eliminate shared accounts in favour of uniquely assigned user IDs.,废除共享账号，为每位用户分配唯一标识账号。,3,Identity,IAM,B2d
+C-IAM-07,Privileged Access Workstations,特权操作专用终端,Use separate hardened devices for admin tasks.,使用独立加固终端执行管理员操作任务。,5,Identity,IAM;Endpoint,B2b
+C-IAM-08,Strong Identity Verification for New Accounts,新账号强身份核验,Verify staff identity before issuing accounts with access to critical systems.,在向员工签发可访问关键系统的账号前进行严格身份核验。,3,Identity,IAM,B2a
+C-DATA-01,Data Classification Scheme,数据分类分级管理,"Label data as Public, Internal, Confidential or Highly Confidential.","按公开、内部、机密、高度机密对数据进行分类标记。",2,Data,Data,B3a
+C-DATA-02,Centralised File Storage,数据集中存储管理,Store important data on managed central file services instead of local devices.,将重要数据存储于受管理的集中文件服务中，避免存放在本地设备。,3,Data,Data;Endpoint;Cloud,B3a
+C-DATA-03,Full Disk Encryption on Laptops,终端全盘加密,Encrypt all managed laptops using full-disk encryption.,对所有受管笔记本电脑启用全盘加密。,4,Data,Data;Endpoint,B3c
+C-DATA-04,Encrypted Removable Media Only,移动存储介质加密管控,Allow only approved encrypted USB drives on endpoints.,终端仅允许使用经审批的加密U盘。,3,Data,Data;Endpoint,B3d
+C-DATA-05,Secure Backup with Offline Copies,数据备份与离线副本保护,Maintain regular backups with at least one offline or immutable copy.,定期备份数据并至少保留一份离线或不可篡改的副本。,4,Data,Data,B3c;B5a
+C-DATA-06,Access Control on Shared Folders,共享目录最小权限访问控制,Apply least-privilege access permissions on network shares.,对网络共享目录实施最小权限访问控制策略。,3,Data,Data;IAM,B3a
+C-DATA-07,Secure Disposal of Media,存储介质安全销毁,Sanitise or destroy storage devices before disposal.,在废弃存储设备前进行安全清除或物理销毁。,3,Data,Data;Endpoint,B3e
+C-DATA-08,Cloud Storage Configuration Review,云存储访问配置定期审查,Regularly review access and sharing settings for cloud storage services.,定期审查云存储服务的访问权限与共享配置。,3,Data,Data;Cloud,B3a;A2
+C-SYS-01,Baseline Secure Configuration,安全基线配置管理,Apply a hardened baseline configuration to servers and endpoints.,对服务器和终端实施加固的安全基线配置。,4,System,Endpoint;Network,B4b
+C-SYS-02,Patch Management Process,漏洞与补丁管理,"Apply security patches on a regular schedule, prioritising critical updates.","按计划定期应用安全补丁，优先修复高危漏洞。",4,System,Endpoint;Network;Cloud,B4d
+C-SYS-03,Antivirus / Endpoint Protection,终端防恶意代码防护,Run centrally managed anti-malware on endpoints and servers.,在终端和服务器上部署集中管理的防恶意代码软件。,3,System,Endpoint,B4c
+C-SYS-04,Application Allowlisting for Critical Systems,关键系统应用程序白名单,Restrict critical servers to run only approved applications.,限制关键服务器仅运行经审批的应用程序。,5,System,Endpoint;Network,B4b
+C-SYS-05,Remove Default and Shared System Accounts,默认账号与共享账号清理,Disable or change default accounts and remove shared admin accounts.,禁用或修改默认账号，清除共享管理员账号。,3,System,IAM;Endpoint,B4b
+C-SYS-06,Secure Remote Administration,安全远程运维管控,Use secure protocols and jump hosts for remote admin access.,使用安全协议和跳板机进行远程管理员访问。,4,System,Endpoint;Network,B4c
+C-SYS-07,Configuration Change Control,配置变更审批与记录,Formal approval and logging for security-relevant configuration changes.,对安全相关的配置变更实施正式审批并留存记录。,3,System,Endpoint;Network;Cloud,B4b;A2
+C-NET-01,Perimeter Firewall Ruleset,网络边界访问控制策略,Block unnecessary inbound and outbound traffic at the network perimeter.,在网络边界封堵不必要的入站和出站流量。,3,Network,Network,B4a
+C-NET-02,Internal Network Segmentation,内部网络区域隔离,Separate user networks from server and management networks.,将用户网络与服务器及管理网络进行隔离分区。,4,Network,Network;Endpoint,B4a;B5
+C-NET-03,Secure Wi-Fi Configuration,无线网络安全配置,"Use strong encryption and separate guest Wi-Fi from internal networks.","使用强加密协议，并将访客Wi-Fi与内部网络隔离。",3,Network,Network;Endpoint,B4a
+C-NET-04,VPN for Remote Access,远程接入VPN管控,Require secure VPN for staff connecting from the internet.,要求员工通过安全VPN进行互联网远程接入。,3,Network,Network;IAM,B4a;B2
+C-NET-05,Network Device Hardening,网络设备安全加固,"Harden routers and switches, disabling unused services and ports.","对路由器和交换机进行安全加固，关闭未使用的服务和端口。",4,Network,Network,B4b
+C-MON-01,Central Log Collection,安全日志集中采集,Forward security logs from key systems to a central log server.,将关键系统的安全日志汇聚至集中日志服务器。,3,Monitoring,Endpoint;Network;IAM;Data,C1
+C-MON-02,Basic Alerting on Suspicious Events,异常行为基础告警,Generate alerts for repeated failed logins and unusual admin activity.,对重复登录失败和异常管理员操作生成告警。,3,Monitoring,IAM;Endpoint;Network,C1
+C-MON-03,Regular Log Review,安全日志定期审查,Review key security logs on at least a weekly basis.,至少每周对关键安全日志进行一次人工审查。,2,Monitoring,IAM;Endpoint;Network;Data,C1
+C-SUP-01,Approved Supplier List,供应商安全准入管理,Use an approved list of IT suppliers with basic security checks.,建立经过基础安全审查的IT供应商准入名单。,2,SupplyChain,SupplyChain;Cloud,A4
+C-SUP-02,Software from Trusted Sources Only,软件可信来源管控,Install software only from trusted repositories or vendors.,仅允许从可信仓库或供应商安装软件。,3,SupplyChain,Endpoint;System,A4;B4b
+C-IR-01,Basic Incident Response Plan,网络安全事件应急预案,Documented steps to contain and recover from common cyber incidents.,制定并记录应对常见网络安全事件的处置与恢复步骤。,3,Resilience,Phishing;Endpoint;Data;Network,D1
+C-IR-02,Backup Restore Testing,数据备份恢复演练,Regularly test restoration of backups for critical systems.,定期对关键系统的数据备份进行恢复测试演练。,3,Resilience,Data;Endpoint;Network,B5a;D1
