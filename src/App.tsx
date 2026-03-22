@@ -5,6 +5,7 @@ import type { ChapterState, StageGameState, Sector, RiskLevel } from "./types";
 import type { Control, Threat } from "./utils/dataLoader";
 import { loadControls, loadThreats } from "./utils/dataLoader";
 import { getStageConfig } from "./data/stageData";
+import { BottomBar } from "./components/BottomBar";
 
 // --- Helpers (mirrored from Layout.tsx) ---
 
@@ -481,9 +482,6 @@ const App: React.FC = () => {
                             Here we will visualise where controls are deployed and how threats are mitigated.
                         </div>
                     </div>
-                    <button className="sidebar-pill" onClick={handleNextTurn}>
-                        Next Turn (T{activeStageState ? activeStageState.turn : 1})
-                    </button>
                 </section>
 
                 <aside className="stage-sidebar-right">
@@ -523,6 +521,14 @@ const App: React.FC = () => {
                     </div>
                 </aside>
             </main>
+            <BottomBar
+                turn={activeStageState?.turn ?? 1}
+                budget={activeStageState?.budget ?? 200_000}
+                score={chapterState?.score}
+                isCompleted={activeStageState?.isCompleted ?? false}
+                onNextTurn={handleNextTurn}
+                onRunAttackSimulation={() => {}}
+            />
         </div>
     );
 };
