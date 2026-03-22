@@ -104,6 +104,7 @@ const App: React.FC = () => {
     const [activeStageState, setActiveStageState] = useState<StageGameState | null>(null);
     const [stageThreats, setStageThreats] = useState<Threat[]>([]);
     const [stageControls, setStageControls] = useState<Control[]>([]);
+    const [deployedControlIds, setDeployedControlIds] = useState<string[]>([]);
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
@@ -145,6 +146,7 @@ const App: React.FC = () => {
             );
         }
 
+        setDeployedControlIds([]);
         setView({ type: "stage", chapter, stageId });
     };
 
@@ -153,6 +155,18 @@ const App: React.FC = () => {
 
         const control = stageControls.find((c) => c.controlId === controlId);
         if (!control) return;
+
+        if (deployedControlIds.includes(controlId)) {
+            const newStageState: StageGameState = {
+                ...activeStageState,
+                logs: [...activeStageState.logs, `[T${activeStageState.turn}] Already deployed: ${control.name}.`],
+            };
+            setActiveStageState(newStageState);
+            setChapterState((prev) =>
+                prev ? { ...prev, stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState } } : prev
+            );
+            return;
+        }
 
         const cost = control.cost * 10_000;
 
@@ -186,6 +200,7 @@ const App: React.FC = () => {
         };
 
         setActiveStageState(newStageState);
+        setDeployedControlIds((prev) => [...prev, controlId]);
         setChapterState((prev) =>
             prev
                 ? {
@@ -360,16 +375,20 @@ const App: React.FC = () => {
                         {stageControls.length === 0 ? (
                             <div className="sidebar-loading">Loading...</div>
                         ) : (
-                            stageControls.map((control) => (
-                                <button
-                                    key={control.controlId}
-                                    className="sidebar-pill"
-                                    onClick={() => handleDeployControl(control.controlId)}
-                                >
-                                    {control.name}
-                                    <span>£{(control.cost * 10_000).toLocaleString()}</span>
-                                </button>
-                            ))
+                            stageControls.map((control) => {
+                                const deployed = deployedControlIds.includes(control.controlId);
+                                return (
+                                    <button
+                                        key={control.controlId}
+                                        className="sidebar-pill"
+                                        onClick={() => handleDeployControl(control.controlId)}
+                                        disabled={deployed}
+                                    >
+                                        {deployed ? `${control.name} ✓` : control.name}
+                                        <span>£{(control.cost * 10_000).toLocaleString()}</span>
+                                    </button>
+                                );
+                            })
                         )}
                     </div>
                 </aside>
