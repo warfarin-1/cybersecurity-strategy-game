@@ -2,8 +2,8 @@
 import React, { useState, useEffect } from "react";
 import "./App.css";
 import type { ChapterState, StageGameState, Sector, RiskLevel } from "./types";
-import type { Control, Threat } from "./utils/dataLoader";
-import { loadControls, loadThreats } from "./utils/dataLoader";
+import type { Control, Threat, Level4Scenario } from "./utils/dataLoader";
+import { loadControls, loadThreats, loadLevel4Tree } from "./utils/dataLoader";
 import { getStageConfig } from "./data/stageData";
 import { BottomBar } from "./components/BottomBar";
 
@@ -128,22 +128,46 @@ const App: React.FC = () => {
     const [deployedControlIds, setDeployedControlIds] = useState<string[]>([]);
     // Tracks which stageId has finished loading — derived dataLoading avoids sync setState in effect
     const [loadedForStageId, setLoadedForStageId] = useState<string | null>(null);
+    const [level4Scenario, setLevel4Scenario] = useState<Level4Scenario | null>(null);
     const dataLoading = view.type === "stage" && loadedForStageId !== view.stageId;
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
-        if (view.type !== "stage") return;
+        if (view.type !== "stage") {
+            setLevel4Scenario(null);
+            return;
+        }
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
         const stageId = view.stageId;
-        Promise.all([loadThreats(view.chapter), loadControls()]).then(
-            ([allThreats, allControls]) => {
-                setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
-                setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
-                setLoadedForStageId(stageId);
-            }
-        );
+        const chapter = view.chapter;
+
+        if (chapter === 4) {
+            const SCENARIO_MAP: Record<string, string> = {
+                "L4-1": "L4-B2-SCENARIO-01",
+                "L4-2": "L4-B3-SCENARIO-01",
+                "L4-3": "L4-B4-SCENARIO-01",
+            };
+            Promise.all([loadThreats(4), loadControls(), loadLevel4Tree()]).then(
+                ([allThreats, allControls, scenarios]) => {
+                    setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
+                    setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
+                    const scenarioId = SCENARIO_MAP[stageId];
+                    setLevel4Scenario(scenarios.find((s) => s.scenarioId === scenarioId) ?? null);
+                    setLoadedForStageId(stageId);
+                }
+            );
+        } else {
+            setLevel4Scenario(null);
+            Promise.all([loadThreats(chapter), loadControls()]).then(
+                ([allThreats, allControls]) => {
+                    setStageThreats(allThreats.filter((t) => config.threatIds.includes(t.threatId)));
+                    setStageControls(allControls.filter((c) => config.availableControlIds.includes(c.controlId)));
+                    setLoadedForStageId(stageId);
+                }
+            );
+        }
     }, [view]);
 
     const isChapterUnlocked = (chapter: ChapterLevel): boolean => {
@@ -600,19 +624,63 @@ const App: React.FC = () => {
                 <section className="stage-main-area">
                     <div className="stage-main-title">Secure Area Boundaries</div>
                     <div className="stage-main-board">
-                        {activeStageState?.isCompleted && (
-                            <div className="stage-status-success">
-                                ✓ Stage Complete — All required controls deployed. Proceed to the next stage.
+                        {view.chapter === 4 && level4Scenario !== null ? (
+                            <div className="threat-tree-panel">
+                                <div className="threat-scenario-header">
+                                    <div className="threat-scenario-title">
+                                        Scenario: {level4Scenario.scenarioName}
+                                    </div>
+                                    <div className="threat-scenario-desc">{level4Scenario.description}</div>
+                                </div>
+                                <div className="threat-chain-label">Attack Chain</div>
+                                {level4Scenario.subThreatIds.map((subId) => {
+                                    const threat = stageThreats.find((t) => t.threatId === subId);
+                                    const mitigated = threat
+                                        ? threat.recommendedControlIds.some((id) => deployedControlIds.includes(id))
+                                        : false;
+                                    return (
+                                        <div
+                                            key={subId}
+                                            className={`threat-node ${mitigated ? "threat-node-mitigated" : "threat-node-unresolved"}`}
+                                        >
+                                            <div>
+                                                <div className="threat-node-id">{subId}</div>
+                                                <div className="threat-node-name">{threat?.scenarioName ?? subId}</div>
+                                            </div>
+                                            <div className={mitigated ? "threat-node-status-resolved" : "threat-node-status-unresolved"}>
+                                                {mitigated ? "✓ Mitigated" : "⚠ Unresolved"}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                                {chapterState && stageConfig && chapterState.score < stageConfig.passingScore && (
+                                    <div className="stage-status-warning">
+                                        ⚠ Score below passing threshold ({stageConfig.passingScore}). Deploy more controls to recover score.
+                                    </div>
+                                )}
+                                {activeStageState?.isCompleted && (
+                                    <div className="stage-status-success">
+                                        ✓ Stage Complete — All required controls deployed. Proceed to the next stage.
+                                    </div>
+                                )}
                             </div>
+                        ) : (
+                            <>
+                                {activeStageState?.isCompleted && (
+                                    <div className="stage-status-success">
+                                        ✓ Stage Complete — All required controls deployed. Proceed to the next stage.
+                                    </div>
+                                )}
+                                {chapterState && stageConfig && chapterState.score < stageConfig.passingScore && (
+                                    <div className="stage-status-warning">
+                                        ⚠ Score below passing threshold ({stageConfig.passingScore}). Deploy more controls to recover score.
+                                    </div>
+                                )}
+                                <div className="stage-main-placeholder">
+                                    Here we will visualise where controls are deployed and how threats are mitigated.
+                                </div>
+                            </>
                         )}
-                        {chapterState && stageConfig && chapterState.score < stageConfig.passingScore && (
-                            <div className="stage-status-warning">
-                                ⚠ Score below passing threshold ({stageConfig.passingScore}). Deploy more controls to recover score.
-                            </div>
-                        )}
-                        <div className="stage-main-placeholder">
-                            Here we will visualise where controls are deployed and how threats are mitigated.
-                        </div>
                     </div>
                 </section>
 

@@ -256,29 +256,67 @@ interface BottomBarProps {
 
 ### ✅ 已完成
 
-- [x] React 19 + TypeScript + Vite 项目骨架
-- [x] 三层导航系统（地图 → 章节 → 阶段）
-- [x] 全部 11 个关卡/阶段的 metadata 定义
-- [x] 阶段游戏界面三列布局
-- [x] 基础 GameState 类型系统
-- [x] 原型游戏逻辑（部署控制、回合推进、风险计算）
-- [x] 深色主题 UI 框架（App.css，343 行）
-- [x] 事件日志系统（StatusPanel）
+**基础架构**
+- [x] React 19 + TypeScript + Vite 项目骨架（strict 模式，零构建错误）
+- [x] 三层导航系统（地图 → 章节 → 阶段），`View` 联合类型驱动
+- [x] 全部 11 个关卡/阶段的 metadata 定义（`STAGES_BY_CHAPTER`）
+- [x] 深色主题 UI 框架（`App.css`）
+- [x] Git 版本控制，所有功能均有 commit 记录
 
-### ❌ 未实现（核心功能缺失）
+**数据层**
+- [x] `src/utils/dataLoader.ts`：异步 CSV/JSON 加载器（`loadControls`、`loadThreats`、`loadLevel4Tree`）
+- [x] `public/data/`：41 个控制、L2/L3/L4 威胁 CSV、L4 威胁树 JSON 全部就位
+- [x] `src/data/stageData.ts`：`StageConfig` 注册表，`getStageConfig(stageId)` 查询接口
 
-- [ ] **Stage 视图与 App 导航整合**：Layout.tsx 原型与 App.tsx 导航未连接
-- [ ] **每个阶段的具体游戏内容**：控制列表、威胁列表均为硬编码占位符
-- [ ] **攻击模拟引擎**：`handleRunAttackSimulation` 无实际逻辑
-- [ ] **威胁数据库**：无任何威胁类型、攻击路径数据
-- [ ] **控制数据库**：控制类型、成本、适用范围均未定义
-- [ ] **风险计算引擎**：当前仅基于"控制数量"，无真实威胁建模
-- [ ] **Chapter 视图数据填充**：Control Room 4 个面板均为占位符
-- [ ] **阶段状态追踪**：每个阶段的 "Status"（未开始/进行中/完成）未实现
-- [ ] **得分系统**：Score 当前为硬编码 100/80
-- [ ] **预算系统**：Chapter 级别预算（£1,000,000）未与 Stage 级别关联
-- [ ] **主可视化区域**：`stage-main-board` 中的威胁/控制可视化未实现
-- [ ] **数据持久化**：无保存/加载机制
+**L2 全部 Stage（完全可玩）**
+- [x] L2-1 Phishing Basics：5 个威胁、8 个控制、4 个必需控制、passing score 60
+- [x] L2-2 Identity & Access：4 个威胁、8 个控制、4 个必需控制、passing score 60
+- [x] L2-3 Data Handling：4 个威胁、8 个控制、3 个必需控制、passing score 60
+- [x] L2-4 Network Hygiene：4 个威胁、8 个控制、3 个必需控制、passing score 60
+- [x] 所有 High 威胁均在 `requiredControlIds` 中有对应控制（逻辑验证通过）
+
+**L3 全部 Stage（完全可玩）**
+- [x] L3-1 Targeted Phishing：6 个威胁（Medium×4 + High×2）、9 个控制、4 个必需控制、passing score 65
+- [x] L3-2 Cloud Identity：6 个威胁、9 个控制、4 个必需控制、passing score 65
+- [x] L3-3 Data at Scale：6 个威胁、8 个控制、4 个必需控制、passing score 65
+- [x] L3-4 Network Exposure：6 个威胁、9 个控制、4 个必需控制、passing score 65
+
+**L4 Stage（配置已填充，威胁树逻辑待实现）**
+- [x] L4-1 High-Risk Identity Chain：`stageData` 占位符保留，数据已在 CSV/JSON 中就位
+- [x] L4-2 Large Data Exposure：同上
+- [x] L4-3 Critical Service Compromise：同上
+
+**游戏机制**
+- [x] 等保风格扣分逻辑：High×10 / Medium×3 / Low×1（每回合对未缓解威胁扣分）
+- [x] 通关检测：所有 `requiredControlIds` 部署后 stage 标记为 `"completed"`
+- [x] Stage 顺序解锁：`isStageUnlocked` 检查前序 Stage 完成状态
+- [x] Chapter 顺序解锁：`completedChapters` Set，完成全章所有 Stage 后解锁下一级
+- [x] `completedChapters` 持久化到 `localStorage`（刷新后 Chapter 解锁状态保留）
+- [x] `deployedControlIds` 持久化到 `StageGameState`（重新进入 Stage 恢复已部署状态）
+- [x] `dataLoading` 保护：数据加载期间禁用 Next Turn 按钮，防止时序问题
+- [x] Chapter 切换时立即重置 `chapterState`，Control Room 数据正确初始化
+
+**UI 组件**
+- [x] Stage 三列布局（左：Security Measures / 中：stage-main-board / 右：Requirements + Threats）
+- [x] Security Measures 侧栏：动态渲染控制按钮，已部署控制显示 ✓ 并 disabled
+- [x] Security Requirements 侧栏：已部署显示绿色 ✓，未部署显示红色 ✗，显示控制全名
+- [x] Threats 侧栏：动态渲染威胁列表，High 威胁红色边框标注
+- [x] Control Room 4 个面板全部接入真实数据（已知控制、威胁类型、预算概览、分数与状态）
+- [x] Stage 卡片：Risk Type 标签（`getRiskTypeLabel`，支持 L2/L3/L4）、Status 标签（含锁定状态）
+- [x] `stage-status-success` / `stage-status-warning` 横幅（通关 / 分数低于 passing score）
+- [x] BottomBar：Turn / Budget / Score / 通关状态实时显示，`isLoading` 禁用保护
+
+### ❌ 未实现（待完成）
+
+- [ ] **L4 威胁树可视化**：`stage-main-board` 中央区域空白，L4 的威胁树节点尚未渲染
+- [ ] **L4 威胁树通关逻辑**：子节点（`subThreatIds`）缓解 → Scenario 阻断 的链式判断未实现
+- [ ] **beginner / expert 模式**：难度区分（如 beginner 提示哪些控制有效）未实现
+- [ ] **用户测试**：尚未进行正式用户测试
+
+### ⚠️ 已知限制（设计决策）
+
+- `chapterState` 不持久化到 `localStorage`：刷新后章节内 Stage 进度丢失，需重玩；Chapter 解锁状态（`completedChapters`）不受影响
+- `Layout.tsx`、`TopBar.tsx`、`SidebarControls.tsx`、`CommandCenter.tsx`、`StatusPanel.tsx` 为早期原型遗留文件，未被 `main.tsx` 引用，保留作开发历史参考
 
 ---
 
@@ -300,27 +338,38 @@ interface BottomBarProps {
 
 > 按优先级排序：
 
-### 阶段 A：整合与连通（最紧急）
-1. 确认 `main.tsx` 渲染入口，确保 App.tsx 为主入口
-2. 将 Layout.tsx 的游戏逻辑整合进 App.tsx 的 Stage 视图
-3. 将 GameState 升级为支持每个 Stage 独立实例
+### 阶段 A：L4 威胁树实现（最紧急）
 
-### 阶段 B：数据层建设
-4. 创建 `src/data/stageData.ts`，为每个 Stage 定义：
-   - 可用控制列表（名称、成本、效果、适用扇区）
-   - 威胁列表（类型、风险等级、攻击路径）
-   - 初始扇区配置
-5. 将 Chapter 视图的 Control Room 面板与真实数据连接
+L4 数据已完全就位（`level4_threats.csv` 26 行、`level4_threat_trees.json` 3 个 Scenario），需要：
 
-### 阶段 C：游戏机制实现
-6. 实现真实攻击模拟逻辑（基于威胁树或概率模型）
-7. 实现得分系统（基于剩余风险 + 预算使用效率）
-8. 实现阶段完成状态追踪
+1. **填充 L4 stageData**：为 L4-1/2/3 的 `threatIds`、`availableControlIds`、`requiredControlIds` 写入真实值，参考 `level4_threat_trees.json` 中各 Scenario 的 `subThreatIds` 和 `requiredControls`
 
-### 阶段 D：体验完善
-9. 主可视化区域（stage-main-board）：网络拓扑图或资产-威胁矩阵
-10. 教程/词汇表功能（SidebarControls 中已有入口）
-11. 样式统一（迁移至深色主题）
+   | Stage | Scenario | subThreatIds | requiredControls |
+   |-------|----------|-------------|-----------------|
+   | L4-1 | L4-B2-SCENARIO-01 (IAM) | L4-IAM-C1-R1/R2/R3 | C-IAM-04, C-IAM-01, C-GOV-02 |
+   | L4-2 | L4-B3-SCENARIO-01 (Data) | L4-DATA-C2-R1/R2/R3 | C-DATA-08, C-DATA-03, C-DATA-06 |
+   | L4-3 | L4-B4-SCENARIO-01 (Network) | L4-NET-C3-R1/R2/R3 | C-SYS-02, C-NET-02, C-MON-01 |
+
+2. **威胁树可视化**：在 `stage-main-board` 中渲染威胁树结构（Scenario 节点 → subThreat 子节点），显示每个子节点的缓解状态（已/未部署对应控制）
+
+3. **威胁树通关逻辑**：当所有 `subThreatIds` 对应控制均已部署时，Scenario 标记为"阻断"；L4 stage 的通关条件为 Scenario 被阻断（而非简单的 `requiredControlIds` 全覆盖）
+
+### 阶段 B：难度模式
+
+4. **beginner 模式**：在 Security Requirements 侧栏或 Threats 侧栏加入提示，标注哪些控制能缓解哪个威胁，降低认知门槛
+5. **expert 模式**：隐藏推荐关系，玩家需自行判断控制与威胁的对应关系
+
+### 阶段 C：用户测试准备
+
+6. 确保 L2 和 L3 全流程无卡死（budget 充足、required controls 可全部部署）
+7. 验证扣分力度：连续 5 回合不部署任何控制，分数从 100 降至多少（建议测试 L2-1 和 L3-1）
+8. 进行正式用户测试，收集反馈
+
+### 阶段 D：体验完善（低优先级）
+
+9. **`stage-main-board` 可视化**（L2/L3）：资产-威胁矩阵或简易网络拓扑图，替换当前占位文字
+10. **chapterState 持久化**（可选）：将 `stageStates` 序列化写入 `localStorage`，使 Stage 内进度跨刷新保留
+11. 清理遗留原型文件（`Layout.tsx` 等）
 
 ---
 

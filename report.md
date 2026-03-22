@@ -419,3 +419,288 @@ Interface extended with two optional props:
   | `isCompleted` | `activeStageState?.isCompleted ?? false` |
   | `onNextTurn` | `handleNextTurn` |
   | `onRunAttackSimulation` | `() => {}` (no-op) |
+
+---
+
+## Change Log — 2026-03-22 (Security Requirements Full Names)
+
+**Commit:** `73dfb45`
+
+### `src/App.tsx`
+
+Security Requirements sidebar previously displayed raw control IDs (e.g. `C-AWARE-01`).
+
+**Fix:** For each `reqId` in `stageConfig.requiredControlIds`, looks up the matching entry in `stageControls` and renders `control?.name ?? reqId` — falling back to the raw ID only if the control hasn't loaded yet.
+
+---
+
+## Change Log — 2026-03-22 (Stage Unlock Mechanism)
+
+**Commit:** `8d8dadb`
+
+### `src/App.tsx`
+
+#### New helper — `isStageUnlocked(stageId)`
+
+Module-level function. Iterates `STAGES_BY_CHAPTER` to find the stage's index within its chapter:
+
+- Index 0 → always unlocked.
+- Index > 0 → unlocked only if `chapterState?.stageStates[prevStageId]?.status === "completed"`.
+- Unknown stageId → returns `true` (fail-open).
+
+#### Chapter view — Stage card rendering
+
+Each card now calls `isStageUnlocked(stage.id)`:
+
+- Locked cards use `cursor: "not-allowed"` inline style and `stage-card-locked` CSS class.
+- `statusLabel` gains a `"🔒 Locked"` branch; `statusColor` is set to `#6b7280` (grey) when locked.
+
+### `src/App.css`
+
+New rules appended:
+
+| Class | Effect |
+|-------|--------|
+| `.stage-card-locked` | `opacity: 0.45`, `cursor: not-allowed`, border `#444` |
+| `.stage-card-locked:hover` | Suppresses hover transform and border-color change |
+
+---
+
+## Change Log — 2026-03-22 (Control Room Live Data)
+
+**Commit:** `6c37936`
+
+### `src/App.tsx`
+
+#### Chapter view — Control Room panels
+
+All four panels now derive their content from live state:
+
+**Panel 1 — Known Security Measures**
+
+Collects `requiredControlIds` from every completed stage in the chapter (via `getStageConfig`), deduplicates, and renders each as `✓ {id}`. Shows "No controls deployed yet" when empty.
+
+**Panel 2 — Known Threat Types**
+
+Maps each stage in the chapter through `getRiskTypeLabel(stageId)`, deduplicates via `Set`, and renders each label as `⚠ {label}`. Shows "No threats encountered yet" when empty.
+
+**Panel 3 — Budget Overview**
+
+Derives `totalBudget`, `remainingBudget`, and `spentBudget = total − remaining` from `chapterState` (defaults to £1,000,000 / £0 spent when null). Renders three rows.
+
+**Panel 4 — Score & Deductions**
+
+Shows `currentScore / 100`, `Passing Score: {chapterPassingScore}` (max `passingScore` across all stage configs in the chapter), and a status line: `"✓ On track"` or `"⚠ At risk"`.
+
+---
+
+## Change Log — 2026-03-22 (Chapter Unlock System)
+
+**Commit:** `40b6bf6`
+
+### `src/App.tsx`
+
+#### New state
+
+```typescript
+const [completedChapters, setCompletedChapters] = useState<Set<number>>(new Set());
+```
+
+Tracks which chapter IDs (2, 3, 4) the player has fully completed.
+
+#### New helper — `isChapterUnlocked(chapter)`
+
+| Chapter | Condition |
+|---------|-----------|
+| 2 | Always unlocked |
+| 3 | `completedChapters.has(2)` |
+| 4 | `completedChapters.has(3)` |
+
+#### `handleChapterClick` — guard
+
+Returns early if `!isChapterUnlocked(chapterId)`.
+
+#### `handleDeployControl` — chapter completion check
+
+After a stage is marked `"completed"`, checks whether every stage in the chapter now has `status === "completed"` (treating the just-completed stage specially, since its `chapterState` entry is updated asynchronously). If all are done, adds the chapter ID to `completedChapters`.
+
+#### Map view — Chapter card rendering
+
+Cards now reflect unlock and completion status:
+
+| State | CSS class added | Extra element rendered |
+|-------|----------------|------------------------|
+| Locked | `chapter-card-locked` | `"🔒 Complete Level {n-1} to unlock"` label |
+| Unlocked + completed | — | `"✓ Completed"` label |
+
+### `src/App.css`
+
+New rules appended:
+
+| Class | Effect |
+|-------|--------|
+| `.chapter-card-locked` | `opacity: 0.45`, `cursor: not-allowed` |
+| `.chapter-card-locked:hover` | Suppresses hover animation |
+| `.chapter-lock-label` | Small grey label below card subtitle |
+| `.chapter-complete-label` | Green (`#4ade80`) bold label below card subtitle |
+
+---
+
+## Change Log — 2026-03-22 (L3 Stage Configs)
+
+**Commit:** `2b8b882`
+
+### `src/data/stageData.ts`
+
+All four L3 stage configs populated with real threat and control data (previously empty arrays):
+
+| Stage | Threat IDs | Required Controls | Passing Score |
+|-------|-----------|-------------------|---------------|
+| L3-1 Targeted Phishing | L3-PH-01/03/04/05/06/07 | C-AWARE-03, C-GOV-03, C-IAM-04, C-MON-02 | 65 |
+| L3-2 Cloud Identity | L3-IAM-01/02/05/06/07/08 | C-IAM-04, C-IAM-05, C-IAM-01, C-GOV-02 | 65 |
+| L3-3 Data at Scale | L3-DATA-02/03/04/06/07/08 | C-DATA-06, C-DATA-02, C-DATA-04, C-IR-01 | 65 |
+| L3-4 Network Exposure | L3-NET-02/06/07/09, L3-END-01/05 | C-NET-02, C-MON-01, C-SYS-06, C-SYS-03 | 65 |
+
+Each stage has 7–9 `availableControlIds` (core controls + distractors from unrelated categories). All threats follow a Medium × 4 + High × 2 severity distribution.
+
+### `src/App.tsx`
+
+Removed a now-redundant early-return guard in the `useEffect` data loader that was skipping stages with empty `threatIds`.
+
+---
+
+## Change Log — 2026-03-22 (getRiskTypeLabel Substring Match)
+
+**Commit:** `1a43ec9`
+
+### `src/App.tsx`
+
+`getRiskTypeLabel` previously used `String.startsWith("L2-PH")` etc., so L3/L4 threat IDs (e.g. `L3-PH-01`) were never matched and always returned `"Mixed"`.
+
+**Fix:** Switched all comparisons to `String.includes("-PH")`, `includes("-IAM")`, `includes("-DATA")`, `includes("-NET")`, `includes("-END")`. The function now works correctly for all chapter levels.
+
+---
+
+## Change Log — 2026-03-22 (stageData Required Control Fixes)
+
+**Commit:** `b70f56b`
+
+### `src/data/stageData.ts`
+
+#### L2-1 — orphan required control
+
+`C-GOV-03` was listed in `requiredControlIds` but had no threat in `threatIds` that recommended it, making it unmitigatable. Fixed by adding `L2-PH-05` (Medium, recommends `C-GOV-03`) to the threat list.
+
+`C-SYS-03` added to `requiredControlIds` (counters `L2-PH-07`, the High-severity phishing threat already present).
+
+Updated `requiredControlIds`: `["C-AWARE-01", "C-AWARE-02", "C-GOV-03", "C-SYS-03"]`
+
+#### All stages — High threats must have a required control
+
+Audit across all 8 populated stages (L2-1 through L3-4): every High-severity threat now has at least one of its `recommendedControlIds` present in the stage's `requiredControlIds`. Previously several High threats could go entirely unmitigated without blocking stage completion.
+
+---
+
+## Change Log — 2026-03-22 (deployedControlIds Persistence & Loading Guard)
+
+**Commit:** `fdeffd0`
+
+### `src/types.ts`
+
+`deployedControlIds: string[]` added to `StageGameState` interface, enabling deployed control state to survive stage re-entry.
+
+### `src/App.tsx`
+
+#### `makeStageGameState` — initialise field
+
+`deployedControlIds: []` added to the factory function so all new stage states are valid.
+
+#### `handleDeployControl` — persist to StageGameState
+
+`newDeployedIds` written into `newStageState.deployedControlIds`, so the array is stored in `chapterState.stageStates` and survives navigation away and back.
+
+#### `handleStageClick` — restore on re-entry
+
+Changed `setDeployedControlIds([])` → `setDeployedControlIds(stageState.deployedControlIds)`, so previously deployed controls are restored when the player re-enters a stage.
+
+#### Data loading — `dataLoading` state
+
+```typescript
+const [dataLoading, setDataLoading] = useState(false);
+```
+
+Set to `true` before the `Promise.all` fetch, `false` in the `.then` callback. Passed to `<BottomBar isLoading={dataLoading} />`.
+
+### `src/components/BottomBar.tsx`
+
+New optional prop `isLoading?: boolean` (default `false`):
+
+- Next Turn button `disabled` when `isLoading || isCompleted`.
+- Button label: `"Loading..."` → `"Stage Complete"` → `"Next Turn (T{n})"` (priority order).
+
+---
+
+## Change Log — 2026-03-22 (Score Label & localStorage Persistence)
+
+**Commit:** `1b1bff5`
+
+### `src/App.tsx`
+
+#### `completedChapters` — localStorage persistence
+
+`useState` initialiser changed to a lazy function that reads `localStorage.getItem("completedChapters")` and parses it as `number[]` into a `Set`. Wrapped in try/catch; returns an empty Set on any error.
+
+When a chapter is completed, `setCompletedChapters` now also calls `localStorage.setItem("completedChapters", JSON.stringify([...next]))` so progress survives page refresh.
+
+#### Stage view TopBar — score label
+
+`stat-label` text changed from `"Score"` → `"Chapter Score"` to clarify that the figure reflects the whole chapter's accumulated deductions, not just the current stage.
+
+---
+
+## Change Log — 2026-03-22 (sidebar-loading, L4 Empty State, Chapter Switch Reset)
+
+**Commit:** `3f34a59`
+
+### `src/App.css`
+
+New rule appended:
+
+```css
+.sidebar-loading {
+    font-size: 12px;
+    color: #6b7280;
+    padding: 4px 8px;
+    font-style: italic;
+}
+```
+
+Previously the class was used in JSX but undefined in any stylesheet, causing unstyled text.
+
+### `src/App.tsx`
+
+#### Left sidebar (Security Measures) — L4 empty state
+
+| Before | After |
+|--------|-------|
+| `stageControls.length === 0 ? "Loading..." : list` | `dataLoading ? "Loading..." : stageControls.length === 0 ? "No controls available" : list` |
+
+For L4 placeholder stages (empty `availableControlIds`), the sidebar now correctly shows "No controls available" after loading completes instead of remaining stuck at "Loading...".
+
+#### Right sidebar (Threats) — L4 empty state
+
+Same pattern applied: `dataLoading ? "Loading..." : stageThreats.length === 0 ? "No threats available" : list`.
+
+#### `handleChapterClick` — reset chapterState on chapter switch
+
+Previously, navigating from one chapter to another left `chapterState` pointing at the old chapter's data, causing the Control Room to display stale budget and score until the player clicked a stage.
+
+**Fix:** Added a `setChapterState` call inside `handleChapterClick`:
+
+```typescript
+setChapterState((prev) =>
+    prev?.chapterId === chapterId ? prev : makeChapterState(chapterId)
+);
+```
+
+Same-chapter navigation preserves existing state; different-chapter navigation initialises a fresh `ChapterState` immediately.

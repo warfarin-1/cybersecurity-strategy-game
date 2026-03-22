@@ -232,38 +232,93 @@ const L3_4: StageConfig = {
     passingScore: 65,
 };
 
-// ─── Level 4 — Key Infrastructure (placeholder) ──────────────────────────────
+// ─── Level 4 — Key Infrastructure ────────────────────────────────────────────
+// Scenario: L4-B2-SCENARIO-01 (IAM)
+// subThreatIds drive threat-tree logic; L4-IAM-01/02 are standalone stage threats.
 
 const L4_1: StageConfig = {
     stageId: "L4-1",
     stageName: "High-Risk Identity Chain",
     chapter: 4,
-    budgetAllocation: 200_000,
-    threatIds: [],
-    availableControlIds: [],
-    requiredControlIds: [],
+    budgetAllocation: 300_000,
+    // Scenario sub-threats (tree nodes) + 2 standalone threats
+    // L4-IAM-C1-R1 Medium — No MFA on Critical Cloud Admin Accounts → C-IAM-04
+    // L4-IAM-C1-R2 Medium — Password Reuse with External Services   → C-IAM-01
+    // L4-IAM-C1-R3 Low    — Dormant Privileged Accounts             → C-GOV-02
+    // L4-IAM-01   High    — Multiple Privileged Accounts Compromised → C-IAM-04
+    // L4-IAM-02   Medium  — No Separation Between Admin and User Accounts → C-IAM-07
+    threatIds: ["L4-IAM-C1-R1", "L4-IAM-C1-R2", "L4-IAM-C1-R3", "L4-IAM-01", "L4-IAM-02"],
+    availableControlIds: [
+        // Scenario required controls
+        "C-IAM-04",     // MFA for Admin and High-Privilege Accounts
+        "C-IAM-01",     // Password Complexity Policy
+        "C-GOV-02",     // Joiners-Movers-Leavers Process
+        // Supporting controls
+        "C-IAM-07",     // Privileged Access Workstations  (counters L4-IAM-02)
+        "C-IAM-08",     // Strong Identity Verification for New Accounts
+        // Distractors
+        "C-DATA-01",    // Data Classification Scheme
+        "C-NET-01",     // Perimeter Firewall Ruleset
+    ],
+    requiredControlIds: ["C-IAM-04", "C-IAM-01", "C-GOV-02"],
     passingScore: 70,
 };
+
+// Scenario: L4-B3-SCENARIO-01 (Data)
 
 const L4_2: StageConfig = {
     stageId: "L4-2",
     stageName: "Large Data Exposure",
     chapter: 4,
-    budgetAllocation: 200_000,
-    threatIds: [],
-    availableControlIds: [],
-    requiredControlIds: [],
+    budgetAllocation: 300_000,
+    // L4-DATA-C2-R1 High   — Publicly Accessible Cloud Storage       → C-DATA-08
+    // L4-DATA-C2-R2 Medium — No Encryption for Database at Rest       → C-DATA-03
+    // L4-DATA-C2-R3 Medium — Over-Broad Access to Reporting System    → C-DATA-06
+    // L4-DATA-01   High    — Large-Scale Exposure of Personal Data    → C-DATA-06
+    // L4-DATA-03   Medium  — Untracked Copies of Highly Confidential Data → C-DATA-02
+    threatIds: ["L4-DATA-C2-R1", "L4-DATA-C2-R2", "L4-DATA-C2-R3", "L4-DATA-01", "L4-DATA-03"],
+    availableControlIds: [
+        // Scenario required controls
+        "C-DATA-08",    // Cloud Storage Configuration Review
+        "C-DATA-03",    // Full Disk Encryption on Laptops
+        "C-DATA-06",    // Access Control on Shared Folders
+        // Supporting controls
+        "C-DATA-02",    // Centralised File Storage           (counters L4-DATA-03)
+        "C-DATA-05",    // Secure Backup with Offline Copies
+        // Distractors
+        "C-IAM-01",     // Password Complexity Policy
+        "C-NET-02",     // Internal Network Segmentation
+    ],
+    requiredControlIds: ["C-DATA-08", "C-DATA-03", "C-DATA-06"],
     passingScore: 70,
 };
+
+// Scenario: L4-B4-SCENARIO-01 (Network)
 
 const L4_3: StageConfig = {
     stageId: "L4-3",
     stageName: "Critical Service Compromise",
     chapter: 4,
-    budgetAllocation: 200_000,
-    threatIds: [],
-    availableControlIds: [],
-    requiredControlIds: [],
+    budgetAllocation: 300_000,
+    // L4-NET-C3-R1 Medium — Critical Vulnerability on Internet-Facing Service → C-SYS-02
+    // L4-NET-C3-R2 Medium — Weak Segmentation Around Critical System          → C-NET-02
+    // L4-NET-C3-R3 Low    — Limited Logging of Access to Critical System       → C-MON-01
+    // L4-NET-01   High    — Critical System Directly Exposed to Internet       → C-SYS-06
+    // L4-NET-04   Medium  — Inadequate Monitoring of Critical Network Segments → C-MON-01
+    threatIds: ["L4-NET-C3-R1", "L4-NET-C3-R2", "L4-NET-C3-R3", "L4-NET-01", "L4-NET-04"],
+    availableControlIds: [
+        // Scenario required controls
+        "C-SYS-02",     // Patch Management Process
+        "C-NET-02",     // Internal Network Segmentation
+        "C-MON-01",     // Central Log Collection
+        // Supporting controls
+        "C-SYS-01",     // Baseline Secure Configuration
+        "C-SYS-06",     // Secure Remote Administration      (counters L4-NET-01)
+        // Distractors
+        "C-IAM-04",     // MFA for Admin and High-Privilege Accounts
+        "C-DATA-06",    // Access Control on Shared Folders
+    ],
+    requiredControlIds: ["C-SYS-02", "C-NET-02", "C-MON-01"],
     passingScore: 70,
 };
 
