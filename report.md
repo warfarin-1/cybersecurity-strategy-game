@@ -1170,3 +1170,127 @@ New optional prop `language?: "en" | "zh"` (default `"en"`). A local `t()` helpe
 | Loading state | Loading... | 加载中... |
 | Completed state | Stage Complete | 关卡完成 |
 | Attack Sim button | Attack Sim (Coming Soon) | 攻击模拟（即将推出） |
+
+---
+
+## Change Log — 2026-03-23 (Cybersecurity Glossary Panel)
+
+**Commit:** `7b6af54`
+
+### `src/App.tsx`
+
+#### New module-level component — `GlossaryPanel`
+
+Defined before the `App` component. Accepts two props:
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `language` | `"en" \| "zh"` | Controls bilingual display and data loading |
+| `onClose` | `() => void` | Callback to close the overlay |
+
+**Internal state:**
+
+| State | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `activeTab` | `"controls" \| "threats"` | `"controls"` | Active content tab |
+| `searchQuery` | `string` | `""` | Live search filter text |
+| `allControls` | `Control[]` | `[]` | Full controls list loaded on mount |
+| `allThreats` | `Threat[]` | `[]` | Merged L2+L3+L4 threats, sorted by level |
+| `loading` | `boolean` | `true` | Loading state shown while fetching |
+
+**`useEffect` — parallel data load:**
+
+Fires on mount and when `language` changes. Calls:
+```typescript
+Promise.all([
+    loadControls(language),
+    loadThreats(2, language),
+    loadThreats(3, language),
+    loadThreats(4, language),
+])
+```
+Merges the three threat arrays and sorts by `level` ascending.
+
+**Search filtering:**
+
+`filteredControls` — case-insensitive match on `controlId`, `name`, `nameZh`, `category`.
+`filteredThreats` — case-insensitive match on `threatId`, `scenarioName`, `scenarioNameZh`, `riskType`.
+Empty query shows all entries.
+
+**Layout structure:**
+
+```
+glossary-overlay (click-outside closes)
+  └─ glossary-panel (stopPropagation)
+       ├─ glossary-header: title h2 + ✕ close button
+       ├─ glossary-search: real-time search input
+       ├─ glossary-tabs: "Security Controls (n)" | "Threats (n)"
+       └─ glossary-content (scrollable)
+            ├─ [loading] sidebar-loading text
+            ├─ [controls tab] one glossary-item per control
+            │    ├─ glossary-item-header: controlId · category badge · cost (£)
+            │    ├─ glossary-item-name: nameZh / name
+            │    ├─ glossary-item-desc: descriptionZh / description
+            │    └─ glossary-item-caf: CAF principle
+            └─ [threats tab] one glossary-item per threat
+                 ├─ glossary-item-header: threatId · severity badge · riskType badge
+                 ├─ glossary-item-name: scenarioNameZh / scenarioName
+                 ├─ glossary-item-desc: descriptionZh / description
+                 └─ glossary-item-caf: recommended control IDs
+```
+
+Severity badges use `.severity-high` / `.severity-medium` / `.severity-low` colour classes.
+
+#### New state in `App`
+
+```typescript
+const [glossaryOpen, setGlossaryOpen] = useState(false);
+```
+
+#### Glossary button — all three views
+
+A `📖 Glossary / 安全图鉴` button (`.glossary-btn`) is added to the TopBar of every view:
+
+| View | Placement |
+|------|-----------|
+| Map | Direct child of `<header className="top-bar">`, after subtitle — `margin-left: auto` pushes it right |
+| Chapter | Inside `.top-bar-right` div, after the stat boxes |
+| Stage | Inside `.top-bar-right` div, after the stat boxes |
+
+All three use `onClick={() => setGlossaryOpen(true)}` and display `t("Glossary", "安全图鉴")`.
+
+#### Overlay rendered in all three view returns
+
+```tsx
+{glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
+```
+
+Added as the last child of each view's root `<div className="app-root">`.
+
+### `src/App.css`
+
+New rules appended (Glossary section):
+
+| Class | Purpose |
+|-------|---------|
+| `.glossary-btn` | TopBar pill button, transparent with grey border; hover turns blue |
+| `.glossary-overlay` | Fixed full-screen dark backdrop (`rgba(0,0,0,0.7)`), z-index 1000, flex-centred |
+| `.glossary-panel` | Modal panel: 680px wide, 80vh tall, dark `#0d1117` background, rounded 12px |
+| `.glossary-header` | Panel title bar with h2 and close button, bottom border |
+| `.glossary-close` | Transparent ✕ button, grey text, hover turns white |
+| `.glossary-search` | Dark input field with focus border highlight (`#7dd3fc`) |
+| `.glossary-tabs` | Flex tab row with underline active indicator |
+| `.glossary-tab` | Transparent tab button, active state: blue text + blue underline |
+| `.glossary-content` | Scrollable flex-column content area |
+| `.glossary-item` | Dark card (`#161b22`) for each control or threat entry |
+| `.glossary-item-header` | Flex row: id · category · cost/severity, wraps on narrow widths |
+| `.glossary-item-id` | Monospace 11px grey ID label |
+| `.glossary-item-category` | Blue-tinted pill badge for category or risk type |
+| `.glossary-item-cost` | Orange (`#ffb84d`) cost label, pushed right via `margin-left: auto` |
+| `.glossary-item-severity` | Severity pill badge (coloured via severity-* classes) |
+| `.glossary-item-name` | 14px semi-bold entry title |
+| `.glossary-item-desc` | 12px grey description text, 1.5 line-height |
+| `.glossary-item-caf` | 11px grey CAF principle / recommended control footnote |
+| `.severity-high` | Red text (`#f87171`) |
+| `.severity-medium` | Orange text (`#ffb84d`) |
+| `.severity-low` | Green text (`#4ade80`) |
