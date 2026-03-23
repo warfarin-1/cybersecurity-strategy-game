@@ -525,6 +525,60 @@ const App: React.FC = () => {
         });
     };
 
+    const handleResetStage = (stageId: string) => {
+        if (!chapterState) return;
+
+        const stageState = chapterState.stageStates[stageId];
+        if (!stageState) return;
+
+        const config = getStageConfig(stageId);
+        if (!config) return;
+
+        const spent = config.budgetAllocation - stageState.budget;
+        const refund = Math.max(0, spent);
+
+        const resetStageState: StageGameState = {
+            ...stageState,
+            budget: config.budgetAllocation,
+            deployedControlIds: [],
+            isCompleted: false,
+            status: "not_started",
+            turn: 1,
+            logs: [],
+        };
+
+        const newChapterState = {
+            ...chapterState,
+            remainingBudget: chapterState.remainingBudget + refund,
+            stageStates: {
+                ...chapterState.stageStates,
+                [stageId]: resetStageState,
+            },
+        };
+
+        setChapterState(newChapterState);
+
+        if (activeStageState?.stageId === stageId) {
+            setActiveStageState(resetStageState);
+            setDeployedControlIds([]);
+        }
+
+        const chapter = config.chapter;
+        const allStages = STAGES_BY_CHAPTER[chapter];
+        const stillAllCompleted = allStages.every((s) => {
+            if (s.id === stageId) return false;
+            return newChapterState.stageStates[s.id]?.status === "completed";
+        });
+        if (!stillAllCompleted) {
+            setCompletedChapters((prev) => {
+                const next = new Set(prev);
+                next.delete(chapter);
+                localStorage.setItem("completedChapters", JSON.stringify([...next]));
+                return next;
+            });
+        }
+    };
+
     const handleNextTurn = () => {
         if (!activeStageState) return;
 
@@ -785,6 +839,7 @@ const App: React.FC = () => {
                                 !unlocked              ? "stage-card-locked"    : "",
                                 status === "completed" ? "stage-card-completed" : "",
                             ].filter(Boolean).join(" ");
+                            const hasProgress = status === "in_progress" || status === "completed";
                             return (
                                 <button
                                     key={stage.id}
@@ -802,6 +857,17 @@ const App: React.FC = () => {
                                             Status: {statusLabel}
                                         </span>
                                     </div>
+                                    {hasProgress && (
+                                        <button
+                                            className="stage-reset-btn"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleResetStage(stage.id);
+                                            }}
+                                        >
+                                            {t("↺ Reset Stage", "↺ 重置关卡")}
+                                        </button>
+                                    )}
                                 </button>
                             );
                         })}

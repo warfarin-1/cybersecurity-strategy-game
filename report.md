@@ -1294,3 +1294,90 @@ New rules appended (Glossary section):
 | `.severity-high` | Red text (`#f87171`) |
 | `.severity-medium` | Orange text (`#ffb84d`) |
 | `.severity-low` | Green text (`#4ade80`) |
+
+---
+
+## Change Log — Undo Control Deployment
+
+**Date:** 2026-03-23
+
+### Overview
+
+Added the ability to undo (retract) a previously deployed control within a Stage, refunding its cost and reverting completion status.
+
+### `src/App.tsx`
+
+#### New handler: `handleUndoControl(controlId)`
+
+- Finds the control in `stageControls`; returns early if not found or not deployed
+- Calculates `refund = control.cost * 10_000`
+- Removes `controlId` from `deployedControlIds`
+- Builds a new `StageGameState` with budget increased by refund, `isCompleted: false`, `status: "in_progress"`, and an `↩ Undid: …` log entry (uses `control.nameZh` when language is `"zh"`)
+- Calls `setActiveStageState`, `setDeployedControlIds`, and `setChapterState` (increments `remainingBudget` by refund)
+
+#### Stage view — left sidebar control button rendering
+
+Previously: deployed controls rendered as a single `disabled` button.
+
+Now: deployed controls render as a `<div className="control-deployed-row">` containing:
+- A `disabled` pill button showing `{name} ✓` and cost
+- An `↩` undo button (`className="undo-btn"`) that calls `handleUndoControl`
+
+Undeployed controls are unchanged (no `disabled` attribute; `deployed` branch now handles disabling implicitly via separate render path).
+
+### `src/App.css`
+
+New rules added after `.sidebar-pill-success`:
+
+| Class | Purpose |
+|-------|---------|
+| `.control-deployed-row` | Flex row wrapping the deployed pill + undo button, `gap: 4px` |
+| `.control-deployed-row .sidebar-pill` | `flex: 1` so the pill fills remaining space |
+| `.undo-btn` | Transparent button with grey border, 12px font; hover turns red (`#f87171`) |
+
+---
+
+## Change Log — Reset Stage from Chapter View
+
+**Date:** 2026-03-23
+
+### Overview
+
+Added a Reset Stage button on each Stage card in the Chapter view, allowing players to wipe a stage's progress and reclaim the spent budget.
+
+### `src/App.tsx`
+
+#### New handler: `handleResetStage(stageId)`
+
+- Guards: requires `chapterState` and an existing `stageStates[stageId]`; looks up `StageConfig` via `getStageConfig`
+- Calculates `spent = config.budgetAllocation - stageState.budget`; `refund = Math.max(0, spent)`
+- Builds `resetStageState`: resets `budget` to `config.budgetAllocation`, clears `deployedControlIds`, sets `isCompleted: false`, `status: "not_started"`, `turn: 1`, `logs: []`
+- Updates `chapterState`: increments `remainingBudget` by refund, replaces `stageStates[stageId]` with the reset state
+- If `activeStageState.stageId === stageId`, also calls `setActiveStageState(resetStageState)` and `setDeployedControlIds([])`
+- Checks whether all other stages in the chapter are still `"completed"`; if not, removes the chapter from `completedChapters` and updates `localStorage`
+
+#### Chapter view — Stage card rendering
+
+Added `hasProgress` flag (`status === "in_progress" || status === "completed"`).
+
+When `hasProgress` is true, a Reset button is rendered inside the Stage card:
+
+```tsx
+<button
+  className="stage-reset-btn"
+  onClick={(e) => { e.stopPropagation(); handleResetStage(stage.id); }}
+>
+  {t("↺ Reset Stage", "↺ 重置关卡")}
+</button>
+```
+
+`e.stopPropagation()` prevents the card's `onClick` (which navigates into the stage) from firing.
+
+### `src/App.css`
+
+New rules added after `.undo-btn:hover`:
+
+| Class | Purpose |
+|-------|---------|
+| `.stage-reset-btn` | Full-width transparent button, grey border, 11px font, `margin-top: 8px` |
+| `.stage-reset-btn:hover` | Border and text turn red (`#f87171`) |
