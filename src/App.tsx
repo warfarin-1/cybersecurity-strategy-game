@@ -143,7 +143,9 @@ const GlossaryPanel: React.FC<GlossaryPanelProps> = ({ language, onClose }) => {
                     {loading ? (
                         <div className="sidebar-loading">{t("Loading...", "加载中...")}</div>
                     ) : activeTab === "controls" ? (
-                        filteredControls.map((control) => (
+                        filteredControls.length === 0 ? (
+                            <div className="sidebar-loading">{t("No results found.", "未找到相关结果。")}</div>
+                        ) : filteredControls.map((control) => (
                             <div key={control.controlId} className="glossary-item">
                                 <div className="glossary-item-header">
                                     <span className="glossary-item-id">{control.controlId}</span>
@@ -162,7 +164,9 @@ const GlossaryPanel: React.FC<GlossaryPanelProps> = ({ language, onClose }) => {
                             </div>
                         ))
                     ) : (
-                        filteredThreats.map((threat) => (
+                        filteredThreats.length === 0 ? (
+                            <div className="sidebar-loading">{t("No results found.", "未找到相关结果。")}</div>
+                        ) : filteredThreats.map((threat) => (
                             <div key={threat.threatId} className="glossary-item">
                                 <div className="glossary-item-header">
                                     <span className="glossary-item-id">{threat.threatId}</span>
