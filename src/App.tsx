@@ -486,6 +486,45 @@ const App: React.FC = () => {
         }
     };
 
+    const handleUndoControl = (controlId: string) => {
+        if (!activeStageState || !chapterState) return;
+
+        const control = stageControls.find((c) => c.controlId === controlId);
+        if (!control) return;
+
+        if (!deployedControlIds.includes(controlId)) return;
+
+        const refund = control.cost * 10_000;
+        const newDeployedIds = deployedControlIds.filter((id) => id !== controlId);
+
+        const undoName = language === "zh" && control.nameZh ? control.nameZh : control.name;
+        const newStageState: StageGameState = {
+            ...activeStageState,
+            budget: activeStageState.budget + refund,
+            deployedControlIds: newDeployedIds,
+            isCompleted: false,
+            status: "in_progress",
+            logs: [
+                ...activeStageState.logs,
+                `↩ Undid: ${undoName} (+£${refund.toLocaleString()})`,
+            ],
+        };
+
+        setActiveStageState(newStageState);
+        setDeployedControlIds(newDeployedIds);
+        setChapterState((prev) => {
+            if (!prev) return prev;
+            return {
+                ...prev,
+                remainingBudget: prev.remainingBudget + refund,
+                stageStates: {
+                    ...prev.stageStates,
+                    [activeStageState.stageId]: newStageState,
+                },
+            };
+        });
+    };
+
     const handleNextTurn = () => {
         if (!activeStageState) return;
 
@@ -828,12 +867,31 @@ const App: React.FC = () => {
                                 const label = deployed
                                     ? `${cName} ✓`
                                     : `${gameMode === "beginner" && isRecommended ? "⭐ " : ""}${cName}`;
+                                if (deployed) {
+                                    return (
+                                        <div key={control.controlId} className="control-deployed-row">
+                                            <button
+                                                className="sidebar-pill sidebar-pill-deployed"
+                                                disabled
+                                            >
+                                                {label}
+                                                <span>£{(control.cost * 10_000).toLocaleString()}</span>
+                                            </button>
+                                            <button
+                                                className="undo-btn"
+                                                onClick={() => handleUndoControl(control.controlId)}
+                                                title={t("Undo this control", "撤回此措施")}
+                                            >
+                                                ↩
+                                            </button>
+                                        </div>
+                                    );
+                                }
                                 return (
                                     <button
                                         key={control.controlId}
-                                        className={`sidebar-pill${gameMode === "beginner" && isRecommended && !deployed ? " control-recommended" : ""}`}
+                                        className={`sidebar-pill${gameMode === "beginner" && isRecommended ? " control-recommended" : ""}`}
                                         onClick={() => handleDeployControl(control.controlId)}
-                                        disabled={deployed}
                                     >
                                         {label}
                                         <span>£{(control.cost * 10_000).toLocaleString()}</span>

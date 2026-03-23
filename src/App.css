@@ -370,6 +370,33 @@
     background: rgba(74, 222, 128, 0.08);
 }
 
+.control-deployed-row {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+
+.control-deployed-row .sidebar-pill {
+    flex: 1;
+}
+
+.undo-btn {
+    padding: 4px 8px;
+    background: transparent;
+    border: 1px solid #444;
+    border-radius: 6px;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.15s;
+    flex-shrink: 0;
+}
+
+.undo-btn:hover {
+    border-color: #f87171;
+    color: #f87171;
+}
+
 .stage-status-success {
     border: 1px solid #4ade80;
     background: rgba(74, 222, 128, 0.08);
