@@ -66,6 +66,131 @@ function getRiskTypeLabel(stageId: string): string {
     return "Mixed";
 }
 
+// ─── GlossaryPanel ────────────────────────────────────────────────────────────
+
+interface GlossaryPanelProps {
+    language: "en" | "zh";
+    onClose: () => void;
+}
+
+const GlossaryPanel: React.FC<GlossaryPanelProps> = ({ language, onClose }) => {
+    const t = (en: string, zh: string) => language === "zh" ? zh : en;
+    const [activeTab, setActiveTab] = useState<"controls" | "threats">("controls");
+    const [searchQuery, setSearchQuery] = useState("");
+    const [allControls, setAllControls] = useState<Control[]>([]);
+    const [allThreats, setAllThreats] = useState<Threat[]>([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        Promise.all([
+            loadControls(language),
+            loadThreats(2, language),
+            loadThreats(3, language),
+            loadThreats(4, language),
+        ]).then(([controls, t2, t3, t4]) => {
+            setAllControls(controls);
+            setAllThreats([...t2, ...t3, ...t4].sort((a, b) => a.level - b.level));
+            setLoading(false);
+        });
+    }, [language]);
+
+    const q = searchQuery.toLowerCase();
+    const filteredControls = q
+        ? allControls.filter((c) =>
+            c.controlId.toLowerCase().includes(q) ||
+            c.name.toLowerCase().includes(q) ||
+            c.nameZh.toLowerCase().includes(q) ||
+            c.category.toLowerCase().includes(q)
+          )
+        : allControls;
+    const filteredThreats = q
+        ? allThreats.filter((th) =>
+            th.threatId.toLowerCase().includes(q) ||
+            th.scenarioName.toLowerCase().includes(q) ||
+            th.scenarioNameZh.toLowerCase().includes(q) ||
+            th.riskType.toLowerCase().includes(q)
+          )
+        : allThreats;
+
+    return (
+        <div className="glossary-overlay" onClick={onClose}>
+            <div className="glossary-panel" onClick={(e) => e.stopPropagation()}>
+                <div className="glossary-header">
+                    <h2>{t("Cybersecurity Glossary", "网络安全图鉴")}</h2>
+                    <button className="glossary-close" onClick={onClose}>✕</button>
+                </div>
+                <input
+                    className="glossary-search"
+                    placeholder={t("Search controls or threats...", "搜索安全措施或威胁...")}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                />
+                <div className="glossary-tabs">
+                    <button
+                        className={`glossary-tab ${activeTab === "controls" ? "active" : ""}`}
+                        onClick={() => setActiveTab("controls")}
+                    >
+                        {t("Security Controls", "安全措施")} ({filteredControls.length})
+                    </button>
+                    <button
+                        className={`glossary-tab ${activeTab === "threats" ? "active" : ""}`}
+                        onClick={() => setActiveTab("threats")}
+                    >
+                        {t("Threats", "威胁图鉴")} ({filteredThreats.length})
+                    </button>
+                </div>
+                <div className="glossary-content">
+                    {loading ? (
+                        <div className="sidebar-loading">{t("Loading...", "加载中...")}</div>
+                    ) : activeTab === "controls" ? (
+                        filteredControls.map((control) => (
+                            <div key={control.controlId} className="glossary-item">
+                                <div className="glossary-item-header">
+                                    <span className="glossary-item-id">{control.controlId}</span>
+                                    <span className="glossary-item-category">{control.category}</span>
+                                    <span className="glossary-item-cost">
+                                        £{(control.cost * 10_000).toLocaleString()}
+                                    </span>
+                                </div>
+                                <div className="glossary-item-name">
+                                    {language === "zh" && control.nameZh ? control.nameZh : control.name}
+                                </div>
+                                <div className="glossary-item-desc">
+                                    {language === "zh" && control.descriptionZh ? control.descriptionZh : control.description}
+                                </div>
+                                <div className="glossary-item-caf">CAF: {control.cafPrinciple}</div>
+                            </div>
+                        ))
+                    ) : (
+                        filteredThreats.map((threat) => (
+                            <div key={threat.threatId} className="glossary-item">
+                                <div className="glossary-item-header">
+                                    <span className="glossary-item-id">{threat.threatId}</span>
+                                    <span className={`glossary-item-severity severity-${threat.severity.toLowerCase()}`}>
+                                        {threat.severity}
+                                    </span>
+                                    <span className="glossary-item-category">{threat.riskType}</span>
+                                </div>
+                                <div className="glossary-item-name">
+                                    {language === "zh" && threat.scenarioNameZh ? threat.scenarioNameZh : threat.scenarioName}
+                                </div>
+                                <div className="glossary-item-desc">
+                                    {language === "zh" && threat.descriptionZh ? threat.descriptionZh : threat.description}
+                                </div>
+                                <div className="glossary-item-caf">
+                                    {t("Recommended Control", "推荐措施")}: {threat.recommendedControlIds.join(", ")}
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 type ChapterLevel = 2 | 3 | 4;
 
 interface ChapterMeta {
@@ -145,6 +270,7 @@ const App: React.FC = () => {
             return "en";
         }
     });
+    const [glossaryOpen, setGlossaryOpen] = useState(false);
 
     // Translation helper
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
@@ -408,6 +534,9 @@ const App: React.FC = () => {
                 <header className="top-bar">
                     <div className="top-bar-title">{t("Cybersecurity Command Center", "网络安全指挥中心")}</div>
                     <div className="top-bar-subtitle">{t("Select a Level to Begin", "选择关卡开始")}</div>
+                    <button className="glossary-btn" onClick={() => setGlossaryOpen(true)}>
+                        📖 {t("Glossary", "安全图鉴")}
+                    </button>
                 </header>
                 <main className="map-container">
                     <div className="mode-selector">
@@ -473,6 +602,7 @@ const App: React.FC = () => {
                         );
                     })}
                 </main>
+                {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
             </div>
         );
     }
@@ -530,6 +660,9 @@ const App: React.FC = () => {
                             <span className="stat-label">{t("Score", "得分")}</span>
                             <span className="stat-value">{chapterState?.score ?? 100} / 100</span>
                         </div>
+                        <button className="glossary-btn" onClick={() => setGlossaryOpen(true)}>
+                            📖 {t("Glossary", "安全图鉴")}
+                        </button>
                     </div>
                 </header>
 
@@ -631,6 +764,7 @@ const App: React.FC = () => {
                         })}
                     </section>
                 </main>
+                {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
             </div>
         );
     }
@@ -666,6 +800,9 @@ const App: React.FC = () => {
                             {chapterState ? chapterState.score : 100} / 100
                         </span>
                     </div>
+                    <button className="glossary-btn" onClick={() => setGlossaryOpen(true)}>
+                        📖 {t("Glossary", "安全图鉴")}
+                    </button>
                 </div>
             </header>
 
@@ -880,6 +1017,7 @@ const App: React.FC = () => {
                 onRunAttackSimulation={() => {}}
                 language={language}
             />
+            {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
         </div>
     );
 };
