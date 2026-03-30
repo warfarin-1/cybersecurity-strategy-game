@@ -12,6 +12,8 @@ export interface StageConfig {
     availableControlIds: string[];   // controls shown in the sidebar (includes distractors)
     requiredControlIds: string[];    // must be deployed to pass
     passingScore: number;            // minimum score to complete the stage
+    briefing?: string;               // narrative briefing (English)
+    briefingZh?: string;             // narrative briefing (Chinese)
 }
 
 // ─── Level 2 — Basic Protection ──────────────────────────────────────────────
@@ -38,6 +40,8 @@ const L2_1: StageConfig = {
     ],
     requiredControlIds: ["C-AWARE-01", "C-AWARE-02", "C-GOV-03", "C-SYS-03"],
     passingScore: 60,
+    briefing: "Meridian's staff have been clicking on suspicious links in supplier emails. Three employees reported fake invoices last week. Establish basic phishing defences before the situation escalates.",
+    briefingZh: "Meridian 员工最近频繁点击供应商邮件中的可疑链接，上周已有三名员工收到虚假发票。在局势恶化前建立基础钓鱼防御。",
 };
 
 const L2_2: StageConfig = {
@@ -61,6 +65,8 @@ const L2_2: StageConfig = {
     ],
     requiredControlIds: ["C-IAM-01", "C-IAM-02", "C-IAM-06", "C-IAM-03"],
     passingScore: 60,
+    briefing: "Hundreds of staff accounts across multiple retail systems, no consistent password policy. Shared logins and stale accounts are everywhere. Time to lock things down.",
+    briefingZh: "零售系统中存在大量共享账号和僵尸账户，密码策略形同虚设。是时候整顿身份与访问管理了。",
 };
 
 const L2_3: StageConfig = {
@@ -84,6 +90,8 @@ const L2_3: StageConfig = {
     ],
     requiredControlIds: ["C-DATA-01", "C-DATA-04", "C-DATA-05"],
     passingScore: 60,
+    briefing: "Meridian stores customer purchase records and payment references across unsecured shared drives. A minor breach here could expose thousands of customers.",
+    briefingZh: "Meridian 将客户购买记录和支付信息存储在未受保护的共享驱动器上，一次小规模泄露就可能波及数千名客户。",
 };
 
 const L2_4: StageConfig = {
@@ -107,6 +115,8 @@ const L2_4: StageConfig = {
     ],
     requiredControlIds: ["C-NET-01", "C-NET-03", "C-NET-05"],
     passingScore: 60,
+    briefing: "Meridian's office network has no segmentation — point-of-sale systems sit on the same network as staff laptops. Basic network hygiene is long overdue.",
+    briefingZh: "Meridian 的办公网络毫无分段——销售终端与员工笔记本共用同一网段。基础网络安全整改早该进行了。",
 };
 
 // ─── Level 3 — Critical Business ─────────────────────────────────────────────
@@ -141,6 +151,8 @@ const L3_1: StageConfig = {
     ],
     requiredControlIds: ["C-AWARE-03", "C-GOV-03", "C-IAM-04", "C-MON-02"],
     passingScore: 65,
+    briefing: "Hospital administrators are receiving highly convincing spear-phishing emails impersonating the regional health authority. One wrong click could compromise patient records for thousands.",
+    briefingZh: "医院管理人员正在收到伪装成地区卫生局的高度逼真鱼叉式钓鱼邮件。一次错误点击可能导致数千名患者的病历外泄。",
 };
 
 const L3_2: StageConfig = {
@@ -171,6 +183,8 @@ const L3_2: StageConfig = {
     ],
     requiredControlIds: ["C-IAM-04", "C-IAM-05", "C-IAM-01", "C-GOV-02"],
     passingScore: 65,
+    briefing: "Eastbridge has migrated clinical records to a cloud platform, but account management is chaotic — dozens of former contractors still have active credentials. A breach through a stale account would be catastrophic.",
+    briefingZh: "Eastbridge 已将临床记录迁移至云平台，但账户管理混乱——数十名前外包人员仍持有有效凭证。一旦通过僵尸账户发生入侵，后果将不堪设想。",
 };
 
 const L3_3: StageConfig = {
@@ -200,6 +214,8 @@ const L3_3: StageConfig = {
     ],
     requiredControlIds: ["C-DATA-06", "C-DATA-02", "C-DATA-04", "C-IR-01"],
     passingScore: 65,
+    briefing: "The hospital's EHR system holds sensitive records for over 200,000 patients. Access controls are inconsistent and audit logs are incomplete. Regulators are watching.",
+    briefingZh: "医院电子病历系统存储着逾20万名患者的敏感信息。访问控制不一致，审计日志残缺不全，监管机构正在密切关注。",
 };
 
 const L3_4: StageConfig = {
@@ -230,6 +246,8 @@ const L3_4: StageConfig = {
     ],
     requiredControlIds: ["C-NET-02", "C-MON-01", "C-SYS-06", "C-SYS-03"],
     passingScore: 65,
+    briefing: "Eastbridge's medical devices, administrative systems and public Wi-Fi all share the same network. An attacker who gets in anywhere gets in everywhere. Segmentation is critical.",
+    briefingZh: "Eastbridge 的医疗设备、行政系统和公共 Wi-Fi 共用同一网络。攻击者只要突破任意一点便可横向渗透全局。网络分段迫在眉睫。",
 };
 
 // ─── Level 4 — Key Infrastructure ────────────────────────────────────────────
@@ -262,6 +280,8 @@ const L4_1: StageConfig = {
     ],
     requiredControlIds: ["C-IAM-04", "C-IAM-01", "C-GOV-02"],
     passingScore: 70,
+    briefing: "Intelligence suggests a state-linked threat actor has been probing the Grid's identity infrastructure for months. Weak privileged account controls could give an attacker a direct path to operational systems. This is not a drill.",
+    briefingZh: "情报显示，一个与国家关联的威胁行为者已对电网身份基础设施持续侦察数月。特权账户控制薄弱可能为攻击者提供直达运营系统的路径。这不是演练。",
 };
 
 // Scenario: L4-B3-SCENARIO-01 (Data)
@@ -291,6 +311,8 @@ const L4_2: StageConfig = {
     ],
     requiredControlIds: ["C-DATA-08", "C-DATA-03", "C-DATA-06"],
     passingScore: 70,
+    briefing: "Operational data flowing between control systems and field sensors has shown signs of tampering. If an attacker can manipulate grid telemetry, they can trigger cascading failures without touching the physical infrastructure.",
+    briefingZh: "控制系统与现场传感器之间传输的运营数据出现篡改迹象。若攻击者能够操控电网遥测数据，无需接触任何物理设施即可触发连锁故障。",
 };
 
 // Scenario: L4-B4-SCENARIO-01 (Network)
@@ -320,6 +342,8 @@ const L4_3: StageConfig = {
     ],
     requiredControlIds: ["C-SYS-02", "C-NET-02", "C-MON-01"],
     passingScore: 70,
+    briefing: "A sophisticated intrusion attempt has been detected at the Grid's network boundary. The attackers appear to be mapping internal systems. You have one chance to contain the threat before they establish a foothold.",
+    briefingZh: "电网网络边界检测到一次高度复杂的入侵尝试，攻击者似乎正在探测内部系统结构。在他们建立据点之前，你只有一次机会遏制威胁。",
 };
 
 // ─── Exports ──────────────────────────────────────────────────────────────────

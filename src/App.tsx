@@ -5,6 +5,7 @@ import type { ChapterState, StageGameState, Sector, RiskLevel } from "./types";
 import type { Control, Threat, Level4Scenario } from "./utils/dataLoader";
 import { loadControls, loadThreats, loadLevel4Tree } from "./utils/dataLoader";
 import { getStageConfig } from "./data/stageData";
+import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle } from "./data/narrative";
 import { BottomBar } from "./components/BottomBar";
 
 // --- Helpers (mirrored from Layout.tsx) ---
@@ -275,6 +276,9 @@ const App: React.FC = () => {
         }
     });
     const [glossaryOpen, setGlossaryOpen] = useState(false);
+    const [briefingOpen, setBriefingOpen] = useState(true);
+    const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
+    const [promotionLevel, setPromotionLevel] = useState<3 | 4 | null>(null);
 
     // Translation helper
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
@@ -287,6 +291,7 @@ const App: React.FC = () => {
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
         if (view.type !== "stage") return;
+        setBriefingOpen(true);
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
@@ -319,6 +324,17 @@ const App: React.FC = () => {
             );
         }
     }, [view, language]);
+
+    useEffect(() => {
+        if (view.type !== "map") return;
+        const l2done = completedChapters.has(2);
+        const l3done = completedChapters.has(3);
+        if (l3done && !localStorage.getItem("seenPromotion_4")) {
+            setPromotionLevel(4);
+        } else if (l2done && !localStorage.getItem("seenPromotion_3")) {
+            setPromotionLevel(3);
+        }
+    }, [view, completedChapters]);
 
     const isChapterUnlocked = (chapter: ChapterLevel): boolean => {
         if (chapter === 2) return true;
@@ -610,6 +626,21 @@ const App: React.FC = () => {
             logs: [...activeStageState.logs, turnLog],
         };
 
+        if (h > 0) {
+            const firstHighThreat = stageThreats.find((th) =>
+                th.severity === "High" &&
+                !th.recommendedControlIds.some((id) => deployedControlIds.includes(id))
+            );
+            const firstUnresolvedName = firstHighThreat ? threatName(firstHighThreat) : "unknown threat";
+            setFeedbackMsg(
+                language === "zh"
+                    ? `存在未处理的严重威胁：${firstUnresolvedName}。客户无法批准进展。`
+                    : `Critical threat unresolved: ${firstUnresolvedName}. The client cannot sign off until this is addressed.`
+            );
+        } else {
+            setFeedbackMsg(null);
+        }
+
         setActiveStageState(newStageState);
         setChapterState((prev) => {
             if (!prev) return prev;
@@ -623,14 +654,21 @@ const App: React.FC = () => {
     };
 
     const goBackToMap = () => setView({ type: "map" });
-    const goBackToChapter = (chapter: ChapterLevel) => setView({ type: "chapter", chapter });
+    const goBackToChapter = (chapter: ChapterLevel) => {
+        setFeedbackMsg(null);
+        setView({ type: "chapter", chapter });
+    };
 
     if (view.type === "map") {
+        const completedLevelCount = [2, 3, 4].filter((lv) => completedChapters.has(lv as ChapterLevel)).length;
+        const playerTitle = getPlayerTitle(completedLevelCount);
         return (
             <div className="app-root">
                 <header className="top-bar">
                     <div className="top-bar-title">{t("Cybersecurity Command Center", "网络安全指挥中心")}</div>
-                    <div className="top-bar-subtitle">{t("Select a Level to Begin", "选择关卡开始")}</div>
+                    <div className="top-bar-role">
+                        {t(playerTitle.en, playerTitle.zh)} · Sentinel Advisory
+                    </div>
                     <button className="glossary-btn" onClick={() => setGlossaryOpen(true)}>
                         📖 {t("Glossary", "安全图鉴")}
                     </button>
@@ -687,6 +725,12 @@ const App: React.FC = () => {
                                 <div className="chapter-icon">Lv.{chapter.id}</div>
                                 <div className="chapter-text-main">{chapter.title}</div>
                                 <div className="chapter-text-sub">{chapter.subtitle}</div>
+                                <div className="chapter-org-name">
+                                    {t(ORG_PROFILES[chapter.id].orgName, ORG_PROFILES[chapter.id].orgNameZh)}
+                                </div>
+                                <div className="chapter-org-type">
+                                    {t(ORG_PROFILES[chapter.id].orgType, ORG_PROFILES[chapter.id].orgTypeZh)}
+                                </div>
                                 {!unlocked && (
                                     <div className="chapter-lock-label">
                                         🔒 {t(`Complete Level ${chapter.id - 1} to unlock`, `完成第 ${chapter.id - 1} 关解锁`)}
@@ -700,6 +744,34 @@ const App: React.FC = () => {
                     })}
                 </main>
                 {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
+                {promotionLevel && (
+                    <div className="promotion-overlay">
+                        <div className="promotion-panel">
+                            <div className="promotion-time-skip">
+                                {t(PROMOTION_EVENTS[promotionLevel]!.timeSkip, PROMOTION_EVENTS[promotionLevel]!.timeSkipZh)}
+                            </div>
+                            <div className="promotion-title-new">
+                                {t(PROMOTION_EVENTS[promotionLevel]!.newTitle, PROMOTION_EVENTS[promotionLevel]!.newTitleZh)}
+                            </div>
+                            <div className="promotion-divider" />
+                            <blockquote className="promotion-quote">
+                                "{t(PROMOTION_EVENTS[promotionLevel]!.managerQuote, PROMOTION_EVENTS[promotionLevel]!.managerQuoteZh)}"
+                            </blockquote>
+                            <p className="promotion-attribution">
+                                — {t("Your Manager", "你的上司")}, Sentinel Advisory
+                            </p>
+                            <button
+                                className="promotion-confirm"
+                                onClick={() => {
+                                    localStorage.setItem(`seenPromotion_${promotionLevel}`, "1");
+                                    setPromotionLevel(null);
+                                }}
+                            >
+                                {t("Continue", "继续")}
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         );
     }
@@ -813,6 +885,14 @@ const App: React.FC = () => {
                                                 ? t("✓ On track", "✓ 进展顺利")
                                                 : t("⚠ At risk", "⚠ 存在风险")}
                                         </div>
+                                        {(100 - currentScore) > 15 && (
+                                            <div style={{ marginTop: 4, fontSize: 11, color: "#f87171" }}>
+                                                {t(
+                                                    "Some threats remain unmitigated — consider revisiting earlier stages.",
+                                                    "存在未缓解的威胁，建议回顾之前的关卡部署。"
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -969,6 +1049,21 @@ const App: React.FC = () => {
                 </aside>
 
                 <section className="stage-main-area">
+                    {stageConfig?.briefing && (
+                        <div className={`stage-briefing ${briefingOpen ? "" : "stage-briefing-collapsed"}`}>
+                            <div className="stage-briefing-header" onClick={() => setBriefingOpen((p) => !p)}>
+                                <span className="stage-briefing-label">{t("Mission Brief", "任务简报")}</span>
+                                <span className="stage-briefing-toggle">{briefingOpen ? "▲" : "▼"}</span>
+                            </div>
+                            {briefingOpen && (
+                                <p className="stage-briefing-text">
+                                    {language === "zh" && stageConfig.briefingZh
+                                        ? stageConfig.briefingZh
+                                        : stageConfig.briefing}
+                                </p>
+                            )}
+                        </div>
+                    )}
                     <div className="stage-main-title">{t("Secure Area Boundaries", "安全区域边界")}</div>
                     <div className="stage-main-board">
                         {view.chapter === 4 && level4Scenario !== null ? (
@@ -1144,6 +1239,7 @@ const App: React.FC = () => {
                 onNextTurn={handleNextTurn}
                 onRunAttackSimulation={() => {}}
                 language={language}
+                feedbackMsg={feedbackMsg}
             />
             {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
         </div>

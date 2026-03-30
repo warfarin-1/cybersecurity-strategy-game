@@ -10,6 +10,7 @@ interface BottomBarProps {
     isLoading?: boolean;
     score?: number;
     language?: "en" | "zh";
+    feedbackMsg?: string | null;
 }
 
 export const BottomBar: React.FC<BottomBarProps> = ({
@@ -21,6 +22,7 @@ export const BottomBar: React.FC<BottomBarProps> = ({
     isLoading = false,
     score,
     language = "en",
+    feedbackMsg,
 }) => {
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
     return (
@@ -36,6 +38,11 @@ export const BottomBar: React.FC<BottomBarProps> = ({
                     </>
                 )}
             </div>
+            {feedbackMsg && (
+                <div className="bottombar-feedback">
+                    ⚠ {feedbackMsg}
+                </div>
+            )}
             <div className="bottombar-right">
                 <button
                     className="btn-small btn-outline"
