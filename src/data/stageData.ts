@@ -252,7 +252,7 @@ const L3_4: StageConfig = {
 
 // ─── Level 4 — Key Infrastructure ────────────────────────────────────────────
 // Scenario: L4-B2-SCENARIO-01 (IAM)
-// subThreatIds drive threat-tree logic; L4-IAM-01/02 are standalone stage threats.
+// The threat tree uses linked sub-threats; L4-IAM-01/02 are extra standalone threats also shown in the stage.
 
 const L4_1: StageConfig = {
     stageId: "L4-1",

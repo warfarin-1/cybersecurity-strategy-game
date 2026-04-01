@@ -74,11 +74,9 @@ async function fetchText(filename: string): Promise<string> {
 // ─── Loaders ─────────────────────────────────────────────────────────────────
 
 /**
- * Load all security controls.
- * Bilingual CSV columns: ControlID, Name, Name_ZH, Description, Description_ZH,
- *                        Cost, Category, ApplicableRiskTypes, CAF_Principle
- * English CSV columns:   ControlID, Name, Description, Cost, Category,
- *                        ApplicableRiskTypes, CAF_Principle
+ * Load all security controls from the CSV file.
+ * Picks the bilingual file when language is "zh", otherwise uses the English-only file.
+ * Column order differs between the two files — see the index comments below.
  */
 export async function loadControls(lang?: "en" | "zh"): Promise<Control[]> {
     const bilingual = lang === "zh";
@@ -124,11 +122,9 @@ export async function loadControls(lang?: "en" | "zh"): Promise<Control[]> {
 }
 
 /**
- * Load threats for a given level.
- * Bilingual CSV columns: ThreatID, Level, RiskType, ScenarioName, ScenarioName_ZH,
- *                        Severity, Description, Description_ZH, RecommendedControlID, CAF_Principle
- * English CSV columns:   ThreatID, Level, RiskType, ScenarioName, Severity,
- *                        Description, RecommendedControlID, CAF_Principle
+ * Load threats for the given level (2, 3, or 4) from the CSV file.
+ * Picks the bilingual file when language is "zh", otherwise uses the English-only file.
+ * Column order differs between the two files — see the index comments below.
  */
 export async function loadThreats(level: 2 | 3 | 4, lang?: "en" | "zh"): Promise<Threat[]> {
     const bilingual = lang === "zh";

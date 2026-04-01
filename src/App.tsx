@@ -8,7 +8,7 @@ import { getStageConfig } from "./data/stageData";
 import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle, INTRO_LINES, ENDING_LINES } from "./data/narrative";
 import { BottomBar } from "./components/BottomBar";
 
-// --- Helpers (mirrored from Layout.tsx) ---
+// Helper functions used across the game
 
 function calculateRiskLevel(controlsApplied: number): RiskLevel {
     if (controlsApplied >= 3) return "Low";
@@ -23,7 +23,7 @@ const BASE_SECTORS: Sector[] = [
     { id: "computing", name: "Computing Environment",  controlsApplied: 0, riskLevel: "High" },
 ];
 
-/** Map a control's category to the sector it logically protects. */
+/** Work out which sector a security control belongs to. */
 function controlToSector(control: Control): string {
     switch (control.category) {
         case "Network":  return "boundary";
@@ -256,7 +256,7 @@ const App: React.FC = () => {
     const [stageThreats, setStageThreats] = useState<Threat[]>([]);
     const [stageControls, setStageControls] = useState<Control[]>([]);
     const [deployedControlIds, setDeployedControlIds] = useState<string[]>([]);
-    // Tracks which stageId has finished loading — derived dataLoading avoids sync setState in effect
+    // Remember which stage and language were last loaded, so we know when to fetch new data
     const [loadedForStageId, setLoadedForStageId] = useState<string | null>(null);
     const [level4Scenario, setLevel4Scenario] = useState<Level4Scenario | null>(null);
     const [gameMode, setGameMode] = useState<"beginner" | "expert">(() => {
@@ -470,11 +470,11 @@ const App: React.FC = () => {
         });
         const newBudget = activeStageState.budget - cost;
 
-        // Completion check — compute new deployed set synchronously
+        // Check if this deployment completes the stage
         const newDeployedIds = [...deployedControlIds, controlId];
         const stageConfig = getStageConfig(activeStageState.stageId);
 
-        // L4: all scenario subThreatIds mitigated; L2/L3: all requiredControlIds deployed
+        // Level 4 stages pass when the whole attack chain is blocked; Level 2/3 pass when all required controls are deployed
         const isL4 = view.type === "stage" && view.chapter === 4;
         let stageJustCompleted = false;
         let completionLog = "";
@@ -527,7 +527,7 @@ const App: React.FC = () => {
                 : prev
         );
 
-        // If this deploys completed the stage, check if all chapter stages are now done
+        // If the stage is now complete, check whether all stages in the chapter are also done
         if (stageJustCompleted && view.type === "stage") {
             const chapterStages = STAGES_BY_CHAPTER[view.chapter];
             const allChapterDone = chapterStages.every(

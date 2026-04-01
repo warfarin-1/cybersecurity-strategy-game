@@ -78,7 +78,7 @@ export const PLAYER_TITLES: Record<number, { en: string; zh: string }> = {
     2: { en: "Senior Security Consultant", zh: "高级安全顾问" },
 };
 
-/** Infer player rank from the number of completed chapters. */
+/** Return the player's job title based on how many chapters they have completed. */
 export function getPlayerTitle(completedLevels: number): { en: string; zh: string } {
     if (completedLevels >= 2) return PLAYER_TITLES[2];
     if (completedLevels >= 1) return PLAYER_TITLES[1];
