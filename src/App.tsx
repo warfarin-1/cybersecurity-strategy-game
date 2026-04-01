@@ -348,11 +348,11 @@ const App: React.FC = () => {
     useEffect(() => {
         if (!showEnding) return;
         if (endingLineIndex < ENDING_LINES.length) {
-            const delay = ENDING_LINES[endingLineIndex].en === "" ? 300 : 700;
+            const delay = ENDING_LINES[endingLineIndex].en === "" ? 400 : 900;
             const timer = setTimeout(() => setEndingLineIndex((i) => i + 1), delay);
             return () => clearTimeout(timer);
         } else {
-            const timer = setTimeout(() => setEndingReady(true), 1000);
+            const timer = setTimeout(() => setEndingReady(true), 1200);
             return () => clearTimeout(timer);
         }
     }, [showEnding, endingLineIndex]);
@@ -367,6 +367,9 @@ const App: React.FC = () => {
 
     useEffect(() => {
         if (view.type !== "map") return;
+        // Ending sequence takes priority — don't show promotion at the same time
+        const allDone = completedChapters.has(2) && completedChapters.has(3) && completedChapters.has(4);
+        if (allDone && !localStorage.getItem("seenEnding")) return;
         const l2done = completedChapters.has(2);
         const l3done = completedChapters.has(3);
         if (l3done && !localStorage.getItem("seenPromotion_4")) {
@@ -738,7 +741,7 @@ const App: React.FC = () => {
 
     if (showEnding) {
         return (
-            <div className="intro-overlay">
+            <div className="ending-overlay">
                 <button className="intro-skip" onClick={dismissEnding}>
                     {language === "zh" ? "跳过" : "Skip"}
                 </button>
@@ -746,7 +749,7 @@ const App: React.FC = () => {
                     {ENDING_LINES.slice(0, endingLineIndex).map((line, i) => (
                         <div
                             key={i}
-                            className={`intro-line${line.en === "" ? " intro-line-spacer" : ""}`}
+                            className={`intro-line${line.en === "" ? " intro-line-spacer" : ""}${i === ENDING_LINES.length - 1 ? " ending-line-final" : ""}`}
                         >
                             {language === "zh" ? line.zh : line.en}
                         </div>
@@ -844,6 +847,11 @@ const App: React.FC = () => {
                             </button>
                         );
                     })}
+                    <div className="chapter-card chapter-card-coming-soon">
+                        <div className="chapter-icon chapter-icon-coming-soon">Lv.5</div>
+                        <div className="chapter-text-main">Quantum Fluctuations</div>
+                        <div className="chapter-text-sub">{t("Coming Soon", "即将推出")}</div>
+                    </div>
                 </main>
                 {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
                 {promotionLevel && (

@@ -1086,3 +1086,38 @@
     from { opacity: 0; transform: translateY(4px); }
     to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ─── Ending Overlay ─────────────────────────────────────────────────────── */
+
+.ending-overlay {
+    position: fixed;
+    inset: 0;
+    background: #020308;
+    z-index: 3000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px;
+}
+
+.ending-line-final {
+    color: #f59e0b !important;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: 0.02em;
+}
+
+/* ─── Coming Soon Card ───────────────────────────────────────────────────── */
+
+.chapter-card-coming-soon {
+    border-style: dashed;
+    border-color: #1f2937;
+    opacity: 0.45;
+    cursor: default;
+    pointer-events: none;
+}
+
+.chapter-icon-coming-soon {
+    color: #374151;
+}
