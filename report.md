@@ -1778,3 +1778,237 @@ New section appended: `/* ─── Intro Overlay ──────────
 | `.intro-begin` | Light-blue outline button, 48px top margin, fades in via `introFadeIn` with 0.6s duration |
 | `.intro-begin:hover` | Increased background and border opacity |
 | `@keyframes introFadeIn` | `opacity: 0; translateY(4px)` → `opacity: 1; translateY(0)` |
+
+---
+
+## Change Log — Ending Animation
+
+**Date:** 2026-04-01
+**Commit:** `dff0a36`
+
+### Overview
+
+Added a full-screen ending sequence that plays once when the player has completed all three chapters (Level 2, 3, and 4). Mirrors the intro animation in structure, but uses slower pacing and a distinct final line style.
+
+---
+
+### `src/data/narrative.ts`
+
+New export `ENDING_LINES`:
+
+```typescript
+export const ENDING_LINES: { en: string; zh: string }[] = [ … ]
+```
+
+15 entries (including blank spacer lines). Narrates the conclusion of the Convolutional Kernel engagement, the manager's summary ("Three clients. Three assessments. No breaches on our watch."), and the arrival of a new file for a client codenamed "Quantum Fluctuations". Ends with "To be continued." / "待续。"
+
+---
+
+### `src/App.tsx`
+
+#### Import update
+
+`ENDING_LINES` added to the narrative import.
+
+#### New state variables
+
+| State | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `showEnding` | `boolean` | `false` | Whether the ending sequence is active |
+| `endingLineIndex` | `number` | `0` | How many lines have been revealed |
+| `endingReady` | `boolean` | `false` | Whether the Return to Menu button should appear |
+
+#### New `useEffect` — ending trigger
+
+Runs when `view` returns to `"map"` or `completedChapters` changes. If all three chapters are present in `completedChapters` and `localStorage` has no `"seenEnding"` key, triggers the ending via `setTimeout(() => setShowEnding(true), 0)`.
+
+#### New `useEffect` — ending ticker
+
+Runs whenever `showEnding` or `endingLineIndex` changes:
+- If lines remain: schedules a `setTimeout` (400ms for blank lines, 900ms for text lines) to increment `endingLineIndex`
+- Once all lines shown: schedules a 1200ms delay then sets `endingReady = true`
+
+#### New handler: `dismissEnding`
+
+Writes `"seenEnding"` to `localStorage`, sets `showEnding` to `false`, and resets `endingLineIndex` and `endingReady` to their initial values.
+
+#### Ending rendering (new branch between intro and map)
+
+```tsx
+if (showEnding) {
+    return (
+        <div className="ending-overlay">
+            <button className="intro-skip" onClick={dismissEnding}>…</button>
+            <div className="intro-content">
+                {ENDING_LINES.slice(0, endingLineIndex).map((line, i) => (
+                    <div key={i} className={`intro-line${…}${i === ENDING_LINES.length - 1 ? " ending-line-final" : ""}`}>
+                        {language === "zh" ? line.zh : line.en}
+                    </div>
+                ))}
+            </div>
+            {endingReady && (
+                <button className="intro-begin" onClick={dismissEnding}>
+                    {language === "zh" ? "返回主菜单" : "Return to Menu"}
+                </button>
+            )}
+        </div>
+    );
+}
+```
+
+The last line ("To be continued.") receives the `ending-line-final` class for a distinct amber colour.
+
+---
+
+### `src/App.css`
+
+New section appended: `/* ─── Ending Overlay ─────────────────────────────────────────────────────── */`
+
+| Class | Purpose |
+|-------|---------|
+| `.ending-overlay` | Full-screen fixed container identical in layout to `.intro-overlay` |
+| `.ending-line-final` | Amber (`#f59e0b`) bold 16px style for the "To be continued." line |
+
+---
+
+## Change Log — ESLint setState-in-Effect Fixes
+
+**Date:** 2026-04-01
+**Commit:** `ea204f0`
+
+### Overview
+
+The ESLint rule `react-hooks/set-state-in-effect` flags any synchronous `setState` call directly in an effect body. Three new violations were introduced by the ending/promotion effects and the data-loading effect reset; two pre-existing empty `catch` blocks also triggered `no-empty`.
+
+---
+
+### `src/App.tsx`
+
+| Location | Fix applied |
+|----------|------------|
+| `setBriefingOpen(true)` in data-loading effect | Wrapped in `setTimeout(..., 0)` |
+| `setShowEnding(true)` in ending-trigger effect | Wrapped in `setTimeout(..., 0)` |
+| `setPromotionLevel(3/4)` in promotion effect | Wrapped in `setTimeout(..., 0)` |
+| Empty `catch {}` in `dismissIntro` | Changed to `catch { /* ignore */ }` |
+| Empty `catch {}` in `dismissEnding` | Changed to `catch { /* ignore */ }` |
+
+Wrapping in `setTimeout` defers the state update to after the current effect finishes, breaking the synchronous call chain that the rule flags. Functional behaviour is unchanged.
+
+---
+
+## Change Log — Narrative System Audit and Fixes
+
+**Date:** 2026-04-01
+**Commit:** `a1e71b9`
+
+### Overview
+
+Full audit of all narrative features against a specification checklist. Six issues found and corrected in one commit.
+
+---
+
+### Issues fixed
+
+#### 1. Ending animation delays (spec mismatch)
+
+The ending ticker used the same delay values as the intro (300ms / 700ms / 1000ms). Updated to the intended slower pacing:
+
+| Delay | Before | After |
+|-------|--------|-------|
+| Blank line | 300ms | 400ms |
+| Text line | 700ms | 900ms |
+| "Return to Menu" button appearance | 1000ms | 1200ms |
+
+#### 2. Ending and promotion cutscene simultaneous trigger
+
+When a player completes Level 4 for the first time, both the ending sequence (`seenEnding` absent) and the Level 4 promotion cutscene (`seenPromotion_4` absent) were triggered together, producing two overlapping overlays.
+
+**Fix:** The promotion `useEffect` now checks for a pending ending sequence before running:
+
+```typescript
+const allDone = completedChapters.has(2) && completedChapters.has(3) && completedChapters.has(4);
+if (allDone && !localStorage.getItem("seenEnding")) return;
+```
+
+The ending sequence is shown first; the promotion cutscene fires on the next map visit (after the ending has been dismissed and `seenEnding` is written).
+
+#### 3. Missing `ending-line-final` class on "To be continued." line
+
+The last line of the ending was not visually distinguished from the other text lines.
+
+**Fix:** The rendering loop now appends `ending-line-final` to the last element (`i === ENDING_LINES.length - 1`), applying the amber colour defined in CSS.
+
+#### 4. Ending overlay reusing `intro-overlay` class
+
+The ending used `<div className="intro-overlay">`, sharing the intro's CSS rather than having its own selector.
+
+**Fix:** Changed to `<div className="ending-overlay">` and added a dedicated `.ending-overlay` rule in `App.css`.
+
+#### 5. Missing Lv.5 "Quantum Fluctuations" coming-soon card
+
+The map view rendered only the three playable chapter cards. The Lv.5 card referenced in `ENDING_LINES` had no visual representation.
+
+**Fix:** A non-interactive `<div>` card added after the `CHAPTERS.map()` block:
+
+```tsx
+<div className="chapter-card chapter-card-coming-soon">
+    <div className="chapter-icon chapter-icon-coming-soon">Lv.5</div>
+    <div className="chapter-text-main">Quantum Fluctuations</div>
+    <div className="chapter-text-sub">{t("Coming Soon", "即将推出")}</div>
+</div>
+```
+
+#### 6. Four CSS classes missing from `App.css`
+
+`ending-overlay`, `ending-line-final`, `chapter-card-coming-soon`, and `chapter-icon-coming-soon` were referenced in JSX but not defined in any stylesheet.
+
+**Fix:** All four added to `App.css`:
+
+| Class | Purpose |
+|-------|---------|
+| `.ending-overlay` | Full-screen overlay for the ending sequence |
+| `.ending-line-final` | Amber bold style for the final "To be continued." line |
+| `.chapter-card-coming-soon` | Dashed border, 45% opacity, `pointer-events: none` |
+| `.chapter-icon-coming-soon` | Dark grey level indicator for the locked future card |
+
+---
+
+## Change Log — Comment Rewrite (Student-level Language)
+
+**Date:** 2026-04-01
+**Commit:** `869aab9`
+
+### Overview
+
+Code comments across four source files were rewritten to remove engineering-specific terminology and use plain language appropriate for an undergraduate project submission.
+
+---
+
+### Files changed and comments rewritten
+
+#### `src/App.tsx` — 6 comments
+
+| Before | After |
+|--------|-------|
+| `// --- Helpers (mirrored from Layout.tsx) ---` | `// Helper functions used across the game` |
+| `/** Map a control's category to the sector it logically protects. */` | `/** Work out which sector a security control belongs to. */` |
+| `// Tracks which stageId has finished loading — derived dataLoading avoids sync setState in effect` | `// Remember which stage and language were last loaded, so we know when to fetch new data` |
+| `// Completion check — compute new deployed set synchronously` | `// Check if this deployment completes the stage` |
+| `// L4: all scenario subThreatIds mitigated; L2/L3: all requiredControlIds deployed` | `// Level 4 stages pass when the whole attack chain is blocked; Level 2/3 pass when all required controls are deployed` |
+| `// If this deploys completed the stage, check if all chapter stages are now done` | `// If the stage is now complete, check whether all stages in the chapter are also done` |
+
+#### `src/data/narrative.ts` — 1 comment
+
+| Before | After |
+|--------|-------|
+| `/** Infer player rank from the number of completed chapters. */` | `/** Return the player's job title based on how many chapters they have completed. */` |
+
+#### `src/data/stageData.ts` — 1 comment
+
+| Before | After |
+|--------|-------|
+| `// subThreatIds drive threat-tree logic; L4-IAM-01/02 are standalone stage threats.` | `// The threat tree uses linked sub-threats; L4-IAM-01/02 are extra standalone threats also shown in the stage.` |
+
+#### `src/utils/dataLoader.ts` — 2 JSDoc blocks
+
+Column-listing JSDoc blocks for `loadControls` and `loadThreats` replaced with shorter descriptions explaining which file is chosen and where the column index comments are.
