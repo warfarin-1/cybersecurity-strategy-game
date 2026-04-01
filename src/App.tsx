@@ -299,7 +299,7 @@ const App: React.FC = () => {
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
         if (view.type !== "stage") return;
-        setBriefingOpen(true);
+        setTimeout(() => setBriefingOpen(true), 0);
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
@@ -361,7 +361,7 @@ const App: React.FC = () => {
         if (view.type !== "map") return;
         const allDone = completedChapters.has(2) && completedChapters.has(3) && completedChapters.has(4);
         if (allDone && !localStorage.getItem("seenEnding")) {
-            setShowEnding(true);
+            setTimeout(() => setShowEnding(true), 0);
         }
     }, [view, completedChapters]);
 
@@ -370,9 +370,9 @@ const App: React.FC = () => {
         const l2done = completedChapters.has(2);
         const l3done = completedChapters.has(3);
         if (l3done && !localStorage.getItem("seenPromotion_4")) {
-            setPromotionLevel(4);
+            setTimeout(() => setPromotionLevel(4), 0);
         } else if (l2done && !localStorage.getItem("seenPromotion_3")) {
-            setPromotionLevel(3);
+            setTimeout(() => setPromotionLevel(3), 0);
         }
     }, [view, completedChapters]);
 
@@ -406,7 +406,7 @@ const App: React.FC = () => {
     const handleStageClick = (chapter: ChapterLevel, stageId: string) => {
         if (!isStageUnlocked(stageId)) return;
 
-        // Initialise (or reuse) chapter state
+        // Initialize (or reuse) chapter state
         let current = chapterState;
         if (!current || current.chapterId !== chapter) {
             current = makeChapterState(chapter);
@@ -524,7 +524,7 @@ const App: React.FC = () => {
                 : prev
         );
 
-        // If this deploy completed the stage, check if all chapter stages are now done
+        // If this deploys completed the stage, check if all chapter stages are now done
         if (stageJustCompleted && view.type === "stage") {
             const chapterStages = STAGES_BY_CHAPTER[view.chapter];
             const allChapterDone = chapterStages.every(
@@ -694,12 +694,12 @@ const App: React.FC = () => {
     };
 
     const dismissIntro = () => {
-        try { localStorage.setItem("seenIntro", "1"); } catch {}
+        try { localStorage.setItem("seenIntro", "1"); } catch { /* ignore */ }
         setShowIntro(false);
     };
 
     const dismissEnding = () => {
-        try { localStorage.setItem("seenEnding", "1"); } catch {}
+        try { localStorage.setItem("seenEnding", "1"); } catch { /* ignore */ }
         setShowEnding(false);
         setEndingLineIndex(0);
         setEndingReady(false);
