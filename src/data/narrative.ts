@@ -22,28 +22,28 @@ export interface PromotionEvent {
 
 export const ORG_PROFILES: Record<2 | 3 | 4, OrgProfile> = {
     2: {
-        orgName: "Meridian Retail Group",
-        orgNameZh: "Meridian 零售集团",
+        orgName: "Singularity",
+        orgNameZh: "Singularity",
         orgType: "Retail & E-commerce",
         orgTypeZh: "零售与电商",
-        tagline: "800 employees · First compliance engagement",
-        taglineZh: "800名员工 · 首次合规评估",
+        tagline: "800 employees · Level 2 assessment",
+        taglineZh: "800名员工 · 等保二级评估",
     },
     3: {
-        orgName: "Eastbridge General Hospital",
-        orgNameZh: "Eastbridge 综合医院",
+        orgName: "Polarized Light",
+        orgNameZh: "Polarized Light",
         orgType: "Healthcare",
         orgTypeZh: "医疗卫生",
-        tagline: "1,200 beds · EHR system going live",
-        taglineZh: "1200张床位 · 电子病历系统全面上线",
+        tagline: "Regional healthcare · Level 3 assessment",
+        taglineZh: "地区医疗机构 · 等保三级评估",
     },
     4: {
-        orgName: "National Grid Operations Centre",
-        orgNameZh: "国家电网运营中心",
-        orgType: "Critical Infrastructure",
-        orgTypeZh: "关键信息基础设施",
-        tagline: "Serves millions · Level 4 mandatory",
-        taglineZh: "服务数百万用户 · 四级认证法定要求",
+        orgName: "Convolutional Kernel",
+        orgNameZh: "Convolutional Kernel",
+        orgType: "Classification: Restricted",
+        orgTypeZh: "密级：限制",
+        tagline: "Level 4 mandatory",
+        taglineZh: "四级认证法定要求",
     },
 };
 
@@ -55,9 +55,9 @@ export const PROMOTION_EVENTS: Partial<Record<2 | 3 | 4, PromotionEvent>> = {
         timeSkip: "Six months later.",
         timeSkipZh: "六个月后。",
         managerQuote:
-            "Good work on the Meridian account. You handled the basics well. We've got something bigger coming in — Eastbridge Hospital needs a full Level 3 review. I think you're ready.",
+            "Good work on the Singularity account. You handled the basics well. We've got something bigger coming in — Polarized Light needs a full Level 3 review. I think you're ready.",
         managerQuoteZh:
-            "Meridian 那边做得不错。基础工作处理得很稳。现在有个更重要的项目——Eastbridge 医院需要完整的三级评估。我觉得你准备好了。",
+            "Singularity 那边做得不错。基础工作处理得很稳。现在有个更重要的项目——Polarized Light 需要完整的三级评估。我觉得你准备好了。",
     },
     4: {
         unlockedLevel: 4,
@@ -66,9 +66,9 @@ export const PROMOTION_EVENTS: Partial<Record<2 | 3 | 4, PromotionEvent>> = {
         timeSkip: "Two years in.",
         timeSkipZh: "入职两年。",
         managerQuote:
-            "The Grid Operations Centre has requested us specifically. Level 4. Critical infrastructure. This isn't like anything you've done before — the stakes are national.",
+            "Convolutional Kernel has requested us specifically. Level 4. I can't tell you more than that until you're in the room. What I can tell you is that this one matters.",
         managerQuoteZh:
-            "国家电网运营中心点名要我们接手。四级，关键基础设施。这和你之前经历的完全不同——这次关系到整个国家。",
+            "Convolutional Kernel 点名要我们接手。四级。在你进入那个房间之前我无法告诉你更多。我能告诉你的是，这次非常重要。",
     },
 };
 
@@ -84,3 +84,20 @@ export function getPlayerTitle(completedLevels: number): { en: string; zh: strin
     if (completedLevels >= 1) return PLAYER_TITLES[1];
     return PLAYER_TITLES[0];
 }
+
+export const INTRO_LINES: { en: string; zh: string }[] = [
+    { en: "Nottingham. 2026.", zh: "诺丁汉，2026年。" },
+    { en: "", zh: "" },
+    { en: "Kryuger Security.", zh: "Kryuger Security。" },
+    { en: "Boutique cybersecurity consultancy.", zh: "精品网络安全咨询公司。" },
+    { en: "", zh: "" },
+    { en: "You've just joined as a Junior Security Consultant.", zh: "你刚刚以初级安全顾问的身份入职。" },
+    { en: "No corner office. No senior title. Not yet.", zh: "没有独立办公室，没有高级头衔。还没有。" },
+    { en: "", zh: "" },
+    { en: "Your first case file is on the desk.", zh: "第一份案卷已经放在你的桌上。" },
+    { en: "Client: Singularity.", zh: "客户：Singularity。" },
+    { en: "They need to pass a Level 2 security assessment.", zh: "他们需要通过等保二级评估。" },
+    { en: "Budget's tight. Threats are real.", zh: "预算有限，威胁真实存在。" },
+    { en: "", zh: "" },
+    { en: "Time to get to work.", zh: "该开始工作了。" },
+];

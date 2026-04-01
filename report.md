@@ -1381,3 +1381,400 @@ New rules added after `.undo-btn:hover`:
 |-------|---------|
 | `.stage-reset-btn` | Full-width transparent button, grey border, 11px font, `margin-top: 8px` |
 | `.stage-reset-btn:hover` | Border and text turn red (`#f87171`) |
+
+---
+
+## Change Log — Inter Font, BottomBar Styles, Refined Hover Effects
+
+**Date:** 2026-03-30
+
+### Overview
+
+Unified typography with the Inter typeface and refined interactive hover effects across chapter cards, stage cards, and sidebar control buttons. Added dedicated CSS classes for the BottomBar component.
+
+---
+
+### `index.html`
+
+Added Google Fonts preconnect and Inter stylesheet link in `<head>`:
+
+```html
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+```
+
+### `src/App.css`
+
+#### Typography
+
+- `.app-root` `font-family` updated to `'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif`
+
+#### Hover effect refinements
+
+| Selector | Change |
+|----------|--------|
+| `.chapter-card` transition | Duration 0.15s → 0.18s; added `ease` to `border-color` |
+| `.chapter-card:hover` | Changed to `:hover:not(:disabled)`; shadow reduced from `0 22px 50px rgba(0,0,0,0.7)` to `0 8px 24px rgba(0,0,0,0.35)` |
+| `.stage-card:hover` | Changed to `:not(:disabled):hover`; shadow reduced from `0 14px 30px rgba(0,0,0,0.6)` to `0 6px 16px rgba(0,0,0,0.3)` |
+| `.sidebar-pill:hover` | Changed to `:not(:disabled):hover`; added `transform: translateX(2px)` |
+
+#### New BottomBar CSS classes
+
+| Class | Purpose |
+|-------|---------|
+| `.bottombar` | 56px fixed-height bar, dark translucent background, top border, flex layout |
+| `.bottombar-left` | 13px grey text row, flex with 16px gap |
+| `.bottombar-right` | Flex row for action buttons, 8px gap |
+| `.btn-small` | Base style for compact buttons: `padding: 7px 16px`, 13px 500-weight, 8px border-radius |
+| `.btn-outline` | Light-blue tinted outline button (`rgba(125,211,252,…)`) |
+| `.btn-outline:hover:not(:disabled)` | Increased background and border opacity on hover |
+| `.btn-outline:disabled` | 40% opacity, `cursor: not-allowed` |
+
+---
+
+## Change Log — Narrative System
+
+**Date:** 2026-03-30
+
+### Overview
+
+Introduced a narrative layer on top of the existing game mechanics: organisation profiles on the map view, player job titles, promotion cutscenes when unlocking Level 3/4, per-stage mission briefings, and turn feedback messages in the BottomBar.
+
+---
+
+### New file: `src/data/narrative.ts`
+
+Pure data module — no game logic.
+
+#### Interfaces
+
+| Interface | Fields | Purpose |
+|-----------|--------|---------|
+| `OrgProfile` | `orgName`, `orgNameZh`, `orgType`, `orgTypeZh`, `tagline`, `taglineZh` | Fictional client organisation shown on the map and chapter cards |
+| `PromotionEvent` | `unlockedLevel`, `managerQuote`, `managerQuoteZh`, `timeSkip`, `timeSkipZh`, `newTitle`, `newTitleZh` | Narrative cutscene data triggered when a new level is unlocked |
+
+#### Exports
+
+| Export | Type | Content |
+|--------|------|---------|
+| `ORG_PROFILES` | `Record<2\|3\|4, OrgProfile>` | L2: Meridian Retail Group / L3: Eastbridge General Hospital / L4: National Grid Operations Centre |
+| `PROMOTION_EVENTS` | `Partial<Record<3\|4, PromotionEvent>>` | Manager quotes and time-skip text for Level 3 and Level 4 unlock moments |
+| `PLAYER_TITLES` | `Record<number, {en,zh}>` | Index 0–2: Junior Security Consultant → Security Consultant → Senior Security Consultant |
+| `getPlayerTitle(completedLevels)` | `function` | Returns the appropriate title object based on how many chapters have been completed |
+
+---
+
+### `src/data/stageData.ts`
+
+`StageConfig` interface extended with two optional fields:
+
+```typescript
+briefing?: string;    // narrative mission brief (English)
+briefingZh?: string;  // narrative mission brief (Chinese)
+```
+
+All 11 `StageConfig` objects now include `briefing` and `briefingZh` strings providing in-universe context for each scenario.
+
+---
+
+### `src/App.tsx`
+
+#### New imports
+
+```typescript
+import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle } from "./data/narrative";
+```
+
+#### New state variables
+
+| State | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `briefingOpen` | `boolean` | `true` | Controls whether the Mission Brief panel in Stage view is expanded |
+| `feedbackMsg` | `string \| null` | `null` | Feedback message passed to BottomBar after each turn |
+| `promotionLevel` | `3 \| 4 \| null` | `null` | Triggers the promotion cutscene overlay when set |
+
+#### `briefingOpen` reset
+
+`setBriefingOpen(true)` is called inside `handleStageClick` so the briefing panel is always expanded when entering a stage.
+
+#### `handleNextTurn` — feedback message
+
+After scoring, if any High-severity threats remain unmitigated (`h > 0`), a context-aware warning is composed:
+- Finds the first unmitigated High threat by name (bilingual)
+- Sets `feedbackMsg` to a bilingual string naming the threat and explaining the client cannot sign off
+- If no High threats remain unmitigated, `feedbackMsg` is set to `null`
+
+#### Promotion cutscene `useEffect`
+
+Runs when `view` changes to `"map"` or `completedChapters` changes:
+
+```typescript
+useEffect(() => {
+    if (view.type !== "map") return;
+    if (completedChapters.has(3) && !localStorage.getItem("seenPromotion_4")) {
+        setPromotionLevel(4);
+    } else if (completedChapters.has(2) && !localStorage.getItem("seenPromotion_3")) {
+        setPromotionLevel(3);
+    }
+}, [view, completedChapters]);
+```
+
+The seen-state is persisted via `localStorage.setItem("seenPromotion_${level}", "1")` when the player clicks Continue.
+
+#### Map view — TopBar player title
+
+```tsx
+<div className="top-bar-role">
+    {t(playerTitle.en, playerTitle.zh)} · Sentinel Advisory
+</div>
+```
+
+`playerTitle` is computed from `getPlayerTitle(completedLevelCount)` where `completedLevelCount` counts entries in `completedChapters`.
+
+#### Map view — Chapter card organisation display
+
+Each chapter card now shows the client organisation name and type beneath the level title:
+
+```tsx
+<div className="chapter-org-name">{t(ORG_PROFILES[chapter.id].orgName, ORG_PROFILES[chapter.id].orgNameZh)}</div>
+<div className="chapter-org-type">{t(ORG_PROFILES[chapter.id].orgType, ORG_PROFILES[chapter.id].orgTypeZh)}</div>
+```
+
+#### Map view — Promotion cutscene overlay
+
+Rendered conditionally when `promotionLevel` is non-null, layered above the map:
+
+```tsx
+{promotionLevel && (
+    <div className="promotion-overlay">
+        <div className="promotion-panel">
+            <div className="promotion-time-skip">…</div>
+            <div className="promotion-title-new">…</div>
+            <div className="promotion-divider" />
+            <blockquote className="promotion-quote">"…"</blockquote>
+            <p className="promotion-attribution">— Your Manager, Sentinel Advisory</p>
+            <button className="promotion-confirm" onClick={…}>Continue</button>
+        </div>
+    </div>
+)}
+```
+
+#### Chapter view — score warning
+
+When `(100 - currentScore) > 15`, a red inline note is shown beneath the score:
+
+> "Some threats remain unmitigated — consider revisiting earlier stages."
+
+#### Stage view — Mission Brief panel
+
+Rendered immediately before the main content area when `stageConfig.briefing` exists:
+
+```tsx
+<div className={`stage-briefing ${briefingOpen ? "" : "stage-briefing-collapsed"}`}>
+    <div className="stage-briefing-header" onClick={() => setBriefingOpen(p => !p)}>
+        <span className="stage-briefing-label">Mission Brief</span>
+        <span className="stage-briefing-toggle">{briefingOpen ? "▲" : "▼"}</span>
+    </div>
+    {briefingOpen && (
+        <p className="stage-briefing-text">
+            {language === "zh" && stageConfig.briefingZh ? stageConfig.briefingZh : stageConfig.briefing}
+        </p>
+    )}
+</div>
+```
+
+#### `goBackToChapter` helper
+
+Extracted from inline logic; additionally calls `setFeedbackMsg(null)` to clear any lingering turn feedback when leaving a stage.
+
+---
+
+### `src/components/BottomBar.tsx`
+
+`BottomBarProps` extended with:
+
+```typescript
+feedbackMsg?: string | null;
+```
+
+When `feedbackMsg` is truthy, a warning line is rendered between the left stats and the right buttons:
+
+```tsx
+{feedbackMsg && (
+    <div className="bottombar-feedback">
+        ⚠ {feedbackMsg}
+    </div>
+)}
+```
+
+---
+
+### `src/App.css`
+
+#### New CSS classes
+
+| Class | Purpose |
+|-------|---------|
+| `.top-bar-role` | 12px muted subtitle below the game title in TopBar |
+| `.chapter-org-name` | 13px semi-bold organisation name on chapter cards |
+| `.chapter-org-type` | 11px muted organisation type label |
+| `.stage-briefing` | Dark bordered box for the Mission Brief panel, `margin-bottom: 12px` |
+| `.stage-briefing-collapsed` | Removes bottom padding when collapsed |
+| `.stage-briefing-header` | Flex row with cursor pointer; hover lightens background |
+| `.stage-briefing-label` | 12px uppercase tracking label ("Mission Brief") |
+| `.stage-briefing-toggle` | 10px grey chevron indicator |
+| `.stage-briefing-text` | 13px body text, 1.6 line-height, muted colour |
+| `.bottombar-feedback` | Centred amber warning text (`#fbbf24`), 12px, flex `1` |
+| `.promotion-overlay` | Full-screen fixed backdrop (`rgba(0,0,0,0.85)`), z-index 200 |
+| `.promotion-panel` | Centred card, max-width 480px, dark background, rounded corners |
+| `.promotion-time-skip` | 12px uppercase spaced grey time-jump label |
+| `.promotion-title-new` | 22px bold new job title |
+| `.promotion-divider` | 1px horizontal rule separator |
+| `.promotion-quote` | Italic blockquote in amber (`#fbbf24`), larger font |
+| `.promotion-attribution` | 12px right-aligned grey attribution line |
+| `.promotion-confirm` | Full-width confirm button, light-blue outline style |
+| `.promotion-confirm:hover` | Increased background opacity on hover |
+
+---
+
+## Change Log — Client Rebrand, Briefing Rewrite, Intro Animation
+
+**Date:** 2026-04-01
+
+### Overview
+
+Three coordinated changes: (1) renamed all fictional clients and the consultancy brand; (2) rewrote every stage mission briefing with richer prose tied to the new client identities; (3) added a full-screen intro sequence that plays on first launch and can be skipped.
+
+---
+
+### `src/data/narrative.ts`
+
+#### Consultancy rename
+
+All occurrences of "Sentinel Advisory" replaced with **"Kryuger Security"** (affects `App.tsx` display strings; the string does not appear in `narrative.ts` directly).
+
+#### `ORG_PROFILES` — replaced
+
+| Level | Old name | New name | Notes |
+|-------|----------|----------|-------|
+| 2 | Meridian Retail Group | **Singularity** | Tagline updated to "800 employees · Level 2 assessment" |
+| 3 | Eastbridge General Hospital | **Polarized Light** | Tagline updated to "Regional healthcare · Level 3 assessment" |
+| 4 | National Grid Operations Centre | **Convolutional Kernel** | Org type changed to "Classification: Restricted"; tagline simplified |
+
+#### `PROMOTION_EVENTS` — replaced
+
+Manager quotes updated to reference the new client names (Singularity / Polarized Light). Level 4 quote rewritten to be deliberately vague, matching the restricted nature of the Convolutional Kernel engagement.
+
+#### New export: `INTRO_LINES`
+
+```typescript
+export const INTRO_LINES: { en: string; zh: string }[] = [ … ]
+```
+
+14 entries (including blank spacer lines). Content: sets the scene in Nottingham 2026, introduces Kryuger Security, establishes the player's starting role as Junior Security Consultant, and names the first client. Ends with "Time to get to work." / "该开始工作了。"
+
+---
+
+### `src/data/stageData.ts`
+
+All 11 `briefing` / `briefingZh` fields rewritten. Changes per stage:
+
+| Stage | Key change |
+|-------|-----------|
+| L2-1 | References Singularity; prose expanded to three-beat incident pattern ("someone clicked… then another… then a third") |
+| L2-2 | References Singularity; enumerates specific account types (former contractors, seasonal staff, 2023 logistics partner) |
+| L2-3 | References Singularity; lists data categories and adds insider threat framing |
+| L2-4 | References Singularity; expands on device types (POS, scanners, laptops, guest Wi-Fi) |
+| L3-1 | References Polarized Light; adds deliberate timing detail (started two weeks before system migration) |
+| L3-2 | References Polarized Light; adds timeline (18 months ago migration, post-migration audit gap) |
+| L3-3 | References Polarized Light; shifts from EHR framing to "data that does not expire"; adds next-of-kin detail |
+| L3-4 | References Polarized Light; attributes network sprawl to facilities team adding devices without IT |
+| L4-1 | References Convolutional Kernel by codename; sparse briefing is described as "deliberate"; removes nation-state attribution language |
+| L4-2 | Removes grid/telemetry framing; focuses on consequences of data manipulation rather than the infrastructure type |
+| L4-3 | Reframes as pure reconnaissance detection; "they are mapping" framing replaces "sophisticated intrusion attempt" |
+
+---
+
+### `src/App.tsx`
+
+#### Import update
+
+```typescript
+import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle, INTRO_LINES } from "./data/narrative";
+```
+
+#### New state variables
+
+| State | Type | Default | Purpose |
+|-------|------|---------|---------|
+| `showIntro` | `boolean` | `!localStorage.getItem("seenIntro")` | Whether to show the intro sequence |
+| `introLineIndex` | `number` | `0` | How many lines have been revealed so far |
+| `introReady` | `boolean` | `false` | Whether the Begin button should appear |
+
+#### New `useEffect` — intro ticker
+
+Runs whenever `showIntro` or `introLineIndex` changes:
+- If lines remain: schedules a `setTimeout` (300ms for blank lines, 700ms for text lines) to increment `introLineIndex`
+- Once all lines shown: schedules a 1000ms delay then sets `introReady = true`
+- Returns cleanup to cancel the timer on re-render
+
+#### New handler: `dismissIntro`
+
+```typescript
+const dismissIntro = () => {
+    try { localStorage.setItem("seenIntro", "1"); } catch {}
+    setShowIntro(false);
+};
+```
+
+Persists the seen-state so the intro does not replay on refresh.
+
+#### Intro rendering (new top-level branch, before all view branches)
+
+```tsx
+if (showIntro) {
+    return (
+        <div className="intro-overlay">
+            <button className="intro-skip" onClick={dismissIntro}>…</button>
+            <div className="intro-content">
+                {INTRO_LINES.slice(0, introLineIndex).map((line, i) => (
+                    <div key={i} className={`intro-line${line.en === "" ? " intro-line-spacer" : ""}`}>
+                        {language === "zh" ? line.zh : line.en}
+                    </div>
+                ))}
+            </div>
+            {introReady && (
+                <button className="intro-begin" onClick={dismissIntro}>…</button>
+            )}
+        </div>
+    );
+}
+```
+
+Blank lines render as `.intro-line-spacer` (fixed height, no fade animation). The Begin button appears only after all lines have been shown and the 1-second pause has elapsed.
+
+#### "Sentinel Advisory" → "Kryuger Security"
+
+Two occurrences replaced in the map view JSX:
+- TopBar role line: `{playerTitle} · Kryuger Security`
+- Promotion panel attribution: `— Your Manager, Kryuger Security`
+
+---
+
+### `src/App.css`
+
+New section appended: `/* ─── Intro Overlay ──────────────────────────────────────────────────────── */`
+
+| Class / Rule | Purpose |
+|---|---|
+| `.intro-overlay` | Full-screen fixed container, `z-index: 3000`, near-black background (`#020308`), centred flex column |
+| `.intro-skip` | Absolute top-right button; transparent, muted grey; hover lightens border and text |
+| `.intro-content` | Max 480px centred column, `gap: 2px` between lines |
+| `.intro-line` | 15px, `#9ca3af`, `opacity: 0` → animated in via `introFadeIn` |
+| `.intro-line:first-child` | Overridden to `#e5e7eb`, 600 weight, 16px (location/year line) |
+| `.intro-line:last-child` | Overridden to `#7dd3fc`, 500 weight (closing CTA line) |
+| `.intro-line-spacer` | Fixed 12px height, `opacity: 1 !important`, no animation |
+| `.intro-begin` | Light-blue outline button, 48px top margin, fades in via `introFadeIn` with 0.6s duration |
+| `.intro-begin:hover` | Increased background and border opacity |
+| `@keyframes introFadeIn` | `opacity: 0; translateY(4px)` → `opacity: 1; translateY(0)` |

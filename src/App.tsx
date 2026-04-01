@@ -5,7 +5,7 @@ import type { ChapterState, StageGameState, Sector, RiskLevel } from "./types";
 import type { Control, Threat, Level4Scenario } from "./utils/dataLoader";
 import { loadControls, loadThreats, loadLevel4Tree } from "./utils/dataLoader";
 import { getStageConfig } from "./data/stageData";
-import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle } from "./data/narrative";
+import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle, INTRO_LINES } from "./data/narrative";
 import { BottomBar } from "./components/BottomBar";
 
 // --- Helpers (mirrored from Layout.tsx) ---
@@ -279,6 +279,11 @@ const App: React.FC = () => {
     const [briefingOpen, setBriefingOpen] = useState(true);
     const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
     const [promotionLevel, setPromotionLevel] = useState<3 | 4 | null>(null);
+    const [showIntro, setShowIntro] = useState<boolean>(() => {
+        try { return !localStorage.getItem("seenIntro"); } catch { return false; }
+    });
+    const [introLineIndex, setIntroLineIndex] = useState(0);
+    const [introReady, setIntroReady] = useState(false);
 
     // Translation helper
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
@@ -324,6 +329,18 @@ const App: React.FC = () => {
             );
         }
     }, [view, language]);
+
+    useEffect(() => {
+        if (!showIntro) return;
+        if (introLineIndex < INTRO_LINES.length) {
+            const delay = INTRO_LINES[introLineIndex].en === "" ? 300 : 700;
+            const timer = setTimeout(() => setIntroLineIndex((i) => i + 1), delay);
+            return () => clearTimeout(timer);
+        } else {
+            const timer = setTimeout(() => setIntroReady(true), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [showIntro, introLineIndex]);
 
     useEffect(() => {
         if (view.type !== "map") return;
@@ -653,11 +670,41 @@ const App: React.FC = () => {
         });
     };
 
+    const dismissIntro = () => {
+        try { localStorage.setItem("seenIntro", "1"); } catch {}
+        setShowIntro(false);
+    };
+
     const goBackToMap = () => setView({ type: "map" });
     const goBackToChapter = (chapter: ChapterLevel) => {
         setFeedbackMsg(null);
         setView({ type: "chapter", chapter });
     };
+
+    if (showIntro) {
+        return (
+            <div className="intro-overlay">
+                <button className="intro-skip" onClick={dismissIntro}>
+                    {language === "zh" ? "跳过" : "Skip"}
+                </button>
+                <div className="intro-content">
+                    {INTRO_LINES.slice(0, introLineIndex).map((line, i) => (
+                        <div
+                            key={i}
+                            className={`intro-line${line.en === "" ? " intro-line-spacer" : ""}`}
+                        >
+                            {language === "zh" ? line.zh : line.en}
+                        </div>
+                    ))}
+                </div>
+                {introReady && (
+                    <button className="intro-begin" onClick={dismissIntro}>
+                        {language === "zh" ? "开始" : "Begin"}
+                    </button>
+                )}
+            </div>
+        );
+    }
 
     if (view.type === "map") {
         const completedLevelCount = [2, 3, 4].filter((lv) => completedChapters.has(lv as ChapterLevel)).length;
@@ -667,7 +714,7 @@ const App: React.FC = () => {
                 <header className="top-bar">
                     <div className="top-bar-title">{t("Cybersecurity Command Center", "网络安全指挥中心")}</div>
                     <div className="top-bar-role">
-                        {t(playerTitle.en, playerTitle.zh)} · Sentinel Advisory
+                        {t(playerTitle.en, playerTitle.zh)} · Kryuger Security
                     </div>
                     <button className="glossary-btn" onClick={() => setGlossaryOpen(true)}>
                         📖 {t("Glossary", "安全图鉴")}
@@ -758,7 +805,7 @@ const App: React.FC = () => {
                                 "{t(PROMOTION_EVENTS[promotionLevel]!.managerQuote, PROMOTION_EVENTS[promotionLevel]!.managerQuoteZh)}"
                             </blockquote>
                             <p className="promotion-attribution">
-                                — {t("Your Manager", "你的上司")}, Sentinel Advisory
+                                — {t("Your Manager", "你的上司")}, Kryuger Security
                             </p>
                             <button
                                 className="promotion-confirm"

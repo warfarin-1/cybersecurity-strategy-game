@@ -40,8 +40,8 @@ const L2_1: StageConfig = {
     ],
     requiredControlIds: ["C-AWARE-01", "C-AWARE-02", "C-GOV-03", "C-SYS-03"],
     passingScore: 60,
-    briefing: "Meridian's staff have been clicking on suspicious links in supplier emails. Three employees reported fake invoices last week. Establish basic phishing defences before the situation escalates.",
-    briefingZh: "Meridian 员工最近频繁点击供应商邮件中的可疑链接，上周已有三名员工收到虚假发票。在局势恶化前建立基础钓鱼防御。",
+    briefing: "Your first day on the Singularity account. They run a mid-sized retail operation — online storefront, warehouse logistics, eight hundred staff. Someone in accounts payable clicked a link last week. Then another person did. Then a third. The pattern is clear. Start with the basics.",
+    briefingZh: "你在 Singularity 项目上的第一天。这是一家中型零售商——线上店面、仓储物流、八百名员工。上周有人点了一个链接。然后又一个人点了。然后第三个。规律很明显。从基础开始。",
 };
 
 const L2_2: StageConfig = {
@@ -65,8 +65,8 @@ const L2_2: StageConfig = {
     ],
     requiredControlIds: ["C-IAM-01", "C-IAM-02", "C-IAM-06", "C-IAM-03"],
     passingScore: 60,
-    briefing: "Hundreds of staff accounts across multiple retail systems, no consistent password policy. Shared logins and stale accounts are everywhere. Time to lock things down.",
-    briefingZh: "零售系统中存在大量共享账号和僵尸账户，密码策略形同虚设。是时候整顿身份与访问管理了。",
+    briefing: "Singularity's IT team has been adding accounts for years and deleting almost none. Former contractors, seasonal staff, a logistics partner who stopped working with them in 2023 — all still active. Nobody knows how many doors are open.",
+    briefingZh: "Singularity 的 IT 团队多年来一直在添加账户，却几乎从未删除。前外包人员、季节性员工、2023年就停止合作的物流合作方——全都还处于活跃状态。没人知道有多少扇门还开着。",
 };
 
 const L2_3: StageConfig = {
@@ -90,8 +90,8 @@ const L2_3: StageConfig = {
     ],
     requiredControlIds: ["C-DATA-01", "C-DATA-04", "C-DATA-05"],
     passingScore: 60,
-    briefing: "Meridian stores customer purchase records and payment references across unsecured shared drives. A minor breach here could expose thousands of customers.",
-    briefingZh: "Meridian 将客户购买记录和支付信息存储在未受保护的共享驱动器上，一次小规模泄露就可能波及数千名客户。",
+    briefing: "Customer purchase histories. Payment references. Loyalty programme data. Singularity collects all of it and stores most of it on shared drives with no access controls. A disgruntled warehouse employee could walk out with everything. So could an attacker who got in through phishing.",
+    briefingZh: "客户购买记录、支付信息、积分计划数据。Singularity 收集了所有这些，大部分存储在没有访问控制的共享驱动器上。一个心怀不满的仓库员工可以带走一切。通过钓鱼入侵的攻击者也可以。",
 };
 
 const L2_4: StageConfig = {
@@ -115,8 +115,8 @@ const L2_4: StageConfig = {
     ],
     requiredControlIds: ["C-NET-01", "C-NET-03", "C-NET-05"],
     passingScore: 60,
-    briefing: "Meridian's office network has no segmentation — point-of-sale systems sit on the same network as staff laptops. Basic network hygiene is long overdue.",
-    briefingZh: "Meridian 的办公网络毫无分段——销售终端与员工笔记本共用同一网段。基础网络安全整改早该进行了。",
+    briefing: "The point-of-sale terminals, the warehouse scanners, the staff laptops, the guest Wi-Fi — all on the same network. One compromised device is a foothold into everything else. Singularity's infrastructure grew fast and nobody stopped to think about segmentation.",
+    briefingZh: "销售终端、仓库扫描仪、员工笔记本、访客 Wi-Fi——全在同一个网络上。一台被入侵的设备就是进入其他所有系统的跳板。Singularity 的基础设施扩张太快，没有人停下来考虑过网络分段。",
 };
 
 // ─── Level 3 — Critical Business ─────────────────────────────────────────────
@@ -151,8 +151,8 @@ const L3_1: StageConfig = {
     ],
     requiredControlIds: ["C-AWARE-03", "C-GOV-03", "C-IAM-04", "C-MON-02"],
     passingScore: 65,
-    briefing: "Hospital administrators are receiving highly convincing spear-phishing emails impersonating the regional health authority. One wrong click could compromise patient records for thousands.",
-    briefingZh: "医院管理人员正在收到伪装成地区卫生局的高度逼真鱼叉式钓鱼邮件。一次错误点击可能导致数千名患者的病历外泄。",
+    briefing: "Polarized Light manages sensitive records for a large patient population. Someone has been sending staff emails that look exactly like internal communications from the compliance department. The timing is deliberate — they started two weeks before a major system migration. This is not opportunistic.",
+    briefingZh: "Polarized Light 管理着大量患者的敏感档案。有人一直在向员工发送看起来完全像合规部门内部通讯的邮件。时机是蓄意选择的——攻击在一次重大系统迁移前两周开始。这不是机会性攻击。",
 };
 
 const L3_2: StageConfig = {
@@ -183,8 +183,8 @@ const L3_2: StageConfig = {
     ],
     requiredControlIds: ["C-IAM-04", "C-IAM-05", "C-IAM-01", "C-GOV-02"],
     passingScore: 65,
-    briefing: "Eastbridge has migrated clinical records to a cloud platform, but account management is chaotic — dozens of former contractors still have active credentials. A breach through a stale account would be catastrophic.",
-    briefingZh: "Eastbridge 已将临床记录迁移至云平台，但账户管理混乱——数十名前外包人员仍持有有效凭证。一旦通过僵尸账户发生入侵，后果将不堪设想。",
+    briefing: "Polarized Light migrated to cloud-based record management eighteen months ago. The migration team did the technical work and then moved on. Nobody audited the accounts afterwards. Clinical staff, admin contractors, external consultants — the access list has not been reviewed since go-live.",
+    briefingZh: "Polarized Light 在十八个月前迁移到了基于云的档案管理系统。迁移团队完成技术工作后就离开了。此后没有人审计过账户。临床人员、行政外包、外部顾问——自上线以来访问列表从未被审查过。",
 };
 
 const L3_3: StageConfig = {
@@ -214,8 +214,8 @@ const L3_3: StageConfig = {
     ],
     requiredControlIds: ["C-DATA-06", "C-DATA-02", "C-DATA-04", "C-IR-01"],
     passingScore: 65,
-    briefing: "The hospital's EHR system holds sensitive records for over 200,000 patients. Access controls are inconsistent and audit logs are incomplete. Regulators are watching.",
-    briefingZh: "医院电子病历系统存储着逾20万名患者的敏感信息。访问控制不一致，审计日志残缺不全，监管机构正在密切关注。",
+    briefing: "The records system holds data on over two hundred thousand individuals. Diagnostic history. Medication records. Next of kin. The kind of data that does not expire and cannot be changed after a breach. Access controls were set up during the migration and have not been revisited. Audit logs are incomplete.",
+    briefingZh: "档案系统存储着逾二十万人的数据。诊断记录、用药档案、紧急联系人。这类数据不会过期，泄露后无法更改。访问控制在迁移时设置，此后从未被重新审视。审计日志残缺不全。",
 };
 
 const L3_4: StageConfig = {
@@ -246,8 +246,8 @@ const L3_4: StageConfig = {
     ],
     requiredControlIds: ["C-NET-02", "C-MON-01", "C-SYS-06", "C-SYS-03"],
     passingScore: 65,
-    briefing: "Eastbridge's medical devices, administrative systems and public Wi-Fi all share the same network. An attacker who gets in anywhere gets in everywhere. Segmentation is critical.",
-    briefingZh: "Eastbridge 的医疗设备、行政系统和公共 Wi-Fi 共用同一网络。攻击者只要突破任意一点便可横向渗透全局。网络分段迫在眉睫。",
+    briefing: "Polarized Light's network was never designed for the equipment it now carries. Diagnostic devices, administrative terminals, and public-facing infrastructure share the same underlying network. The facilities team added devices over the years without consulting IT. Nobody has a complete map of what is connected to what.",
+    briefingZh: "Polarized Light 的网络从未为它现在承载的设备而设计。诊断设备、行政终端和面向公众的基础设施共用同一底层网络。设施团队多年来在未咨询 IT 部门的情况下添加设备。没有人有完整的连接关系图。",
 };
 
 // ─── Level 4 — Key Infrastructure ────────────────────────────────────────────
@@ -280,8 +280,8 @@ const L4_1: StageConfig = {
     ],
     requiredControlIds: ["C-IAM-04", "C-IAM-01", "C-GOV-02"],
     passingScore: 70,
-    briefing: "Intelligence suggests a state-linked threat actor has been probing the Grid's identity infrastructure for months. Weak privileged account controls could give an attacker a direct path to operational systems. This is not a drill.",
-    briefingZh: "情报显示，一个与国家关联的威胁行为者已对电网身份基础设施持续侦察数月。特权账户控制薄弱可能为攻击者提供直达运营系统的路径。这不是演练。",
+    briefing: "The client goes by Convolutional Kernel. That is all you have been told. The briefing documents are sparse by design. What you do know: the infrastructure they operate affects a significant number of people, and certain actors have been probing it systematically for months. Privileged access is the entry point they are looking for.",
+    briefingZh: "客户代号 Convolutional Kernel。这是你被告知的全部信息。简报文件的简略是刻意为之。你所知道的是：他们运营的基础设施影响着大量人口，某些行为者已对其进行了数月的系统性侦察。特权访问是他们正在寻找的突破口。",
 };
 
 // Scenario: L4-B3-SCENARIO-01 (Data)
@@ -311,8 +311,8 @@ const L4_2: StageConfig = {
     ],
     requiredControlIds: ["C-DATA-08", "C-DATA-03", "C-DATA-06"],
     passingScore: 70,
-    briefing: "Operational data flowing between control systems and field sensors has shown signs of tampering. If an attacker can manipulate grid telemetry, they can trigger cascading failures without touching the physical infrastructure.",
-    briefingZh: "控制系统与现场传感器之间传输的运营数据出现篡改迹象。若攻击者能够操控电网遥测数据，无需接触任何物理设施即可触发连锁故障。",
+    briefing: "The systems you are looking at don't store personal records or financial data. They store operational telemetry — readings, states, commands. If that data can be manipulated, the consequences are not a data breach. They are something considerably worse. Signs of tampering have already been detected.",
+    briefingZh: "你面对的系统不存储个人档案或财务数据。它们存储运营遥测数据——读数、状态、指令。如果这些数据被篡改，后果不是数据泄露，而是严重得多的事情。篡改迹象已经被检测到。",
 };
 
 // Scenario: L4-B4-SCENARIO-01 (Network)
@@ -342,8 +342,8 @@ const L4_3: StageConfig = {
     ],
     requiredControlIds: ["C-SYS-02", "C-NET-02", "C-MON-01"],
     passingScore: 70,
-    briefing: "A sophisticated intrusion attempt has been detected at the Grid's network boundary. The attackers appear to be mapping internal systems. You have one chance to contain the threat before they establish a foothold.",
-    briefingZh: "电网网络边界检测到一次高度复杂的入侵尝试，攻击者似乎正在探测内部系统结构。在他们建立据点之前，你只有一次机会遏制威胁。",
+    briefing: "An intrusion attempt has been detected at the network boundary. The behaviour is consistent with reconnaissance — they are not trying to extract data yet. They are mapping. Once they have a complete picture of the internal topology, the next move will be fast. You need to contain this before that happens.",
+    briefingZh: "网络边界检测到一次入侵尝试。行为特征与侦察一致——他们还没有试图提取数据，他们在绘图。一旦他们掌握了内部拓扑的完整图景，下一步行动将会很快。你需要在此之前遏制它。",
 };
 
 // ─── Exports ──────────────────────────────────────────────────────────────────
