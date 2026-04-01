@@ -5,7 +5,7 @@ import type { ChapterState, StageGameState, Sector, RiskLevel } from "./types";
 import type { Control, Threat, Level4Scenario } from "./utils/dataLoader";
 import { loadControls, loadThreats, loadLevel4Tree } from "./utils/dataLoader";
 import { getStageConfig } from "./data/stageData";
-import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle, INTRO_LINES } from "./data/narrative";
+import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle, INTRO_LINES, ENDING_LINES } from "./data/narrative";
 import { BottomBar } from "./components/BottomBar";
 
 // --- Helpers (mirrored from Layout.tsx) ---
@@ -284,6 +284,9 @@ const App: React.FC = () => {
     });
     const [introLineIndex, setIntroLineIndex] = useState(0);
     const [introReady, setIntroReady] = useState(false);
+    const [showEnding, setShowEnding] = useState(false);
+    const [endingLineIndex, setEndingLineIndex] = useState(0);
+    const [endingReady, setEndingReady] = useState(false);
 
     // Translation helper
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
@@ -341,6 +344,26 @@ const App: React.FC = () => {
             return () => clearTimeout(timer);
         }
     }, [showIntro, introLineIndex]);
+
+    useEffect(() => {
+        if (!showEnding) return;
+        if (endingLineIndex < ENDING_LINES.length) {
+            const delay = ENDING_LINES[endingLineIndex].en === "" ? 300 : 700;
+            const timer = setTimeout(() => setEndingLineIndex((i) => i + 1), delay);
+            return () => clearTimeout(timer);
+        } else {
+            const timer = setTimeout(() => setEndingReady(true), 1000);
+            return () => clearTimeout(timer);
+        }
+    }, [showEnding, endingLineIndex]);
+
+    useEffect(() => {
+        if (view.type !== "map") return;
+        const allDone = completedChapters.has(2) && completedChapters.has(3) && completedChapters.has(4);
+        if (allDone && !localStorage.getItem("seenEnding")) {
+            setShowEnding(true);
+        }
+    }, [view, completedChapters]);
 
     useEffect(() => {
         if (view.type !== "map") return;
@@ -675,6 +698,13 @@ const App: React.FC = () => {
         setShowIntro(false);
     };
 
+    const dismissEnding = () => {
+        try { localStorage.setItem("seenEnding", "1"); } catch {}
+        setShowEnding(false);
+        setEndingLineIndex(0);
+        setEndingReady(false);
+    };
+
     const goBackToMap = () => setView({ type: "map" });
     const goBackToChapter = (chapter: ChapterLevel) => {
         setFeedbackMsg(null);
@@ -700,6 +730,31 @@ const App: React.FC = () => {
                 {introReady && (
                     <button className="intro-begin" onClick={dismissIntro}>
                         {language === "zh" ? "开始" : "Begin"}
+                    </button>
+                )}
+            </div>
+        );
+    }
+
+    if (showEnding) {
+        return (
+            <div className="intro-overlay">
+                <button className="intro-skip" onClick={dismissEnding}>
+                    {language === "zh" ? "跳过" : "Skip"}
+                </button>
+                <div className="intro-content">
+                    {ENDING_LINES.slice(0, endingLineIndex).map((line, i) => (
+                        <div
+                            key={i}
+                            className={`intro-line${line.en === "" ? " intro-line-spacer" : ""}`}
+                        >
+                            {language === "zh" ? line.zh : line.en}
+                        </div>
+                    ))}
+                </div>
+                {endingReady && (
+                    <button className="intro-begin" onClick={dismissEnding}>
+                        {language === "zh" ? "返回主菜单" : "Return to Menu"}
                     </button>
                 )}
             </div>

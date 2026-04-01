@@ -101,3 +101,21 @@ export const INTRO_LINES: { en: string; zh: string }[] = [
     { en: "", zh: "" },
     { en: "Time to get to work.", zh: "该开始工作了。" },
 ];
+
+export const ENDING_LINES: { en: string; zh: string }[] = [
+    { en: "Convolutional Kernel. Assessment complete.", zh: "Convolutional Kernel。评估完成。" },
+    { en: "", zh: "" },
+    { en: "The client sends a single line of acknowledgement.", zh: "客户发来一行确认。" },
+    { en: "No names. No details. Standard procedure.", zh: "没有姓名，没有细节。标准流程。" },
+    { en: "", zh: "" },
+    { en: "Your manager closes the file.", zh: "你的上司合上案卷。" },
+    { en: "\"Three clients. Three assessments. No breaches on our watch.\"", zh: "\"三个客户，三次评估，我们在场期间零泄露。\"" },
+    { en: "", zh: "" },
+    { en: "You've come a long way from that first Singularity report.", zh: "从最初那份 Singularity 报告到现在，你走了很长的路。" },
+    { en: "", zh: "" },
+    { en: "A new file lands on your desk.", zh: "一份新的案卷落在你的桌上。" },
+    { en: "Client codename: Quantum Fluctuations.", zh: "客户代号：Quantum Fluctuations。" },
+    { en: "Classification level: not yet determined.", zh: "保密等级：待定。" },
+    { en: "", zh: "" },
+    { en: "To be continued.", zh: "待续。" },
+];
