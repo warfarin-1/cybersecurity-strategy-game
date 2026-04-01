@@ -379,6 +379,14 @@ const App: React.FC = () => {
         }
     }, [view, completedChapters]);
 
+    // Save chapter state to localStorage whenever it changes, so stage progress survives a page refresh
+    useEffect(() => {
+        if (!chapterState) return;
+        try {
+            localStorage.setItem(`chapterState_${chapterState.chapterId}`, JSON.stringify(chapterState));
+        } catch { /* ignore */ }
+    }, [chapterState]);
+
     const isChapterUnlocked = (chapter: ChapterLevel): boolean => {
         if (chapter === 2) return true;
         if (chapter === 3) return completedChapters.has(2);
@@ -388,9 +396,14 @@ const App: React.FC = () => {
 
     const handleChapterClick = (chapterId: ChapterLevel) => {
         if (!isChapterUnlocked(chapterId)) return;
-        setChapterState((prev) =>
-            prev?.chapterId === chapterId ? prev : makeChapterState(chapterId)
-        );
+        setChapterState((prev) => {
+            if (prev?.chapterId === chapterId) return prev;
+            try {
+                const saved = localStorage.getItem(`chapterState_${chapterId}`);
+                if (saved) return JSON.parse(saved) as ChapterState;
+            } catch { /* ignore */ }
+            return makeChapterState(chapterId);
+        });
         setView({ type: "chapter", chapter: chapterId });
     };
 
@@ -409,10 +422,14 @@ const App: React.FC = () => {
     const handleStageClick = (chapter: ChapterLevel, stageId: string) => {
         if (!isStageUnlocked(stageId)) return;
 
-        // Initialize (or reuse) chapter state
+        // Initialize (or reuse) chapter state, restoring from localStorage if available
         let current = chapterState;
         if (!current || current.chapterId !== chapter) {
-            current = makeChapterState(chapter);
+            try {
+                const saved = localStorage.getItem(`chapterState_${chapter}`);
+                if (saved) current = JSON.parse(saved) as ChapterState;
+            } catch { /* ignore */ }
+            if (!current || current.chapterId !== chapter) current = makeChapterState(chapter);
             setChapterState(current);
         }
 

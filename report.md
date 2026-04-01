@@ -2012,3 +2012,91 @@ Code comments across four source files were rewritten to remove engineering-spec
 #### `src/utils/dataLoader.ts` — 2 JSDoc blocks
 
 Column-listing JSDoc blocks for `loadControls` and `loadThreats` replaced with shorter descriptions explaining which file is chosen and where the column index comments are.
+
+---
+
+## Change Log — Chapter Card Contrast Fix
+
+**Date:** 2026-04-02
+
+### Overview
+
+The chapter selection cards on the map screen had insufficient contrast: card backgrounds were close to solid black, and two text elements either lacked an explicit colour or used a shade too dark to read comfortably on the card surface.
+
+---
+
+### `src/App.css`
+
+| Selector | Before | After |
+|----------|--------|-------|
+| `.chapter-card` background | `radial-gradient(circle at top, #111827, #020308)` | `radial-gradient(circle at top, #1a2535, #0d1424)` |
+| `.chapter-card` border | `#1f2937` | `#2d3748` |
+| `.chapter-text-main` color | *(inherited — no explicit value)* | `#e5e7eb` |
+| `.chapter-org-type` color | `#4b5563` | `#6b7280` |
+
+The card gradient now starts and ends about 30% brighter. `.chapter-text-main` was previously relying on inheritance from `.app-root`, which is correct but fragile; the explicit declaration makes intent clear. `.chapter-org-type` was too dark for the card surface and has been lightened to match the muted-text convention used elsewhere.
+
+---
+
+## Change Log — chapterState localStorage Persistence
+
+**Date:** 2026-04-02
+
+### Overview
+
+`chapterState` (which tracks each chapter's stage completion states, deployed controls, and remaining budget) was only held in memory. On page refresh, `completedChapters` was correctly restored from localStorage (so the map showed chapters as done), but `chapterState.stageStates` was empty — causing all stages inside a chapter to appear locked except the first.
+
+This was listed as a known limitation. It has now been resolved.
+
+---
+
+### `src/App.tsx`
+
+Three changes, no new dependencies or types required.
+
+#### 1. Persistence effect
+
+```typescript
+useEffect(() => {
+    if (!chapterState) return;
+    try {
+        localStorage.setItem(`chapterState_${chapterState.chapterId}`, JSON.stringify(chapterState));
+    } catch { /* ignore */ }
+}, [chapterState]);
+```
+
+Runs whenever `chapterState` changes and writes the full object to `localStorage` under the key `chapterState_2`, `chapterState_3`, or `chapterState_4`.
+
+#### 2. `handleChapterClick` — restore on entry
+
+```typescript
+setChapterState((prev) => {
+    if (prev?.chapterId === chapterId) return prev;
+    try {
+        const saved = localStorage.getItem(`chapterState_${chapterId}`);
+        if (saved) return JSON.parse(saved) as ChapterState;
+    } catch { /* ignore */ }
+    return makeChapterState(chapterId);
+});
+```
+
+When the player clicks a chapter card, the handler now tries localStorage before falling back to `makeChapterState`.
+
+#### 3. `handleStageClick` — same restore logic
+
+The same pattern is applied in `handleStageClick` for the case where the player enters a stage directly (e.g. from a deep link or state mismatch):
+
+```typescript
+if (!current || current.chapterId !== chapter) {
+    try {
+        const saved = localStorage.getItem(`chapterState_${chapter}`);
+        if (saved) current = JSON.parse(saved) as ChapterState;
+    } catch { /* ignore */ }
+    if (!current || current.chapterId !== chapter) current = makeChapterState(chapter);
+    setChapterState(current);
+}
+```
+
+#### Result
+
+After a page refresh, entering any chapter correctly shows all previously completed stages, their deployed controls, and the remaining budget — consistent with what the map screen already showed.
