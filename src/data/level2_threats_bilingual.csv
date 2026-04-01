@@ -1,0 +1,29 @@
+ThreatID,Level,RiskType,ScenarioName,ScenarioName_ZH,Severity,Description,Description_ZH,RecommendedControlID,CAF_Principle
+L2-PH-01,2,Phishing,Basic Phishing Email Scam,基础钓鱼邮件诈骗,Low,Generic phishing email asks users to verify their account via a link.,通用钓鱼邮件诱导用户点击链接验证账号。,C-AWARE-01,B6
+L2-PH-02,2,Phishing,Overly Trusting Link Clicks,员工随意点击可疑链接,Low,Users click unknown links without checking the destination.,员工未核实链接目标即随意点击未知链接。,C-AWARE-02,B6
+L2-PH-03,2,Phishing,Fake Invoice Email,伪造供应商发票邮件,Low,Finance or admin staff receive fake invoice emails from bogus suppliers.,财务或行政人员收到伪装成供应商的虚假发票邮件。,C-AWARE-03,B6
+L2-PH-04,2,Phishing,Simple Credential Harvest Page,简单仿冒登录页面凭据窃取,Medium,A phishing email directs staff to a fake but obviously poor login page.,钓鱼邮件将员工引导至明显粗糙的仿冒登录页面以窃取凭据。,C-IAM-01,B2
+L2-PH-05,2,Phishing,Phishing Report Ignored,钓鱼攻击未上报处置,Medium,Staff spot suspicious emails but are unsure how to report them.,员工发现可疑邮件却不知如何上报。,C-GOV-03,D1
+L2-PH-06,2,Phishing,Phone-Based Social Engineering,电话社会工程攻击,Medium,Callers pretend to be IT support asking for temporary passwords.,攻击者伪装成IT支持人员致电员工索取临时口令。,C-GOV-01,A1;B6
+L2-PH-07,2,Phishing,Malicious Attachment Opened,恶意附件执行导致恶意软件植入,High,User opens an attachment that attempts to drop basic malware.,用户打开附件触发基础恶意软件植入。,C-SYS-03,B4c
+L2-IAM-01,2,IAM,Weak Password Practices,弱口令使用问题,Low,Users choose simple or reused passwords for internal systems.,员工为内部系统设置简单或重复使用的口令。,C-IAM-01,B2
+L2-IAM-02,2,IAM,Passwords on Sticky Notes,口令明文书写外露,Low,Passwords are written on sticky notes near desks or screens.,员工将口令写在便利贴上贴于桌边或屏幕旁。,C-AWARE-02,B6
+L2-IAM-03,2,IAM,Shared Departmental Accounts,部门共享账号使用问题,Low,Teams share single logins for shared mailboxes or apps.,团队共用同一账号登录共享邮箱或应用。,C-IAM-06,B2d
+L2-IAM-04,2,IAM,Stale Leaver Accounts,离职人员账号未及时注销,Medium,Accounts for staff who left months ago are still enabled.,已离职数月的员工账号仍处于启用状态。,C-GOV-02,A1;B2
+L2-IAM-05,2,IAM,No Lockout on Repeated Logins,账号无登录失败锁定机制,Medium,Accounts do not lock after many failed login attempts.,账号多次登录失败后不会自动锁定。,C-IAM-02,B2
+L2-IAM-06,2,IAM,Unprotected Cloud Admin Account,云管理后台缺乏额外身份验证,Medium,Cloud admin portals only require a password with no extra checks.,云管理门户仅需口令即可登录，无任何额外身份验证。,C-IAM-08,B2a
+L2-IAM-07,2,IAM,No MFA for VPN Access,VPN远程访问未启用多因素认证,High,Remote VPN access relies only on passwords and is widely used.,VPN远程访问仅依赖口令且被广泛使用。,C-IAM-03,B2a
+L2-DATA-01,2,Data,Unclassified Important Data,重要数据未分类分级,Low,Teams store information without any sensitivity labels.,团队存储信息时未添加任何敏感度标签。,C-DATA-01,B3a
+L2-DATA-02,2,Data,Sensitive Files on Laptops,敏感文件存于未加密终端,Low,Staff keep small datasets of personal data on unencrypted laptops.,员工将少量个人数据存储在未加密的笔记本电脑上。,C-DATA-03,B3c
+L2-DATA-03,2,Data,Public Link Sharing by Default,云存储默认生成公开共享链接,Low,"Cloud sharing links are sometimes created with 'anyone with the link' access.",云存储有时生成"任何人均可访问"的共享链接。,C-DATA-08,B3a
+L2-DATA-04,2,Data,Duplicate Copies of Data,数据副本分散存于非受管设备,Medium,The same spreadsheets exist on multiple unmanaged devices.,相同电子表格散存于多台非受管设备上。,C-DATA-02,B3a
+L2-DATA-05,2,Data,Unencrypted USB Drives,使用未加密U盘传输数据,Medium,Staff use standard USB sticks to move data between home and office.,员工使用普通U盘在家与办公室间传输数据。,C-DATA-04,B3d
+L2-DATA-06,2,Data,Over-Broad Shared Folder Access,共享文件夹权限过于宽泛,Medium,Shared network folders grant 'everyone' read access by default.,共享网络文件夹默认向所有人开放读取权限。,C-DATA-06,B3a
+L2-DATA-07,2,Data,Backups Stored on Shared Drive Only,备份仅存于共享网盘缺乏保护,High,Backups are stored as simple copies on a shared drive without protection.,备份仅以简单副本形式存于共享网盘，缺乏保护措施。,C-DATA-05,B3c
+L2-NET-01,2,Network,Open Administrative Ports,非必要管理端口对内网开放,Low,Non-critical servers expose RDP/SSH to the internal network without justification.,非关键服务器无故对内网开放RDP/SSH管理端口。,C-NET-01,B4a
+L2-NET-02,2,Network,Default Device Passwords,网络设备使用出厂默认口令,Low,Printers and minor network devices use factory default credentials.,打印机及小型网络设备仍使用出厂默认凭据。,C-SYS-05,B4b
+L2-NET-03,2,Network,Weak Guest Wi-Fi Password,访客Wi-Fi口令强度不足,Low,Guest Wi-Fi uses a simple password shared widely over time.,访客Wi-Fi使用长期广泛共享的简单口令。,C-NET-03,B4a
+L2-NET-04,2,Network,Flat Internal Network,内部网络未进行区域隔离,Medium,User PCs and servers share the same network segment.,用户终端与服务器处于同一网络区段。,C-NET-02,B4a;B5
+L2-NET-05,2,Network,Delayed OS Patching,操作系统补丁更新滞后,Medium,Some endpoints run OS versions that have not been patched for several months.,部分终端运行数月未更新补丁的操作系统版本。,C-SYS-02,B4d
+L2-NET-06,2,Network,Unmanaged IoT Devices,物联网设备接入缺乏安全审查,Medium,Smart TVs or cameras are connected without security review.,智能电视或摄像头未经安全审查即接入网络。,C-NET-05,B4b
+L2-NET-07,2,Network,Unsupported Router Firmware,边界路由器运行停止支持的固件,High,Internet edge router runs out-of-support firmware with known issues.,互联网边界路由器运行已停止支持且存在已知漏洞的固件。,C-NET-05,B4d

@@ -1,0 +1,285 @@
+/* Simple reset */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* Overall page */
+body {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: #e5e7eb; /* light gray */
+    color: #111827;      /* dark text */
+}
+
+/* Root layout */
+.app-root {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top bar */
+.topbar {
+    padding: 12px 20px;
+    background: #111827;      /* dark bar */
+    border-bottom: 1px solid #1f2937;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    color: #e5e7eb;
+}
+
+.topbar-title {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.topbar-meta {
+    font-size: 12px;
+    color: #cbd5f5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.topbar-dot {
+    opacity: 0.7;
+}
+
+.topbar-about-btn {
+    border: 1px solid rgba(148, 163, 184, 0.7);
+    border-radius: 999px;
+    padding: 2px 10px;
+    background: transparent;
+    color: #e5e7eb;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+.topbar-about-btn:hover {
+    background: rgba(148, 163, 184, 0.25);
+}
+
+/* Main layout */
+.app-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr) 280px;
+    gap: 12px;
+    padding: 12px 16px;
+}
+
+/* Shared card style for panels */
+.sidebar,
+.command-center,
+.status-panel {
+    background: #ffffff;            /* white card */
+    border: 1px solid #d1d5db;      /* light border */
+    border-radius: 10px;
+    padding: 12px;
+}
+
+/* Sidebar */
+.sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sidebar-title {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.sidebar-section {
+    border-top: 1px solid #e5e7eb;
+    padding-top: 8px;
+    margin-top: 4px;
+}
+
+.sidebar-section h3 {
+    font-size: 13px;
+    margin-bottom: 6px;
+    color: #4b5563;
+}
+
+/* Command Center */
+.command-center {
+    display: flex;
+    flex-direction: column;
+}
+
+.command-center-header h2 {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.command-center-header p {
+    font-size: 13px;
+    color: #6b7280;
+}
+
+.sector-grid {
+    margin-top: 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 10px;
+}
+
+.sector-card {
+    background: #f9fafb;           /* light card background */
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sector-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+}
+
+.sector-body {
+    font-size: 13px;
+    color: #374151;
+}
+
+.sector-body p {
+    margin-top: 2px;
+}
+
+.sector-footer {
+    margin-top: 6px;
+    display: flex;
+    gap: 6px;
+    justify-content: flex-end;
+}
+
+/* Status panel */
+.status-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.status-title {
+    font-size: 16px;
+}
+
+.status-summary p {
+    font-size: 13px;
+    color: #374151;
+}
+
+.status-logs h3 {
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #4b5563;
+}
+
+.status-log-list {
+    max-height: 220px;
+    overflow-y: auto;
+    border-radius: 6px;
+    border: 1px solid #e5e7eb;
+    padding: 6px;
+    font-size: 12px;
+    background: #f9fafb;
+}
+
+.status-log-item + .status-log-item {
+    margin-top: 4px;
+}
+
+/* Bottom bar */
+.bottombar {
+    padding: 8px 16px;
+    border-top: 1px solid #d1d5db;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #111827;
+}
+
+.bottombar-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bottombar-separator {
+    opacity: 0.6;
+}
+
+/* Buttons */
+button {
+    font: inherit;
+    cursor: pointer;
+}
+
+/* Full-width buttons in sidebar */
+.btn-block {
+    width: 100%;
+    padding: 6px 8px;
+    margin-top: 4px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    color: #111827;
+    font-size: 13px;
+    text-align: left;
+}
+
+.btn-block:hover {
+    background: #e5e7eb;
+}
+
+/* Variant buttons */
+.btn-secondary {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.btn-secondary:hover {
+    background: #dbeafe;
+}
+
+.btn-ghost {
+    background: transparent;
+    border-style: dashed;
+    color: #374151;
+}
+
+/* Small buttons */
+.btn-small {
+    padding: 4px 8px;
+    border-radius: 8px;
+    border: 1px solid #d1d5db;
+    background: #ffffff;
+    font-size: 12px;
+    color: #111827;
+}
+
+.btn-small:hover {
+    background: #e5e7eb;
+}
+
+.btn-outline {
+    background: transparent;
+}
+
+/* Scrollbar for logs etc. */
+.status-log-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.status-log-list::-webkit-scrollbar-thumb {
+    background: #9ca3af;
+    border-radius: 999px;
+}

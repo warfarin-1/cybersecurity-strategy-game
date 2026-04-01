@@ -1,0 +1,40 @@
+ThreatID,Level,RiskType,ScenarioName,Severity,Description,RecommendedControlID,CAF_Principle
+L3-PH-01,3,Phishing,Spear Phishing to Finance Team,Medium,Attackers send realistic emails to finance staff using known supplier names.,C-AWARE-03,B6
+L3-PH-02,3,Phishing,Lookalike Domain Phishing,Medium,Emails come from a domain visually similar to the organisation's official one.,C-DATA-08,B3a;A2
+L3-PH-03,3,Phishing,Link to Convincing Fake Login Page,Medium,A realistic fake portal captures staff credentials when they sign in.,C-IAM-03,B2a
+L3-PH-04,3,Phishing,Multiple Unreported Phishing Attempts,Medium,Several staff receive phishing messages but none are reported to IT.,C-GOV-03,D1
+L3-PH-05,3,Phishing,Phishing Bypass of Simple Filters,Medium,Attackers slightly alter text and images to bypass basic email filters.,C-MON-01,C1
+L3-PH-06,3,Phishing,Credential Theft Leads to Mailbox Rule Abuse,High,Compromised mailbox is used to auto-forward or hide important emails.,C-MON-02,C1;B2
+L3-PH-07,3,Phishing,Phishing Used to Access Cloud Admin Portal,High,Stolen credentials are used to sign in to a cloud admin portal without MFA.,C-IAM-04,B2a;B2c
+L3-IAM-01,3,IAM,Common Password Reuse Across Systems,Medium,"Users reuse the same password for email, VPN and third-party services.",C-IAM-01,B2
+L3-IAM-02,3,IAM,No Regular Access Review,Medium,"Access rights are only adjusted when staff complain, never proactively reviewed.",C-IAM-05,B2d
+L3-IAM-03,3,IAM,Admin Activities from Unhardened Laptops,Medium,Administrators perform changes from standard user laptops used for email and web browsing.,C-IAM-07,B2b
+L3-IAM-04,3,IAM,Generic Shared Admin Accounts,Medium,Critical systems are administered using shared 'admin' accounts.,C-SYS-05,B4b;B2c
+L3-IAM-05,3,IAM,Cloud Accounts Without Conditional Access,Medium,Cloud accounts used by staff have no conditional access or geo restrictions.,C-IAM-03,B2a
+L3-IAM-06,3,IAM,Dormant Admin Accounts Not Removed,High,Old admin accounts remain enabled long after staff have moved role or left.,C-GOV-02,A1;B2c
+L3-IAM-07,3,IAM,Self-Registered Third-Party Accounts Using Work Email,Medium,Staff use work email to sign up to unsanctioned cloud services.,C-SUP-01,A4
+L3-IAM-08,3,IAM,No MFA for High-Risk Cloud Apps,High,"Key SaaS tools (HR, finance) are accessible from the internet with only passwords.",C-IAM-04,B2a
+L3-DATA-01,3,Data,Unclear Data Ownership,Medium,No named owners for critical datasets used by essential functions.,C-DATA-01,B3a;A1
+L3-DATA-02,3,Data,Large Sensitive Dataset in Personal OneDrive,Medium,A large export of personal data is stored in an individual's cloud storage.,C-DATA-02,B3a
+L3-DATA-03,3,Data,Unencrypted Backups Taken to Offsite on USB,Medium,Backups are periodically carried offsite on unencrypted USB drives.,C-DATA-04,B3c
+L3-DATA-04,3,Data,Inadequate Retention Controls,Medium,Historic data is kept for many years without business or legal justification.,C-DATA-01,B3a
+L3-DATA-05,3,Data,Misconfigured Cloud Bucket Exposes Non-Critical Data,Medium,A cloud storage bucket containing internal but non-sensitive documents is publicly reachable.,C-DATA-08,B3a
+L3-DATA-06,3,Data,Infrequently Tested Backups,Medium,Backups are taken but restoration tests rarely occur.,C-IR-02,B5a;D1
+L3-DATA-07,3,Data,Highly Sensitive Data on Shared Network Drive,High,A shared drive holds highly sensitive data with broad read access.,C-DATA-06,B3a
+L3-DATA-08,3,Data,No Clear Process for Data Breach Handling,High,Organisation lacks a defined approach to respond to potential data breaches.,C-IR-01,D1
+L3-NET-01,3,Network,Internet-Facing Service with Weak TLS,Medium,A web service supporting staff uses outdated TLS configuration.,C-NET-01,B4a
+L3-NET-02,3,Network,Flat Network with Exposed Management Interfaces,Medium,Management interfaces for infrastructure are reachable from general user subnets.,C-NET-02,B4a;B5
+L3-NET-03,3,Network,Patch Delays on Internet-Facing Systems,Medium,External services are patched only a few times per year.,C-SYS-02,B4d
+L3-NET-04,3,Network,Unsupported OS on Internal File Server,Medium,An internal file server runs an OS version past end-of-support.,C-SYS-02,B4d
+L3-NET-05,3,Network,Weak Wi-Fi Controls for Staff Network,Medium,Staff Wi-Fi uses a pre-shared key rather than individual credentials.,C-NET-03,B4a;B2
+L3-NET-06,3,Network,No Central Logging for Firewall or VPN,Medium,Key network devices do not send logs to a central collector.,C-MON-01,C1
+L3-NET-07,3,Network,Malware Outbreak on Several PCs,High,Multiple endpoints show activity consistent with a malware outbreak.,C-SYS-03,B4c;C1
+L3-NET-08,3,Network,Critical External Service Without DDoS Consideration,Medium,A public-facing service has no specific capacity or DDoS resilience planning.,C-IR-01,B5a
+L3-NET-09,3,Network,Remote Admin Interface Exposed from Internet,High,A management interface for a core system is reachable directly from the internet.,C-SYS-06,B4c
+L3-END-01,3,Endpoint,Local Admin Rights for Most Staff,Medium,Many staff devices run with local administrator privileges.,C-SYS-01,B4b
+L3-END-02,3,Endpoint,Shadow IT Apps Installed by Users,Medium,Users install unapproved software on their work devices.,C-SUP-02,A4;B4b
+L3-END-03,3,Endpoint,No Regular Review of Security Logs,Medium,Security logs are collected but not routinely reviewed.,C-MON-03,C1
+L3-END-04,3,Endpoint,Third-Party Support Access Not Monitored,Medium,External suppliers connect for support without detailed monitoring.,C-SUP-01,A4
+L3-END-05,3,Endpoint,Outdated Anti-Malware Signatures,Medium,Endpoint protection signatures have not been updated for weeks.,C-SYS-03,B4c
+L3-END-06,3,Endpoint,Poor Documentation of Network Topology,Medium,"Network diagrams are outdated, hindering incident response.",C-SYS-07,B4c;A2
+L3-END-07,3,Endpoint,No Tested Disaster Recovery for Key System,High,An essential system has never had its disaster recovery plan tested.,C-IR-02,B5a;D1

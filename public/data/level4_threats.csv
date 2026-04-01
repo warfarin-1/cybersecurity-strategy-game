@@ -1,0 +1,26 @@
+ThreatID,Level,RiskType,ScenarioName,Severity,Description,RecommendedControlID,CAF_Principle
+L4-PH-01,4,Phishing,Highly Targeted Spear Phishing of Executives,High,Attackers craft bespoke emails to executives using internal project details.,C-AWARE-03,B6;A1
+L4-PH-02,4,Phishing,Compromised Mailbox Used for Internal Phishing,High,An internal mailbox is compromised and used to phish other staff.,C-MON-02,C1;B2
+L4-PH-03,4,Phishing,Phishing Combined with Phone and SMS,Medium,"Attackers use email, phone and SMS together to socially engineer staff.",C-GOV-03,D1;B6
+L4-IAM-01,4,IAM,Multiple Privileged Accounts Compromised,High,Evidence suggests several admin accounts have been taken over.,C-IAM-04,B2c;C1
+L4-IAM-02,4,IAM,No Separation Between Admin and User Accounts,Medium,Admins use the same account for everyday work and administration.,C-IAM-07,B2b
+L4-IAM-03,4,IAM,Inadequate Identity Verification for Remote Joiners,Medium,New remote staff join without robust identity checks before account issue.,C-IAM-08,B2a
+L4-DATA-01,4,Data,Large-Scale Exposure of Personal Data,High,A large dataset of personal data is exposed due to misconfigured access controls.,C-DATA-06,B3a;D1
+L4-DATA-02,4,Data,Backups Corrupted or Encrypted by Malware,High,Backups are found to be unusable after a ransomware incident.,C-DATA-05,B3c;B5a
+L4-DATA-03,4,Data,Untracked Copies of Highly Confidential Data,Medium,Highly confidential data exists in multiple locations outside central control.,C-DATA-02,B3a
+L4-NET-01,4,Network,Critical System Directly Exposed to Internet,High,A critical system has a management interface that is directly reachable from the internet.,C-SYS-06,B4c;B5
+L4-NET-02,4,Network,Multiple Unsupported Core Systems,High,Several core systems run unsupported OS versions with known serious vulnerabilities.,C-SYS-02,B4d
+L4-NET-03,4,Network,Malware Persistence Despite Remediation Efforts,Medium,"Malware repeatedly reappears across the estate, suggesting poor containment.",C-SYS-01,B4b;C1
+L4-NET-04,4,Network,Inadequate Monitoring of Critical Network Segments,Medium,There is little or no monitoring of traffic in and out of critical segments.,C-MON-01,C1
+L4-END-01,4,Endpoint,Critical System Administered from Personal Devices,High,Privileged operations are performed from unmanaged personal devices.,C-IAM-07,B2b;B4b
+L4-END-02,4,Endpoint,No Assurance Over Third-Party Remote Access,Medium,Third-party remote access is not technically or procedurally supervised.,C-SUP-01,A4;D1
+L4-END-03,4,Endpoint,Key Security Logs Missing or Overwritten,Medium,Important security logs are not retained long enough for investigations.,C-MON-03,C1;D1
+L4-IAM-C1-R1,4,IAM,No MFA on Critical Cloud Admin Accounts,Medium,Cloud admin accounts for identity or email services do not require MFA.,C-IAM-04,B2a;B2c
+L4-IAM-C1-R2,4,IAM,Password Reuse with External Services,Medium,Admin or staff passwords are reused across external unmanaged services.,C-IAM-01,B2
+L4-IAM-C1-R3,4,IAM,Dormant Privileged Accounts,Low,Legacy privileged accounts remain enabled but unused.,C-GOV-02,A1;B2c
+L4-DATA-C2-R1,4,Data,Publicly Accessible Cloud Storage with Sensitive Data,High,A cloud bucket containing sensitive data is exposed to the public internet.,C-DATA-08,B3a;D1
+L4-DATA-C2-R2,4,Data,No Encryption for Database at Rest,Medium,Important customer database is stored without encryption at rest.,C-DATA-03,B3c
+L4-DATA-C2-R3,4,Data,Over-Broad Access to Reporting System,Medium,Reporting tools allow many staff to export large amounts of data.,C-DATA-06,B3a
+L4-NET-C3-R1,4,Network,Critical Vulnerability on Internet-Facing Service,Medium,An internet-facing system has a critical unpatched vulnerability.,C-SYS-02,B4d
+L4-NET-C3-R2,4,Network,Weak Segmentation Around Critical System,Medium,Critical services share network zones with less trusted systems.,C-NET-02,B4a;B5
+L4-NET-C3-R3,4,Network,Limited Logging of Access to Critical System,Low,Access to critical systems is not fully logged or centrally stored.,C-MON-01,C1

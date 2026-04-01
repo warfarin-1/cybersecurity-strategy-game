@@ -1,0 +1,68 @@
+[
+  {
+    "scenarioId": "L4-B2-SCENARIO-01",
+    "level": 4,
+    "primaryRiskType": "IAM",
+    "scenarioName": "Account Compromise Chain for Critical Cloud Admin",
+    "severity": "High",
+    "description": "Combination of weak identity controls leading to compromise of critical cloud admin accounts.",
+    "subThreatIds": [
+      "L4-IAM-C1-R1",
+      "L4-IAM-C1-R2",
+      "L4-IAM-C1-R3"
+    ],
+    "requiredControls": [
+      "C-IAM-04",
+      "C-IAM-01",
+      "C-GOV-02"
+    ],
+    "cafPrinciples": [
+      "B2",
+      "A1"
+    ]
+  },
+  {
+    "scenarioId": "L4-B3-SCENARIO-01",
+    "level": 4,
+    "primaryRiskType": "Data",
+    "scenarioName": "Mass Data Exposure via Cloud Storage and Reporting",
+    "severity": "High",
+    "description": "Misconfigured cloud storage and broad reporting access allow large-scale data exfiltration.",
+    "subThreatIds": [
+      "L4-DATA-C2-R1",
+      "L4-DATA-C2-R2",
+      "L4-DATA-C2-R3"
+    ],
+    "requiredControls": [
+      "C-DATA-08",
+      "C-DATA-03",
+      "C-DATA-06"
+    ],
+    "cafPrinciples": [
+      "B3",
+      "D1"
+    ]
+  },
+  {
+    "scenarioId": "L4-B4-SCENARIO-01",
+    "level": 4,
+    "primaryRiskType": "Network",
+    "scenarioName": "Critical Service Compromise via Vulnerability and Poor Segmentation",
+    "severity": "High",
+    "description": "Critical external service is compromised due to unpatched vulnerabilities, weak segmentation and limited logging.",
+    "subThreatIds": [
+      "L4-NET-C3-R1",
+      "L4-NET-C3-R2",
+      "L4-NET-C3-R3"
+    ],
+    "requiredControls": [
+      "C-SYS-02",
+      "C-NET-02",
+      "C-MON-01"
+    ],
+    "cafPrinciples": [
+      "B4",
+      "C1"
+    ]
+  }
+]
