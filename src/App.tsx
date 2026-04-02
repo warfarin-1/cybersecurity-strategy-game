@@ -275,6 +275,10 @@ const App: React.FC = () => {
             return "en";
         }
     });
+    const [theme, setTheme] = useState<"dark" | "light">(() => {
+        try { return (localStorage.getItem("theme") as "dark" | "light") || "dark"; }
+        catch { return "dark"; }
+    });
     const [glossaryOpen, setGlossaryOpen] = useState(false);
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [briefingOpen, setBriefingOpen] = useState(true);
@@ -387,6 +391,11 @@ const App: React.FC = () => {
             localStorage.setItem(`chapterState_${chapterState.chapterId}`, JSON.stringify(chapterState));
         } catch { /* ignore */ }
     }, [chapterState]);
+
+    useEffect(() => {
+        document.documentElement.setAttribute("data-theme", theme);
+        localStorage.setItem("theme", theme);
+    }, [theme]);
 
     const isChapterUnlocked = (chapter: ChapterLevel): boolean => {
         if (chapter === 2) return true;
@@ -883,6 +892,23 @@ const App: React.FC = () => {
                                         onClick={() => { setLanguage("zh"); localStorage.setItem("language", "zh"); }}
                                     >
                                         中文
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="settings-section">
+                                <div className="settings-section-title">{t("Theme", "主题")}</div>
+                                <div className="settings-row">
+                                    <button
+                                        className={`settings-option${theme === "dark" ? " active" : ""}`}
+                                        onClick={() => setTheme("dark")}
+                                    >
+                                        {t("Dark", "深色")}
+                                    </button>
+                                    <button
+                                        className={`settings-option${theme === "light" ? " active" : ""}`}
+                                        onClick={() => setTheme("light")}
+                                    >
+                                        {t("Light", "浅色")}
                                     </button>
                                 </div>
                             </div>
