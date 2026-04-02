@@ -276,6 +276,7 @@ const App: React.FC = () => {
         }
     });
     const [glossaryOpen, setGlossaryOpen] = useState(false);
+    const [settingsOpen, setSettingsOpen] = useState(false);
     const [briefingOpen, setBriefingOpen] = useState(true);
     const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
     const [promotionLevel, setPromotionLevel] = useState<3 | 4 | null>(null);
@@ -794,43 +795,11 @@ const App: React.FC = () => {
                     <button className="glossary-btn" onClick={() => setGlossaryOpen(true)}>
                         📖 {t("Glossary", "安全图鉴")}
                     </button>
+                    <button className="settings-btn" onClick={() => setSettingsOpen(true)}>
+                        ⚙ {t("Settings", "设置")}
+                    </button>
                 </header>
                 <main className="map-container">
-                    <div className="mode-selector">
-                        <span className="mode-label">{t("Game Mode:", "游戏模式：")}</span>
-                        <button
-                            className={`mode-btn ${gameMode === "beginner" ? "mode-btn-active" : ""}`}
-                            onClick={() => { setGameMode("beginner"); localStorage.setItem("gameMode", "beginner"); }}
-                        >
-                            {t("Beginner", "新手")}
-                        </button>
-                        <button
-                            className={`mode-btn ${gameMode === "expert" ? "mode-btn-active" : ""}`}
-                            onClick={() => { setGameMode("expert"); localStorage.setItem("gameMode", "expert"); }}
-                        >
-                            {t("Expert", "专家")}
-                        </button>
-                    </div>
-                    <p className="mode-description">
-                        {gameMode === "beginner"
-                            ? t("Recommended controls are highlighted to guide your decisions.", "推荐的控制措施已高亮显示以引导您的决策。")
-                            : t("No hints provided. Analyse threats and choose controls independently.", "不提供提示。请自行分析威胁并选择控制措施。")}
-                    </p>
-                    <div className="mode-selector">
-                        <span className="mode-label">Language:</span>
-                        <button
-                            className={`mode-btn ${language === "en" ? "mode-btn-active" : ""}`}
-                            onClick={() => { setLanguage("en"); localStorage.setItem("language", "en"); }}
-                        >
-                            English
-                        </button>
-                        <button
-                            className={`mode-btn ${language === "zh" ? "mode-btn-active" : ""}`}
-                            onClick={() => { setLanguage("zh"); localStorage.setItem("language", "zh"); }}
-                        >
-                            中文
-                        </button>
-                    </div>
                     {CHAPTERS.map((chapter) => {
                         const unlocked = isChapterUnlocked(chapter.id);
                         const completed = completedChapters.has(chapter.id);
@@ -871,6 +840,81 @@ const App: React.FC = () => {
                     </div>
                 </main>
                 {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
+                {settingsOpen && (
+                    <div className="settings-overlay" onClick={() => setSettingsOpen(false)}>
+                        <div className="settings-panel" onClick={(e) => e.stopPropagation()}>
+                            <div className="settings-header">
+                                <h2>{t("Settings", "设置")}</h2>
+                                <button className="settings-close" onClick={() => setSettingsOpen(false)}>✕</button>
+                            </div>
+                            <div className="settings-section">
+                                <div className="settings-section-title">{t("Game Mode", "游戏模式")}</div>
+                                <div className="settings-row">
+                                    <button
+                                        className={`settings-option${gameMode === "beginner" ? " active" : ""}`}
+                                        onClick={() => { setGameMode("beginner"); localStorage.setItem("gameMode", "beginner"); }}
+                                    >
+                                        {t("Beginner", "新手")}
+                                    </button>
+                                    <button
+                                        className={`settings-option${gameMode === "expert" ? " active" : ""}`}
+                                        onClick={() => { setGameMode("expert"); localStorage.setItem("gameMode", "expert"); }}
+                                    >
+                                        {t("Expert", "专家")}
+                                    </button>
+                                </div>
+                                <div className="settings-hint">
+                                    {gameMode === "beginner"
+                                        ? t("Recommended controls are highlighted to guide your decisions.", "推荐的安全措施会被高亮显示，帮助你做出决策。")
+                                        : t("No hints. Make your own judgement.", "没有提示，依靠自己的判断。")}
+                                </div>
+                            </div>
+                            <div className="settings-section">
+                                <div className="settings-section-title">{t("Language", "语言")}</div>
+                                <div className="settings-row">
+                                    <button
+                                        className={`settings-option${language === "en" ? " active" : ""}`}
+                                        onClick={() => { setLanguage("en"); localStorage.setItem("language", "en"); }}
+                                    >
+                                        English
+                                    </button>
+                                    <button
+                                        className={`settings-option${language === "zh" ? " active" : ""}`}
+                                        onClick={() => { setLanguage("zh"); localStorage.setItem("language", "zh"); }}
+                                    >
+                                        中文
+                                    </button>
+                                </div>
+                            </div>
+                            <div className="settings-section">
+                                <div className="settings-section-title">{t("Reset Progress", "重置进度")}</div>
+                                <div className="settings-hint">
+                                    {t("This will clear all completed stages and start the game from the beginning.", "这将清除所有已完成的关卡，从头开始游戏。")}
+                                </div>
+                                <button
+                                    className="settings-reset-btn"
+                                    onClick={() => {
+                                        if (window.confirm(
+                                            language === "zh"
+                                                ? "确定要重置所有进度吗？此操作无法撤销。"
+                                                : "Reset all progress? This cannot be undone."
+                                        )) {
+                                            localStorage.removeItem("completedChapters");
+                                            localStorage.removeItem("chapterStates");
+                                            localStorage.removeItem("seenIntro");
+                                            localStorage.removeItem("seenEnding");
+                                            localStorage.removeItem("seenPromotion_3");
+                                            localStorage.removeItem("seenPromotion_4");
+                                            window.location.reload();
+                                        }
+                                    }}
+                                >
+                                    {t("Reset All Progress", "重置所有进度")}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 {promotionLevel && (
                     <div className="promotion-overlay">
                         <div className="promotion-panel">

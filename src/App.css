@@ -301,7 +301,7 @@
 }
 
 .sidebar-title {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     margin-bottom: 6px;
     color: #e5e7eb;
@@ -315,7 +315,7 @@
     border: 1px solid #374151;
     background: #020617;
     color: #e5e7eb;
-    font-size: 12px;
+    font-size: 13px;
     text-align: left;
     cursor: pointer;
 }
@@ -523,7 +523,7 @@
 }
 
 .threat-node-name {
-    font-size: 13px;
+    font-size: 14px;
     color: var(--color-text, #e5e7eb);
 }
 
@@ -549,7 +549,7 @@
 }
 
 .threat-node-severity {
-    font-size: 11px;
+    font-size: 12px;
     color: #6b7280;
     margin-top: 2px;
 }
@@ -601,7 +601,7 @@
 }
 
 .threat-hint {
-    font-size: 11px;
+    font-size: 12px;
     color: #6b7280;
     margin-top: 3px;
     font-style: italic;
@@ -800,7 +800,7 @@
 }
 
 .bottombar-left {
-    font-size: 13px;
+    font-size: 14px;
     color: #6b7280;
     display: flex;
     gap: 16px;
@@ -816,7 +816,7 @@
 .btn-small {
     padding: 7px 16px;
     border-radius: 8px;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s ease;
@@ -897,7 +897,7 @@
 }
 
 .stage-briefing-text {
-    font-size: 12px;
+    font-size: 13px;
     color: #9ca3af;
     line-height: 1.6;
     padding: 0 14px 12px;
@@ -1121,4 +1121,142 @@
 
 .chapter-icon-coming-soon {
     color: #374151;
+}
+
+/* ─── Settings ───────────────────────────────────────────────────────────── */
+
+.settings-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid #374151;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+.settings-btn:hover {
+    border-color: #7dd3fc;
+    color: #7dd3fc;
+}
+
+.settings-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.settings-panel {
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 12px;
+    width: 420px;
+    max-width: 90vw;
+    padding: 0;
+    overflow: hidden;
+}
+
+.settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #30363d;
+}
+
+.settings-header h2 {
+    margin: 0;
+    font-size: 16px;
+    color: #e6edf3;
+    font-weight: 600;
+}
+
+.settings-close {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: inherit;
+}
+.settings-close:hover { color: #e6edf3; }
+
+.settings-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid #21262d;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.settings-row {
+    display: flex;
+    gap: 8px;
+}
+
+.settings-option {
+    padding: 7px 18px;
+    border-radius: 6px;
+    border: 1px solid #30363d;
+    background: transparent;
+    color: #9ca3af;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.settings-option:hover {
+    border-color: #7dd3fc;
+    color: #7dd3fc;
+}
+
+.settings-option.active {
+    background: rgba(125, 211, 252, 0.12);
+    border-color: rgba(125, 211, 252, 0.4);
+    color: #7dd3fc;
+    font-weight: 500;
+}
+
+.settings-hint {
+    font-size: 12px;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.settings-reset-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    background: rgba(248, 113, 113, 0.06);
+    color: #f87171;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    align-self: flex-start;
+}
+
+.settings-reset-btn:hover {
+    background: rgba(248, 113, 113, 0.12);
+    border-color: rgba(248, 113, 113, 0.5);
 }
