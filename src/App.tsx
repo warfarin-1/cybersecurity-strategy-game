@@ -307,8 +307,7 @@ const App: React.FC = () => {
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
         if (view.type !== "stage") return;
-        setTimeout(() => setBriefingOpen(true), 0);
-        setStageScoreDeducted(false);
+        setTimeout(() => { setBriefingOpen(true); setStageScoreDeducted(false); }, 0);
         const config = getStageConfig(view.stageId);
         if (!config) return;
 

@@ -1310,20 +1310,20 @@
 /* ─── Tutorial ───────────────────────────────────────────────────────────── */
 
 .chapter-card-tutorial {
-    border-color: rgba(74, 222, 128, 0.2);
-    background: linear-gradient(145deg, #0a1f0f 0%, #050f07 100%);
+    border-color: rgba(74, 222, 128, 0.3);
+    background: var(--bg-card);
 }
 
-.chapter-card-tutorial:hover {
-    border-color: rgba(74, 222, 128, 0.4);
-    box-shadow: 0 8px 24px rgba(74, 222, 128, 0.1);
+.chapter-card-tutorial:hover:not(:disabled) {
+    border-color: rgba(74, 222, 128, 0.5);
+    box-shadow: 0 8px 24px rgba(74, 222, 128, 0.12);
 }
 
 .chapter-icon-tutorial {
     border-color: rgba(74, 222, 128, 0.3);
-    color: #4ade80;
-    background: linear-gradient(135deg, #0f2d1a 0%, #071409 100%);
-    box-shadow: 0 0 16px rgba(74, 222, 128, 0.1);
+    color: var(--accent-green);
+    background: var(--bg-secondary);
+    box-shadow: none;
     font-size: 28px;
     font-weight: 700;
 }
