@@ -32,6 +32,7 @@ export interface StageGameState {
     logs: string[];
     isCompleted: boolean;
     deployedControlIds: string[];
+    scoreDeducted?: number; // actual points deducted from chapter score on submit
 }
 
 // Per-chapter state tracking all its stages

@@ -584,6 +584,7 @@ const App: React.FC = () => {
 
         const spent = config.budgetAllocation - stageState.budget;
         const refund = Math.max(0, spent);
+        const scoreRefund = stageState.scoreDeducted ?? 0;
 
         const resetStageState: StageGameState = {
             ...stageState,
@@ -593,11 +594,13 @@ const App: React.FC = () => {
             status: "not_started",
             turn: 1,
             logs: [],
+            scoreDeducted: 0,
         };
 
         const newChapterState = {
             ...chapterState,
             remainingBudget: chapterState.remainingBudget + refund,
+            score: Math.min(100, chapterState.score + scoreRefund),
             stageStates: {
                 ...chapterState.stageStates,
                 [stageId]: resetStageState,
@@ -687,6 +690,8 @@ const App: React.FC = () => {
             ...activeStageState,
             isCompleted: true,
             status: "completed",
+            // Preserve previously stored deduction if this is a re-submit after undo
+            scoreDeducted: stageScoreDeducted ? (activeStageState.scoreDeducted ?? 0) : deduction,
         };
 
         setActiveStageState(newStageState);
@@ -721,22 +726,8 @@ const App: React.FC = () => {
         const spent = config.budgetAllocation - activeStageState.budget;
         const refund = Math.max(0, spent);
 
-        // Refund any score that was deducted on submit
-        const scoreRefund = stageScoreDeducted
-            ? (() => {
-                  let deducted = 0;
-                  for (const threat of stageThreats) {
-                      const mitigated = threat.recommendedControlIds.some((id) =>
-                          deployedControlIds.includes(id)
-                      );
-                      if (!mitigated) {
-                          if (threat.severity === "Medium") deducted += 15;
-                          else if (threat.severity === "Low") deducted += 5;
-                      }
-                  }
-                  return deducted;
-              })()
-            : 0;
+        // Refund the exact score that was deducted on submit
+        const scoreRefund = activeStageState.scoreDeducted ?? 0;
 
         const resetStageState: StageGameState = {
             ...activeStageState,
@@ -746,6 +737,7 @@ const App: React.FC = () => {
             status: "in_progress",
             turn: 1,
             logs: [],
+            scoreDeducted: 0,
         };
 
         setActiveStageState(resetStageState);
@@ -1269,6 +1261,10 @@ const App: React.FC = () => {
     )!;
     const stageConfig = getStageConfig(view.stageId);
 
+    const currentStageIndex = STAGES_BY_CHAPTER[view.chapter]?.findIndex((s) => s.id === view.stageId) ?? -1;
+    const nextStage = STAGES_BY_CHAPTER[view.chapter]?.[currentStageIndex + 1];
+    const hasNextStage = !!nextStage;
+
     return (
         <div className="app-root">
             <header className="top-bar">
@@ -1493,6 +1489,12 @@ const App: React.FC = () => {
                 <aside className="stage-sidebar-right">
                     <div className="sidebar-section">
                         <div className="sidebar-title">{t("Security Requirements", "安全要求")}</div>
+                        <div className="score-rule-hint">
+                            {t(
+                                'High: must resolve. Medium (−15pts) and Low (−5pts) reduce score if skipped.',
+                                '高风险：必须解决。中风险(−15分)和低风险(−5分)跳过将扣分。'
+                            )}
+                        </div>
                         {stageConfig ? (
                             stageConfig.requiredControlIds.map((reqId) => {
                                 const deployed = deployedControlIds.includes(reqId);
@@ -1551,6 +1553,12 @@ const App: React.FC = () => {
                 onRunAttackSimulation={() => {}}
                 language={language}
                 feedbackMsg={feedbackMsg}
+                onNextStage={hasNextStage
+                    ? () => handleStageClick(view.chapter, nextStage!.id)
+                    : () => goBackToChapter(view.chapter)}
+                nextStageLabel={hasNextStage
+                    ? t(`→ ${nextStage!.name}`, `→ ${nextStage!.name}`)
+                    : t('← Chapter Overview', '← 章节概览')}
             />
             {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
             {showTutorial && (

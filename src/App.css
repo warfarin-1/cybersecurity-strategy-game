@@ -374,6 +374,24 @@
     color: var(--accent-red);
 }
 
+/* Static status pills in right sidebar — no interactive feedback */
+.sidebar-pill-success,
+.sidebar-pill-danger {
+    cursor: default;
+}
+.sidebar-pill-success:hover,
+.sidebar-pill-danger:hover {
+    transform: none;
+}
+
+/* Threat list items in right sidebar (div elements) — no interactive feedback */
+div.sidebar-pill {
+    cursor: default;
+}
+div.sidebar-pill:hover {
+    transform: none;
+}
+
 /* Stage main area */
 
 .stage-main-area {
@@ -424,6 +442,10 @@
 
 .control-deployed-row .sidebar-pill {
     flex: 1;
+    background: rgba(74, 222, 128, 0.1);
+    border-color: rgba(74, 222, 128, 0.4);
+    color: var(--accent-green);
+    opacity: 1;
 }
 
 .undo-btn {
@@ -882,6 +904,29 @@
 .btn-outline:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+}
+
+.btn-green {
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    color: var(--accent-green);
+}
+
+.btn-green:hover:not(:disabled) {
+    background: rgba(74, 222, 128, 0.18);
+    border-color: rgba(74, 222, 128, 0.5);
+}
+
+/* Score rule hint below Security Requirements title */
+.score-rule-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    padding: 6px 8px;
+    background: rgba(255, 184, 77, 0.06);
+    border-radius: 6px;
+    border-left: 2px solid var(--accent-orange);
+    margin-bottom: 6px;
 }
 
 /* ─── Narrative / Org ────────────────────────────────────────────────────── */

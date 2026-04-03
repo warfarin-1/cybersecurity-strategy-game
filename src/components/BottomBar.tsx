@@ -10,6 +10,8 @@ interface BottomBarProps {
     score?: number;
     language?: "en" | "zh";
     feedbackMsg?: string | null;
+    onNextStage?: () => void;
+    nextStageLabel?: string;
 }
 
 export const BottomBar: React.FC<BottomBarProps> = ({
@@ -21,6 +23,8 @@ export const BottomBar: React.FC<BottomBarProps> = ({
     score,
     language = "en",
     feedbackMsg,
+    onNextStage,
+    nextStageLabel,
 }) => {
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
     return (
@@ -51,6 +55,14 @@ export const BottomBar: React.FC<BottomBarProps> = ({
                         ? t("✓ Stage Complete", "✓ 关卡完成")
                         : t("Submit", "提交")}
                 </button>
+                {isCompleted && onNextStage && (
+                    <button
+                        className="btn-small btn-green"
+                        onClick={onNextStage}
+                    >
+                        {nextStageLabel ?? t("→ Next", "→ 下一关")}
+                    </button>
+                )}
                 <button
                     className="btn-small"
                     onClick={onRunAttackSimulation}

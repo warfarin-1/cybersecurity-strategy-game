@@ -146,8 +146,8 @@ export const TUTORIAL_CARDS: TutorialCard[] = [
     {
         title: "Step 2 — Deploy Controls",
         titleZh: "第二步 — 部署措施",
-        content: "The LEFT panel is your toolkit. Click any control to deploy it — this deducts its cost from your budget. Deployed controls are marked with ✓. You can undo a single control with ↩, or reset the whole stage with ↺.",
-        contentZh: "左侧面板是你的工具箱。点击任意措施即可部署——这会从预算中扣除对应费用。已部署的措施标有 ✓。你可以用 ↩ 撤回单个措施，或用 ↺ 重置整个关卡。",
+        content: "The LEFT panel is your toolkit. Click any control to deploy it — this deducts its cost from your shared chapter budget. Deployed controls are marked with ✓. Made a mistake? Use ↩ to undo a single control and get a refund, or ↺ Reset This Stage to undo everything in the current stage. Note: resetting only affects the current stage — your progress in other stages is kept.",
+        contentZh: "左侧面板是你的工具箱。点击任意措施即可部署——费用从章节共享预算中扣除。已部署的措施标有 ✓。操作有误？用 ↩ 撤回单个措施并退款，或用 ↺ 重置本关来撤销当前关卡的所有部署。注意：重置只影响当前关卡，其他关卡的进度不受影响。",
         highlight: 'left',
     },
     {
