@@ -295,6 +295,9 @@ const App: React.FC = () => {
     const [showTutorial, setShowTutorial] = useState(false);
     const [tutorialIndex, setTutorialIndex] = useState(0);
     const [stageScoreDeducted, setStageScoreDeducted] = useState(false);
+    const [forceTutorialSeen, setForceTutorialSeen] = useState<boolean>(() => {
+        try { return !!localStorage.getItem("seenTutorial"); } catch { return false; }
+    });
 
     // Translation helper
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
@@ -386,6 +389,14 @@ const App: React.FC = () => {
             setTimeout(() => setPromotionLevel(3), 0);
         }
     }, [view, completedChapters]);
+
+    // Auto-trigger tutorial on first map visit (after intro, if not yet seen)
+    useEffect(() => {
+        if (view.type === "map" && !forceTutorialSeen && !showIntro) {
+            openTutorial();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [view.type, forceTutorialSeen, showIntro]);
 
     // Save chapter state to localStorage whenever it changes, so stage progress survives a page refresh
     useEffect(() => {
@@ -757,11 +768,32 @@ const App: React.FC = () => {
     };
 
     const openTutorial = () => {
+        const chapter = 2 as ChapterLevel;
+        let current: ChapterState | null = chapterState;
+        if (!current || current.chapterId !== chapter) {
+            try {
+                const saved = localStorage.getItem(`chapterState_${chapter}`);
+                if (saved) current = JSON.parse(saved) as ChapterState;
+            } catch { /* ignore */ }
+            if (!current || current.chapterId !== chapter) current = makeChapterState(chapter);
+            setChapterState(current);
+        }
+        const stageState = current.stageStates["L2-1"] ?? makeStageGameState("L2-1");
+        setActiveStageState(stageState);
+        if (!current.stageStates["L2-1"]) {
+            setChapterState((prev) =>
+                prev ? { ...prev, stageStates: { ...prev.stageStates, "L2-1": stageState } } : prev
+            );
+        }
+        setDeployedControlIds(stageState.deployedControlIds);
+        setView({ type: "stage", chapter, stageId: "L2-1" });
         setTutorialIndex(0);
         setShowTutorial(true);
     };
 
     const closeTutorial = () => {
+        try { localStorage.setItem("seenTutorial", "1"); } catch { /* ignore */ }
+        setForceTutorialSeen(true);
         setShowTutorial(false);
         setTutorialIndex(0);
     };
@@ -971,6 +1003,23 @@ const App: React.FC = () => {
                                 </div>
                             </div>
                             <div className="settings-section">
+                                <div className="settings-section-title">{t("Tutorial", "新手教程")}</div>
+                                <div className="settings-hint">
+                                    {t("Replay the interactive tutorial on the L2-1 stage.", "在 L2-1 关卡重新播放互动教程。")}
+                                </div>
+                                <button
+                                    className="settings-reset-tutorial-btn"
+                                    onClick={() => {
+                                        localStorage.removeItem("seenTutorial");
+                                        setForceTutorialSeen(false);
+                                        setSettingsOpen(false);
+                                        openTutorial();
+                                    }}
+                                >
+                                    {t("Replay Tutorial", "重新播放教程")}
+                                </button>
+                            </div>
+                            <div className="settings-section">
                                 <div className="settings-section-title">{t("Reset Progress", "重置进度")}</div>
                                 <div className="settings-hint">
                                     {t("This will clear all completed stages and start the game from the beginning.", "这将清除所有已完成的关卡，从头开始游戏。")}
@@ -1024,70 +1073,6 @@ const App: React.FC = () => {
                             >
                                 {t("Continue", "继续")}
                             </button>
-                        </div>
-                    </div>
-                )}
-                {showTutorial && (
-                    <div className="tutorial-overlay">
-                        <div className="tutorial-panel">
-                            <div className="tutorial-dots">
-                                {TUTORIAL_CARDS.map((_, i) => (
-                                    <div
-                                        key={i}
-                                        className={`tutorial-dot${i === tutorialIndex ? ' active' : ''}${i < tutorialIndex ? ' done' : ''}`}
-                                    />
-                                ))}
-                            </div>
-                            {TUTORIAL_CARDS[tutorialIndex].highlight && (
-                                <div className={`tutorial-highlight-badge tutorial-highlight-${TUTORIAL_CARDS[tutorialIndex].highlight}`}>
-                                    {TUTORIAL_CARDS[tutorialIndex].highlight === 'left'   && t('← Left Panel',   '← 左侧面板')}
-                                    {TUTORIAL_CARDS[tutorialIndex].highlight === 'center' && t('↑ Centre Panel', '↑ 中央面板')}
-                                    {TUTORIAL_CARDS[tutorialIndex].highlight === 'right'  && t('Right Panel →',  '右侧面板 →')}
-                                    {TUTORIAL_CARDS[tutorialIndex].highlight === 'bottom' && t('↓ Bottom Bar',   '↓ 底部栏')}
-                                </div>
-                            )}
-                            <div className="tutorial-content">
-                                <h2 className="tutorial-title">
-                                    {language === 'zh'
-                                        ? TUTORIAL_CARDS[tutorialIndex].titleZh
-                                        : TUTORIAL_CARDS[tutorialIndex].title}
-                                </h2>
-                                <p className="tutorial-text">
-                                    {language === 'zh'
-                                        ? TUTORIAL_CARDS[tutorialIndex].contentZh
-                                        : TUTORIAL_CARDS[tutorialIndex].content}
-                                </p>
-                            </div>
-                            <div className="tutorial-actions">
-                                <button className="tutorial-skip" onClick={closeTutorial}>
-                                    {t('Skip Tutorial', '跳过教程')}
-                                </button>
-                                <div className="tutorial-nav">
-                                    {tutorialIndex > 0 && (
-                                        <button
-                                            className="tutorial-btn tutorial-btn-secondary"
-                                            onClick={() => setTutorialIndex((i) => i - 1)}
-                                        >
-                                            {t('Back', '上一步')}
-                                        </button>
-                                    )}
-                                    {tutorialIndex < TUTORIAL_CARDS.length - 1 ? (
-                                        <button
-                                            className="tutorial-btn tutorial-btn-primary"
-                                            onClick={() => setTutorialIndex((i) => i + 1)}
-                                        >
-                                            {t('Next', '下一步')}
-                                        </button>
-                                    ) : (
-                                        <button
-                                            className="tutorial-btn tutorial-btn-primary"
-                                            onClick={closeTutorial}
-                                        >
-                                            {t("Let's go", '开始游戏')}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
                         </div>
                     </div>
                 )}
@@ -1568,6 +1553,66 @@ const App: React.FC = () => {
                 feedbackMsg={feedbackMsg}
             />
             {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
+            {showTutorial && (
+                <div className="tutorial-stage-overlay">
+                    <div className={`tutorial-spotlight tutorial-spotlight-${TUTORIAL_CARDS[tutorialIndex].highlight ?? 'none'}`} />
+                    <div className={`tutorial-bubble tutorial-bubble-${TUTORIAL_CARDS[tutorialIndex].highlight ?? 'none'}`}>
+                        <div className="tutorial-dots">
+                            {TUTORIAL_CARDS.map((_, i) => (
+                                <div
+                                    key={i}
+                                    className={`tutorial-dot${i === tutorialIndex ? ' active' : ''}${i < tutorialIndex ? ' done' : ''}`}
+                                />
+                            ))}
+                        </div>
+                        <h3 className="tutorial-bubble-title">
+                            {language === 'zh'
+                                ? TUTORIAL_CARDS[tutorialIndex].titleZh
+                                : TUTORIAL_CARDS[tutorialIndex].title}
+                        </h3>
+                        <p className="tutorial-bubble-text">
+                            {language === 'zh'
+                                ? TUTORIAL_CARDS[tutorialIndex].contentZh
+                                : TUTORIAL_CARDS[tutorialIndex].content}
+                        </p>
+                        <div className="tutorial-actions">
+                            <button className="tutorial-skip" onClick={closeTutorial}>
+                                {t('Skip', '跳过')}
+                            </button>
+                            <div className="tutorial-nav">
+                                {tutorialIndex > 0 && (
+                                    <button
+                                        className="tutorial-btn tutorial-btn-secondary"
+                                        onClick={() => setTutorialIndex((i) => i - 1)}
+                                    >
+                                        {t('Back', '上一步')}
+                                    </button>
+                                )}
+                                {tutorialIndex < TUTORIAL_CARDS.length - 1 ? (
+                                    <button
+                                        className="tutorial-btn tutorial-btn-primary"
+                                        onClick={() => setTutorialIndex((i) => i + 1)}
+                                    >
+                                        {t('Next', '下一步')}
+                                    </button>
+                                ) : (
+                                    <button
+                                        className="tutorial-btn tutorial-btn-primary"
+                                        onClick={closeTutorial}
+                                    >
+                                        {t('Got it', '明白了')}
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                    {TUTORIAL_CARDS[tutorialIndex].highlight === 'bottom' && (
+                        <div className="tutorial-submit-arrow">
+                            ↓ {t('Submit button is here', '提交按钮在这里')}
+                        </div>
+                    )}
+                </div>
+            )}
         </div>
     );
 };

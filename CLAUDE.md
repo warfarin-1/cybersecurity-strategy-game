@@ -213,8 +213,9 @@ export interface ChapterState {
 | `showEnding` | `boolean` | 控制全通关后的 ending 动画是否显示（读 localStorage 'seenEnding'） |
 | `endingLineIndex` | `number` | ending 已显示到第几行 |
 | `endingReady` | `boolean` | ending 全部显示完毕后是否显示 Return to Menu 按钮 |
-| `showTutorial` | `boolean` | Tutorial 弹窗开关 |
-| `tutorialIndex` | `number` | 当前显示的 Tutorial 卡片索引（0–6） |
+| `showTutorial` | `boolean` | Tutorial 叠加层开关 |
+| `tutorialIndex` | `number` | 当前显示的 Tutorial 卡片索引（0–4，共 5 张） |
+| `forceTutorialSeen` | `boolean` | 标记教程已播放，防止自动重触发；读/写 `localStorage('seenTutorial')`，`closeTutorial` 写 true，Settings Replay 按钮写 false |
 | `stageScoreDeducted` | `boolean` | 标记本关是否已在 `handleSubmitStage` 中结算过扣分，防止重复扣；进入新 Stage / 重置关卡时清空 |
 
 ### 5.3 初始扇区（4个）
@@ -352,10 +353,14 @@ function calculateRiskLevel(controlsApplied: number): RiskLevel {
 | `.settings-hint` / `.settings-reset-btn` | 区块提示文字及重置按钮 |
 | `.stage-inner-reset-btn` | Stage 视图左侧底部关卡内重置按钮（虚线边框，hover 变红） |
 | `.chapter-card-tutorial` / `.chapter-icon-tutorial` | 地图页 Tutorial 入口卡片（绿色渐变） |
-| `.tutorial-overlay` / `.tutorial-panel` | Tutorial 弹窗遮罩与面板 |
+| `.tutorial-stage-overlay` | Tutorial 全屏容器（`pointer-events: none`，不阻断 Stage 交互） |
+| `.tutorial-spotlight` / `.tutorial-spotlight-left/center/right/bottom/none` | box-shadow 镂空高亮：对应左侧面板/中央面板/右侧面板/底部栏/无高亮（全遮罩） |
+| `.tutorial-bubble` / `.tutorial-bubble-left/center/right/bottom/none` | 说明气泡及其定位变体（宽 320px，z-index 1501） |
+| `.tutorial-bubble-title` / `.tutorial-bubble-text` | 气泡标题（16px 600）与正文（13px 1.7行高） |
 | `.tutorial-dot` / `.tutorial-dot.active` / `.tutorial-dot.done` | 进度指示点 |
-| `.tutorial-highlight-badge` / `.tutorial-highlight-left/center/right/bottom` | 面板方向标签（四色） |
 | `.tutorial-btn-primary` / `.tutorial-btn-secondary` / `.tutorial-skip` | Tutorial 导航按钮 |
+| `.tutorial-submit-arrow` | 第5步底部高亮时显示的弹跳箭头指示器 |
+| `.settings-reset-tutorial-btn` | Settings 面板内"重新播放教程"按钮（hover 变蓝） |
 
 ---
 

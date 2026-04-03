@@ -1328,27 +1328,111 @@
     font-weight: 700;
 }
 
-.tutorial-overlay {
+/* Full-screen container — pointer-events none so stage remains interactive */
+.tutorial-stage-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.82);
-    z-index: 2000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    z-index: 1500;
+    pointer-events: none;
 }
 
-.tutorial-panel {
+/* Box-shadow cutout spotlight — only the defined rect shows through */
+.tutorial-spotlight {
+    position: fixed;
+    pointer-events: none;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+    border-radius: 14px;
+    transition: all 0.3s ease;
+}
+
+.tutorial-spotlight-left {
+    top: 64px;
+    left: 20px;
+    width: 220px;
+    bottom: 56px;
+}
+
+.tutorial-spotlight-center {
+    top: 64px;
+    left: calc(20px + 220px + 10px);
+    right: calc(20px + 220px + 10px);
+    bottom: 56px;
+}
+
+.tutorial-spotlight-right {
+    top: 64px;
+    right: 20px;
+    width: 220px;
+    bottom: 56px;
+}
+
+.tutorial-spotlight-bottom {
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    border-radius: 0;
+}
+
+/* Card 1 — no spotlight, full dim */
+.tutorial-spotlight-none {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.72);
+    border-radius: 0;
+    box-shadow: none;
+}
+
+/* Tutorial card bubble */
+.tutorial-bubble {
+    position: fixed;
+    z-index: 1501;
+    width: 320px;
+    max-width: 90vw;
     background: var(--bg-card);
     border: 1px solid var(--border-light);
     border-radius: 16px;
-    width: 520px;
-    max-width: 90vw;
-    padding: 32px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 24px;
-    position: relative;
+    gap: 14px;
+    pointer-events: all;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+/* Card 1 (no highlight) — centered */
+.tutorial-bubble-none {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Left panel highlighted → bubble in center-right */
+.tutorial-bubble-left {
+    top: 50%;
+    left: calc(20px + 220px + 24px);
+    transform: translateY(-50%);
+}
+
+/* Center panel highlighted → bubble centered */
+.tutorial-bubble-center {
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Right panel highlighted → bubble in center-left */
+.tutorial-bubble-right {
+    top: 50%;
+    right: calc(20px + 220px + 24px);
+    transform: translateY(-50%);
+}
+
+/* Bottom bar highlighted → bubble above bar, centered */
+.tutorial-bubble-bottom {
+    bottom: calc(56px + 16px);
+    left: 50%;
+    transform: translateX(-50%);
 }
 
 .tutorial-dots {
@@ -1375,55 +1459,16 @@
     background: var(--accent-green);
 }
 
-.tutorial-highlight-badge {
-    text-align: center;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.05em;
-    padding: 6px 14px;
-    border-radius: 20px;
-    align-self: center;
-}
 
-.tutorial-highlight-left {
-    background: rgba(125, 211, 252, 0.1);
-    color: var(--accent-blue);
-    border: 1px solid rgba(125, 211, 252, 0.2);
-}
-
-.tutorial-highlight-center {
-    background: rgba(248, 113, 113, 0.1);
-    color: var(--accent-red);
-    border: 1px solid rgba(248, 113, 113, 0.2);
-}
-
-.tutorial-highlight-right {
-    background: rgba(74, 222, 128, 0.1);
-    color: var(--accent-green);
-    border: 1px solid rgba(74, 222, 128, 0.2);
-}
-
-.tutorial-highlight-bottom {
-    background: rgba(255, 184, 77, 0.1);
-    color: var(--accent-orange);
-    border: 1px solid rgba(255, 184, 77, 0.2);
-}
-
-.tutorial-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.tutorial-title {
-    font-size: 18px;
+.tutorial-bubble-title {
+    font-size: 16px;
     font-weight: 600;
     color: var(--text-primary);
     margin: 0;
 }
 
-.tutorial-text {
-    font-size: 14px;
+.tutorial-bubble-text {
+    font-size: 13px;
     color: var(--text-secondary);
     line-height: 1.7;
     margin: 0;
@@ -1484,6 +1529,42 @@
 .tutorial-btn-secondary:hover {
     border-color: var(--border-light);
     color: var(--text-primary);
+}
+
+.settings-reset-tutorial-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    margin-top: 6px;
+}
+
+.settings-reset-tutorial-btn:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
+
+/* Submit arrow indicator on bottom-highlight step */
+.tutorial-submit-arrow {
+    position: fixed;
+    bottom: calc(56px + 10px);
+    right: 24px;
+    color: var(--accent-blue);
+    font-size: 13px;
+    font-weight: 600;
+    pointer-events: none;
+    z-index: 102;
+    animation: tutorialBounce 1s ease-in-out infinite;
+}
+
+@keyframes tutorialBounce {
+    0%, 100% { transform: translateY(0); }
+    50%       { transform: translateY(-5px); }
 }
 
 /* ─── Stage Inner Reset Button ───────────────────────────────────────────── */

@@ -2100,3 +2100,178 @@ if (!current || current.chapterId !== chapter) {
 #### Result
 
 After a page refresh, entering any chapter correctly shows all previously completed stages, their deployed controls, and the remaining budget — consistent with what the map screen already showed.
+
+## Change Log — In-Game Tutorial Overlay
+
+### Overview
+
+Replaced the old card-based tutorial panel (rendered on the map screen) with an in-game spotlight overlay that teaches the player directly on the real L2-1 Stage view. The tutorial is triggered automatically on first launch (after the intro animation) and can be replayed from the Settings panel at any time.
+
+### `src/data/narrative.ts`
+
+#### `TUTORIAL_CARDS` — content and highlight order revised
+
+Five cards with a logical walkthrough order:
+
+| Index | Title | Highlight |
+|-------|-------|-----------|
+| 0 | Your Mission | `null` (full dim, introduction) |
+| 1 | Step 1 — Know Your Threats | `right` (right sidebar) |
+| 2 | Step 2 — Deploy Controls | `left` (left sidebar) |
+| 3 | Step 3 — Check the Centre | `center` (main board) |
+| 4 | Step 4 — Submit When Ready | `bottom` (BottomBar) |
+
+### `src/App.tsx`
+
+#### New state: `forceTutorialSeen`
+
+```typescript
+const [forceTutorialSeen, setForceTutorialSeen] = useState<boolean>(() => {
+    try { return !!localStorage.getItem("seenTutorial"); } catch { return false; }
+});
+```
+
+Prevents the auto-trigger effect from firing again once the tutorial has been seen or skipped.
+
+#### Auto-trigger `useEffect` — simplified
+
+```typescript
+useEffect(() => {
+    if (view.type === "map" && !forceTutorialSeen && !showIntro) {
+        openTutorial();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [view.type, forceTutorialSeen, showIntro]);
+```
+
+Replaced the inline 30-line stage-setup block with a single `openTutorial()` call. The function already handles `chapterState` / `activeStageState` initialisation.
+
+#### `openTutorial` — navigates to L2-1 Stage
+
+Sets up chapter state, stage state, deployed control IDs, then calls `setView({ type: "stage", chapter: 2, stageId: "L2-1" })` before setting `showTutorial = true`. Works correctly whether called from the auto-trigger effect, the Tutorial card on the map, or the Settings Replay button.
+
+#### `closeTutorial` — persists seen state
+
+```typescript
+const closeTutorial = () => {
+    try { localStorage.setItem("seenTutorial", "1"); } catch { /* ignore */ }
+    setForceTutorialSeen(true);
+    setShowTutorial(false);
+    setTutorialIndex(0);
+};
+```
+
+#### Removed `tutorial-spotlit` conditional classes
+
+Three elements previously received a `tutorial-spotlit` class to rise above the overlay:
+
+- `<aside className="stage-sidebar-left">` — was conditional
+- `<section className="stage-main-area">` — was conditional
+- `<aside className="stage-sidebar-right">` — was conditional
+- `<BottomBar>` wrapper `<div>` — removed entirely
+
+These are no longer needed under the box-shadow spotlight approach.
+
+#### New tutorial rendering block — spotlight approach
+
+```tsx
+{showTutorial && (
+    <div className="tutorial-stage-overlay">
+        <div className={`tutorial-spotlight tutorial-spotlight-${
+            TUTORIAL_CARDS[tutorialIndex].highlight ?? 'none'
+        }`} />
+        <div className={`tutorial-bubble tutorial-bubble-${
+            TUTORIAL_CARDS[tutorialIndex].highlight ?? 'none'
+        }`}>
+            {/* dots, title, text, nav buttons */}
+        </div>
+        {TUTORIAL_CARDS[tutorialIndex].highlight === 'bottom' && (
+            <div className="tutorial-submit-arrow">
+                ↓ {t('Submit button is here', '提交按钮在这里')}
+            </div>
+        )}
+    </div>
+)}
+```
+
+The outer `div.tutorial-stage-overlay` has `pointer-events: none`, so the stage remains interactive while the tutorial is showing. The bubble itself has `pointer-events: all` to allow button clicks.
+
+#### Settings panel — Replay Tutorial button
+
+Class changed from `settings-reset-btn` (with inline style override) to `settings-reset-tutorial-btn`. The `onClick` now also calls `localStorage.removeItem("seenTutorial")` and `setForceTutorialSeen(false)` before opening the tutorial, ensuring the auto-trigger guard is properly cleared.
+
+### `src/App.css`
+
+#### `.tutorial-stage-overlay` — updated
+
+```css
+.tutorial-stage-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1500;
+    pointer-events: none;   /* stage remains interactive */
+}
+```
+
+Previously had `background: rgba(0,0,0,0.78)` and `pointer-events: all`. Now it is a transparent container; the dim comes from the spotlight's `box-shadow`.
+
+#### `.tutorial-spotlit` — removed
+
+No longer needed.
+
+#### New: `.tutorial-spotlight` and five variants
+
+```css
+.tutorial-spotlight {
+    position: fixed;
+    pointer-events: none;
+    box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+    border-radius: 14px;
+    transition: all 0.3s ease;
+}
+.tutorial-spotlight-left   { top: 64px; left: 20px; width: 220px; bottom: 56px; }
+.tutorial-spotlight-center { top: 64px; left: calc(20px + 220px + 10px);
+                              right: calc(20px + 220px + 10px); bottom: 56px; }
+.tutorial-spotlight-right  { top: 64px; right: 20px; width: 220px; bottom: 56px; }
+.tutorial-spotlight-bottom { bottom: 0; left: 0; right: 0; height: 56px; border-radius: 0; }
+.tutorial-spotlight-none   { position: fixed; inset: 0;
+                              background: rgba(0,0,0,0.72); box-shadow: none; }
+```
+
+The spotlight element's `box-shadow` casts a 9999 px dim outward from the highlighted rect, creating a "hole" effect that frames exactly the panel being described.
+
+#### Updated: `.tutorial-bubble` and positioning variants
+
+Width reduced 460 → 320 px; z-index raised 102 → 1501; padding reduced 28 → 24 px. Bubble positions updated to sit adjacent to each spotlight:
+
+| Variant | Position |
+|---------|----------|
+| `none` | Centred (transform: translate(-50%, -50%)) |
+| `left` | Right of spotlight: `left: calc(20px + 220px + 24px)`, `translateY(-50%)` |
+| `center` | Centred |
+| `right` | Left of spotlight: `right: calc(20px + 220px + 24px)`, `translateY(-50%)` |
+| `bottom` | Above BottomBar: `bottom: calc(56px + 16px)`, `translateX(-50%)` |
+
+#### New text classes
+
+`.tutorial-bubble-title` (16 px, 600 weight) and `.tutorial-bubble-text` (13 px, 1.7 line-height) replace the former `.tutorial-title` and `.tutorial-text`.
+
+#### New: `.settings-reset-tutorial-btn`
+
+```css
+.settings-reset-tutorial-btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+    margin-top: 6px;
+}
+.settings-reset-tutorial-btn:hover {
+    border-color: var(--accent-blue);
+    color: var(--accent-blue);
+}
