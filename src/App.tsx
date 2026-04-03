@@ -294,6 +294,7 @@ const App: React.FC = () => {
     const [endingReady, setEndingReady] = useState(false);
     const [showTutorial, setShowTutorial] = useState(false);
     const [tutorialIndex, setTutorialIndex] = useState(0);
+    const [stageScoreDeducted, setStageScoreDeducted] = useState(false);
 
     // Translation helper
     const t = (en: string, zh: string) => language === "zh" ? zh : en;
@@ -307,6 +308,7 @@ const App: React.FC = () => {
     useEffect(() => {
         if (view.type !== "stage") return;
         setTimeout(() => setBriefingOpen(true), 0);
+        setStageScoreDeducted(false);
         const config = getStageConfig(view.stageId);
         if (!config) return;
 
@@ -498,50 +500,15 @@ const App: React.FC = () => {
             return { ...sector, controlsApplied: newControls, riskLevel: calculateRiskLevel(newControls) };
         });
         const newBudget = activeStageState.budget - cost;
-
-        // Check if this deployment completes the stage
         const newDeployedIds = [...deployedControlIds, controlId];
-        const stageConfig = getStageConfig(activeStageState.stageId);
 
-        // Level 4 stages pass when the whole attack chain is blocked; Level 2/3 pass when all required controls are deployed
-        const isL4 = view.type === "stage" && view.chapter === 4;
-        let stageJustCompleted = false;
-        let completionLog = "";
-
-        if (isL4 && level4Scenario) {
-            const allSubThreatsMitigated = level4Scenario.subThreatIds.every((subThreatId) => {
-                const threat = stageThreats.find((t) => t.threatId === subThreatId);
-                if (!threat) return false;
-                return threat.recommendedControlIds.some((cId) => newDeployedIds.includes(cId));
-            });
-            if (allSubThreatsMitigated && !activeStageState.isCompleted) {
-                stageJustCompleted = true;
-                completionLog = "✓ Attack chain neutralised! All sub-threats mitigated.";
-            }
-        } else {
-            const allRequiredDeployed =
-                stageConfig != null &&
-                stageConfig.requiredControlIds.length > 0 &&
-                stageConfig.requiredControlIds.every((id) => newDeployedIds.includes(id));
-            if (allRequiredDeployed && !activeStageState.isCompleted) {
-                stageJustCompleted = true;
-                completionLog = "✓ Stage complete! All required controls deployed.";
-            }
-        }
-
-        const deployLog = `[T${activeStageState.turn}] Deployed "${control.name}". Budget: £${newBudget.toLocaleString()}.`;
+        const deployLog = `Deployed "${control.name}". Budget: £${newBudget.toLocaleString()}.`;
         const newStageState: StageGameState = {
             ...activeStageState,
             budget: newBudget,
             sectors: updatedSectors,
             deployedControlIds: newDeployedIds,
-            isCompleted: stageJustCompleted ? true : activeStageState.isCompleted,
-            status: stageJustCompleted ? "completed" : activeStageState.status,
-            logs: [
-                ...activeStageState.logs,
-                deployLog,
-                ...(stageJustCompleted ? [completionLog] : []),
-            ],
+            logs: [...activeStageState.logs, deployLog],
         };
 
         setActiveStageState(newStageState);
@@ -555,23 +522,6 @@ const App: React.FC = () => {
                   }
                 : prev
         );
-
-        // If the stage is now complete, check whether all stages in the chapter are also done
-        if (stageJustCompleted && view.type === "stage") {
-            const chapterStages = STAGES_BY_CHAPTER[view.chapter];
-            const allChapterDone = chapterStages.every(
-                (s) =>
-                    s.id === activeStageState.stageId ||
-                    chapterState?.stageStates[s.id]?.status === "completed"
-            );
-            if (allChapterDone) {
-                setCompletedChapters((prev) => {
-                    const next = new Set([...prev, view.chapter]);
-                    localStorage.setItem("completedChapters", JSON.stringify([...next]));
-                    return next;
-                });
-            }
-        }
     };
 
     const handleUndoControl = (controlId: string) => {
@@ -649,6 +599,7 @@ const App: React.FC = () => {
         if (activeStageState?.stageId === stageId) {
             setActiveStageState(resetStageState);
             setDeployedControlIds([]);
+            setStageScoreDeducted(false);
         }
 
         const chapter = config.chapter;
@@ -667,60 +618,141 @@ const App: React.FC = () => {
         }
     };
 
-    const handleNextTurn = () => {
-        if (!activeStageState) return;
-
+    const handleSubmitStage = () => {
+        if (!activeStageState || !chapterState) return;
         const config = getStageConfig(activeStageState.stageId);
+        if (!config) return;
 
-        let totalDeduction = 0;
-        let h = 0, m = 0, l = 0;
+        // Block if any High threats are unresolved
+        const unresolvedHigh = stageThreats.filter((threat) => {
+            if (threat.severity !== "High") return false;
+            return !threat.recommendedControlIds.some((id) => deployedControlIds.includes(id));
+        });
 
-        if (config) {
+        if (unresolvedHigh.length > 0) {
+            const firstName = language === "zh" && unresolvedHigh[0].scenarioNameZh
+                ? unresolvedHigh[0].scenarioNameZh
+                : unresolvedHigh[0].scenarioName;
+            setFeedbackMsg(
+                language === "zh"
+                    ? `存在未处理的严重威胁：${firstName}。必须全部解决才能提交。`
+                    : `Critical threat unresolved: ${firstName}. All high-severity threats must be addressed before submitting.`
+            );
+            return;
+        }
+
+        // Calculate deduction for unresolved Medium/Low (only on first submit)
+        let deduction = 0;
+        if (!stageScoreDeducted) {
             for (const threat of stageThreats) {
                 const mitigated = threat.recommendedControlIds.some((id) =>
                     deployedControlIds.includes(id)
                 );
                 if (!mitigated) {
-                    if (threat.severity === "High")        { h++; totalDeduction += 10; }
-                    else if (threat.severity === "Medium") { m++; totalDeduction += 3; }
-                    else                                   { l++; totalDeduction += 1; }
+                    if (threat.severity === "Medium") deduction += 15;
+                    else if (threat.severity === "Low") deduction += 5;
                 }
             }
+            setStageScoreDeducted(true);
         }
 
-        const turnLog = config
-            ? `[T${activeStageState.turn + 1}] New turn. -${totalDeduction} pts (High: ${h}×10, Medium: ${m}×3, Low: ${l}×1)`
-            : `[T${activeStageState.turn + 1}] New turn started.`;
+        const newScore = Math.max(0, chapterState.score - deduction);
 
-        const newStageState: StageGameState = {
-            ...activeStageState,
-            turn: activeStageState.turn + 1,
-            logs: [...activeStageState.logs, turnLog],
-        };
-
-        if (h > 0) {
-            const firstHighThreat = stageThreats.find((th) =>
-                th.severity === "High" &&
-                !th.recommendedControlIds.some((id) => deployedControlIds.includes(id))
-            );
-            const firstUnresolvedName = firstHighThreat ? threatName(firstHighThreat) : "unknown threat";
+        // Fail if chapter score is below passing threshold
+        if (newScore < config.passingScore) {
+            setChapterState((prev) => {
+                if (!prev) return prev;
+                return { ...prev, score: newScore };
+            });
             setFeedbackMsg(
                 language === "zh"
-                    ? `存在未处理的严重威胁：${firstUnresolvedName}。客户无法批准进展。`
-                    : `Critical threat unresolved: ${firstUnresolvedName}. The client cannot sign off until this is addressed.`
+                    ? `章节得分不足（${newScore}/${config.passingScore}）。请回顾之前的关卡，重置并重新部署措施。`
+                    : `Chapter score too low (${newScore}/${config.passingScore}). Consider resetting an earlier stage and redeploying.`
             );
-        } else {
-            setFeedbackMsg(null);
+            return;
         }
+
+        // Pass — mark stage complete
+        const newStageState: StageGameState = {
+            ...activeStageState,
+            isCompleted: true,
+            status: "completed",
+        };
 
         setActiveStageState(newStageState);
         setChapterState((prev) => {
             if (!prev) return prev;
-            const newScore = Math.max(0, prev.score - totalDeduction);
+            const updatedScore = Math.max(0, prev.score - deduction);
+            const newStageStates = { ...prev.stageStates, [activeStageState.stageId]: newStageState };
+            return { ...prev, score: updatedScore, stageStates: newStageStates };
+        });
+        setFeedbackMsg(null);
+
+        // Check whether all stages in the chapter are now complete
+        if (view.type === "stage") {
+            const chapterStages = STAGES_BY_CHAPTER[view.chapter];
+            const newStageStates = { ...chapterState.stageStates, [activeStageState.stageId]: newStageState };
+            const allChapterDone = chapterStages.every((s) => newStageStates[s.id]?.status === "completed");
+            if (allChapterDone) {
+                setCompletedChapters((prev) => {
+                    const next = new Set([...prev, view.chapter]);
+                    localStorage.setItem("completedChapters", JSON.stringify([...next]));
+                    return next;
+                });
+            }
+        }
+    };
+
+    const handleInnerReset = () => {
+        if (!activeStageState || !chapterState) return;
+        const config = getStageConfig(activeStageState.stageId);
+        if (!config) return;
+
+        const spent = config.budgetAllocation - activeStageState.budget;
+        const refund = Math.max(0, spent);
+
+        // Refund any score that was deducted on submit
+        const scoreRefund = stageScoreDeducted
+            ? (() => {
+                  let deducted = 0;
+                  for (const threat of stageThreats) {
+                      const mitigated = threat.recommendedControlIds.some((id) =>
+                          deployedControlIds.includes(id)
+                      );
+                      if (!mitigated) {
+                          if (threat.severity === "Medium") deducted += 15;
+                          else if (threat.severity === "Low") deducted += 5;
+                      }
+                  }
+                  return deducted;
+              })()
+            : 0;
+
+        const resetStageState: StageGameState = {
+            ...activeStageState,
+            budget: config.budgetAllocation,
+            deployedControlIds: [],
+            isCompleted: false,
+            status: "in_progress",
+            turn: 1,
+            logs: [],
+        };
+
+        setActiveStageState(resetStageState);
+        setDeployedControlIds([]);
+        setStageScoreDeducted(false);
+        setFeedbackMsg(null);
+
+        setChapterState((prev) => {
+            if (!prev) return prev;
             return {
                 ...prev,
-                score: newScore,
-                stageStates: { ...prev.stageStates, [newStageState.stageId]: newStageState },
+                remainingBudget: prev.remainingBudget + refund,
+                score: Math.min(100, prev.score + scoreRefund),
+                stageStates: {
+                    ...prev.stageStates,
+                    [activeStageState.stageId]: resetStageState,
+                },
             };
         });
     };
@@ -1333,6 +1365,14 @@ const App: React.FC = () => {
                                 );
                             })
                         )}
+                        {deployedControlIds.length > 0 && (
+                            <button
+                                className="stage-inner-reset-btn"
+                                onClick={handleInnerReset}
+                            >
+                                {t('↺ Reset This Stage', '↺ 重置本关')}
+                            </button>
+                        )}
                     </div>
                 </aside>
 
@@ -1519,12 +1559,11 @@ const App: React.FC = () => {
                 </aside>
             </main>
             <BottomBar
-                turn={activeStageState?.turn ?? 1}
                 budget={activeStageState?.budget ?? 200_000}
                 score={chapterState?.score}
                 isCompleted={activeStageState?.isCompleted ?? false}
                 isLoading={dataLoading}
-                onNextTurn={handleNextTurn}
+                onSubmit={handleSubmitStage}
                 onRunAttackSimulation={() => {}}
                 language={language}
                 feedbackMsg={feedbackMsg}

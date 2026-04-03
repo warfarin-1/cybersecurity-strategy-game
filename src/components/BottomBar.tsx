@@ -2,9 +2,8 @@
 import React from "react";
 
 interface BottomBarProps {
-    turn: number;
     budget: number;
-    onNextTurn: () => void;
+    onSubmit: () => void;
     onRunAttackSimulation: () => void;
     isCompleted?: boolean;
     isLoading?: boolean;
@@ -14,9 +13,8 @@ interface BottomBarProps {
 }
 
 export const BottomBar: React.FC<BottomBarProps> = ({
-    turn,
     budget,
-    onNextTurn,
+    onSubmit,
     onRunAttackSimulation,
     isCompleted = false,
     isLoading = false,
@@ -28,8 +26,6 @@ export const BottomBar: React.FC<BottomBarProps> = ({
     return (
         <footer className="bottombar">
             <div className="bottombar-left">
-                <span>{t("Turn", "回合")}: {turn}</span>
-                <span className="bottombar-separator">|</span>
                 <span>{t("Budget", "预算")}: £{budget.toLocaleString()}</span>
                 {score !== undefined && (
                     <>
@@ -46,14 +42,14 @@ export const BottomBar: React.FC<BottomBarProps> = ({
             <div className="bottombar-right">
                 <button
                     className="btn-small btn-outline"
-                    onClick={onNextTurn}
+                    onClick={onSubmit}
                     disabled={isCompleted || isLoading}
                 >
                     {isLoading
                         ? t("Loading...", "加载中...")
                         : isCompleted
-                        ? t("Stage Complete", "关卡完成")
-                        : `${t("Next Turn", "下一回合")} (T${turn})`}
+                        ? t("✓ Stage Complete", "✓ 关卡完成")
+                        : t("Submit", "提交")}
                 </button>
                 <button
                     className="btn-small"

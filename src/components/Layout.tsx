@@ -157,9 +157,8 @@ export const Layout: React.FC = () => {
             </div>
 
             <BottomBar
-                turn={gameState.turn}
                 budget={gameState.budget}
-                onNextTurn={handleNextTurn}
+                onSubmit={handleNextTurn}
                 onRunAttackSimulation={handleRunAttackSimulation}
             />
         </div>

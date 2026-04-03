@@ -1485,3 +1485,24 @@
     border-color: var(--border-light);
     color: var(--text-primary);
 }
+
+/* ─── Stage Inner Reset Button ───────────────────────────────────────────── */
+
+.stage-inner-reset-btn {
+    width: 100%;
+    margin-top: 12px;
+    padding: 7px 12px;
+    background: transparent;
+    border: 1px dashed var(--border-color);
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    font-family: inherit;
+}
+
+.stage-inner-reset-btn:hover {
+    border-color: var(--accent-red);
+    color: var(--accent-red);
+}
