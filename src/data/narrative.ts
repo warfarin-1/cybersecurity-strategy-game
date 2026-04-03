@@ -119,3 +119,63 @@ export const ENDING_LINES: { en: string; zh: string }[] = [
     { en: "", zh: "" },
     { en: "To be continued.", zh: "待续。" },
 ];
+
+export interface TutorialCard {
+    title: string;
+    titleZh: string;
+    content: string;
+    contentZh: string;
+    highlight?: 'left' | 'center' | 'right' | 'bottom' | null;
+}
+
+export const TUTORIAL_CARDS: TutorialCard[] = [
+    {
+        title: "Welcome to Kryuger Security",
+        titleZh: "欢迎加入 Kryuger Security",
+        content: "You are a cybersecurity consultant. Your job is to protect client organisations by deploying the right security controls within a limited budget. Let's walk through the basics.",
+        contentZh: "你是一名网络安全顾问。你的工作是在有限预算内为客户机构部署合适的安全措施。让我们先了解一下基本操作。",
+        highlight: null,
+    },
+    {
+        title: "Security Measures (Left Panel)",
+        titleZh: "安全措施（左侧面板）",
+        content: "This is your toolkit. Each card is a security control you can deploy — things like firewalls, MFA, or staff training. Each one costs money. Click a control to deploy it.",
+        contentZh: "这是你的工具箱。每张卡片是一项可以部署的安全措施——防火墙、多因素认证、员工培训等。每项措施都有成本，点击即可部署。",
+        highlight: 'left',
+    },
+    {
+        title: "Threat Status (Centre Panel)",
+        titleZh: "威胁状态（中央面板）",
+        content: "This shows the threats your client is facing. High severity threats must be resolved before you can complete the stage. Medium and low threats are optional — but leaving them unresolved will reduce your score.",
+        contentZh: "这里显示客户面临的威胁。高严重性威胁必须全部解决才能通关。中低威胁可以不处理，但会扣分。",
+        highlight: 'center',
+    },
+    {
+        title: "Security Requirements (Right Panel)",
+        titleZh: "安全要求（右侧面板）",
+        content: "This is what the client expects. The top section shows which controls are required. A green tick means you've deployed it. A red cross means it's still missing.",
+        contentZh: "这里显示客户的期望。上方列出了必须部署的安全措施。绿色勾表示已部署，红色叉表示仍缺失。",
+        highlight: 'right',
+    },
+    {
+        title: "Budget & Turns (Bottom Bar)",
+        titleZh: "预算与回合（底部栏）",
+        content: "Your budget is shared across all stages in a chapter — spend wisely. Click 'Next Turn' when you're ready to evaluate. Once all high threats are resolved and your score is high enough, the stage is complete.",
+        contentZh: "预算在整个章节的所有关卡中共享——要合理规划。准备好后点击「下一回合」进行评估。当所有高风险威胁解决且分数达标，关卡即完成。",
+        highlight: 'bottom',
+    },
+    {
+        title: "One More Thing",
+        titleZh: "还有一点",
+        content: "If you run out of budget or your score drops too low, you can reset any stage and get a full refund. Use the Control Room in the chapter view to track your overall progress.",
+        contentZh: "如果预算不足或分数过低，你可以重置任意关卡并获得全额退款。在章节视图的控制中心可以追踪整体进度。",
+        highlight: null,
+    },
+    {
+        title: "You're Ready",
+        titleZh: "准备好了",
+        content: "That's everything you need to know. Start with Level 2 — your first client is Singularity, a retail company that needs a basic security assessment. Good luck.",
+        contentZh: "这就是你需要了解的全部内容。从第二关开始——你的第一个客户是 Singularity，一家需要基础安全评估的零售公司。祝你好运。",
+        highlight: null,
+    },
+];

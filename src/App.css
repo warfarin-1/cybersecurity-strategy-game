@@ -24,24 +24,24 @@
 }
 
 [data-theme="light"] {
-    --bg-primary:    #f0f4f8;
-    --bg-secondary:  #e2e8f0;
-    --bg-card:       #ffffff;
-    --bg-card-hover: #f8fafc;
-    --bg-input:      #f1f5f9;
-    --border-color:  #cbd5e1;
-    --border-light:  #e2e8f0;
-    --text-primary:  #0f172a;
-    --text-secondary:#475569;
-    --text-muted:    #94a3b8;
-    --text-dim:      #64748b;
-    --accent-blue:   #0284c7;
-    --accent-orange: #d97706;
-    --accent-green:  #16a34a;
-    --accent-red:    #dc2626;
-    --topbar-bg:     rgba(248, 250, 252, 0.95);
+    --bg-primary:    #e8e4de;
+    --bg-secondary:  #ddd9d3;
+    --bg-card:       #f0ece6;
+    --bg-card-hover: #f5f2ee;
+    --bg-input:      #e4e0da;
+    --border-color:  #c8c3bb;
+    --border-light:  #d4cfc8;
+    --text-primary:  #1a1714;
+    --text-secondary:#4a4540;
+    --text-muted:    #7a7570;
+    --text-dim:      #8a8580;
+    --accent-blue:   #2563eb;
+    --accent-orange: #b45309;
+    --accent-green:  #15803d;
+    --accent-red:    #b91c1c;
+    --topbar-bg:     rgba(232, 228, 222, 0.95);
     --overlay-bg:    rgba(0, 0, 0, 0.5);
-    --shadow:        rgba(0, 0, 0, 0.1);
+    --shadow:        rgba(0, 0, 0, 0.08);
 }
 
 /* Overall layout */
@@ -1305,4 +1305,183 @@
 .settings-reset-btn:hover {
     background: rgba(248, 113, 113, 0.12);
     border-color: rgba(248, 113, 113, 0.5);
+}
+
+/* ─── Tutorial ───────────────────────────────────────────────────────────── */
+
+.chapter-card-tutorial {
+    border-color: rgba(74, 222, 128, 0.2);
+    background: linear-gradient(145deg, #0a1f0f 0%, #050f07 100%);
+}
+
+.chapter-card-tutorial:hover {
+    border-color: rgba(74, 222, 128, 0.4);
+    box-shadow: 0 8px 24px rgba(74, 222, 128, 0.1);
+}
+
+.chapter-icon-tutorial {
+    border-color: rgba(74, 222, 128, 0.3);
+    color: #4ade80;
+    background: linear-gradient(135deg, #0f2d1a 0%, #071409 100%);
+    box-shadow: 0 0 16px rgba(74, 222, 128, 0.1);
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.tutorial-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.82);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tutorial-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    width: 520px;
+    max-width: 90vw;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    position: relative;
+}
+
+.tutorial-dots {
+    display: flex;
+    gap: 6px;
+    justify-content: center;
+}
+
+.tutorial-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--border-color);
+    transition: all 0.2s ease;
+}
+
+.tutorial-dot.active {
+    background: var(--accent-blue);
+    width: 18px;
+    border-radius: 3px;
+}
+
+.tutorial-dot.done {
+    background: var(--accent-green);
+}
+
+.tutorial-highlight-badge {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    padding: 6px 14px;
+    border-radius: 20px;
+    align-self: center;
+}
+
+.tutorial-highlight-left {
+    background: rgba(125, 211, 252, 0.1);
+    color: var(--accent-blue);
+    border: 1px solid rgba(125, 211, 252, 0.2);
+}
+
+.tutorial-highlight-center {
+    background: rgba(248, 113, 113, 0.1);
+    color: var(--accent-red);
+    border: 1px solid rgba(248, 113, 113, 0.2);
+}
+
+.tutorial-highlight-right {
+    background: rgba(74, 222, 128, 0.1);
+    color: var(--accent-green);
+    border: 1px solid rgba(74, 222, 128, 0.2);
+}
+
+.tutorial-highlight-bottom {
+    background: rgba(255, 184, 77, 0.1);
+    color: var(--accent-orange);
+    border: 1px solid rgba(255, 184, 77, 0.2);
+}
+
+.tutorial-content {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.tutorial-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.tutorial-text {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin: 0;
+}
+
+.tutorial-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.tutorial-skip {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    padding: 4px 0;
+}
+
+.tutorial-skip:hover {
+    color: var(--text-secondary);
+}
+
+.tutorial-nav {
+    display: flex;
+    gap: 8px;
+}
+
+.tutorial-btn {
+    padding: 9px 20px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s ease;
+}
+
+.tutorial-btn-primary {
+    background: rgba(125, 211, 252, 0.1);
+    border: 1px solid rgba(125, 211, 252, 0.3);
+    color: var(--accent-blue);
+}
+
+.tutorial-btn-primary:hover {
+    background: rgba(125, 211, 252, 0.18);
+    border-color: rgba(125, 211, 252, 0.5);
+}
+
+.tutorial-btn-secondary {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.tutorial-btn-secondary:hover {
+    border-color: var(--border-light);
+    color: var(--text-primary);
 }
