@@ -5,7 +5,7 @@ import type { ChapterState, StageGameState, Sector, RiskLevel } from "./types";
 import type { Control, Threat, Level4Scenario } from "./utils/dataLoader";
 import { loadControls, loadThreats, loadLevel4Tree } from "./utils/dataLoader";
 import { getStageConfig } from "./data/stageData";
-import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle, INTRO_LINES, ENDING_LINES, TUTORIAL_CARDS } from "./data/narrative";
+import { ORG_PROFILES, PROMOTION_EVENTS, getPlayerTitle, INTRO_LINES, ENDING_LINES, TUTORIAL_CARDS, TUTORIAL_MOCK_CONTROLS, TUTORIAL_MOCK_THREATS } from "./data/narrative";
 import { BottomBar } from "./components/BottomBar";
 
 // Helper functions used across the game
@@ -295,6 +295,7 @@ const App: React.FC = () => {
     const [showTutorial, setShowTutorial] = useState(false);
     const [tutorialIndex, setTutorialIndex] = useState(0);
     const [stageScoreDeducted, setStageScoreDeducted] = useState(false);
+    const [tutorialDeployed, setTutorialDeployed] = useState<string[]>([]);
     const [forceTutorialSeen, setForceTutorialSeen] = useState<boolean>(() => {
         try { return !!localStorage.getItem("seenTutorial"); } catch { return false; }
     });
@@ -760,26 +761,8 @@ const App: React.FC = () => {
     };
 
     const openTutorial = () => {
-        const chapter = 2 as ChapterLevel;
-        let current: ChapterState | null = chapterState;
-        if (!current || current.chapterId !== chapter) {
-            try {
-                const saved = localStorage.getItem(`chapterState_${chapter}`);
-                if (saved) current = JSON.parse(saved) as ChapterState;
-            } catch { /* ignore */ }
-            if (!current || current.chapterId !== chapter) current = makeChapterState(chapter);
-            setChapterState(current);
-        }
-        const stageState = current.stageStates["L2-1"] ?? makeStageGameState("L2-1");
-        setActiveStageState(stageState);
-        if (!current.stageStates["L2-1"]) {
-            setChapterState((prev) =>
-                prev ? { ...prev, stageStates: { ...prev.stageStates, "L2-1": stageState } } : prev
-            );
-        }
-        setDeployedControlIds(stageState.deployedControlIds);
-        setView({ type: "stage", chapter, stageId: "L2-1" });
         setTutorialIndex(0);
+        setTutorialDeployed([]);
         setShowTutorial(true);
     };
 
@@ -788,6 +771,7 @@ const App: React.FC = () => {
         setForceTutorialSeen(true);
         setShowTutorial(false);
         setTutorialIndex(0);
+        setTutorialDeployed([]);
     };
 
     const dismissIntro = () => {
@@ -854,6 +838,185 @@ const App: React.FC = () => {
                         {language === "zh" ? "返回主菜单" : "Return to Menu"}
                     </button>
                 )}
+            </div>
+        );
+    }
+
+    if (showTutorial) {
+        return (
+            <div className="tutorial-fullscreen">
+
+                {/* 左侧：说明面板 */}
+                <div className="tutorial-left-panel">
+
+                    <div className="tutorial-dots">
+                        {TUTORIAL_CARDS.map((_, i) => (
+                            <div key={i} className={`tutorial-dot${i === tutorialIndex ? ' active' : ''}${i < tutorialIndex ? ' done' : ''}`} />
+                        ))}
+                    </div>
+
+                    <h2 className="tutorial-bubble-title">
+                        {language === 'zh'
+                            ? TUTORIAL_CARDS[tutorialIndex].titleZh
+                            : TUTORIAL_CARDS[tutorialIndex].title}
+                    </h2>
+                    <p className="tutorial-bubble-text">
+                        {language === 'zh'
+                            ? TUTORIAL_CARDS[tutorialIndex].contentZh
+                            : TUTORIAL_CARDS[tutorialIndex].content}
+                    </p>
+
+                    {TUTORIAL_CARDS[tutorialIndex].highlight && (
+                        <div className={`tutorial-arrow tutorial-arrow-${TUTORIAL_CARDS[tutorialIndex].highlight}`}>
+                            {TUTORIAL_CARDS[tutorialIndex].highlight === 'left' &&
+                                t('← Deploy controls here', '← 在这里部署措施')}
+                            {TUTORIAL_CARDS[tutorialIndex].highlight === 'right' &&
+                                t('Threats & requirements →', '威胁与要求 →')}
+                            {TUTORIAL_CARDS[tutorialIndex].highlight === 'center' &&
+                                t('↑ Threat status here', '↑ 威胁状态在这里')}
+                            {TUTORIAL_CARDS[tutorialIndex].highlight === 'bottom' &&
+                                t('↓ Submit button below', '↓ 提交按钮在下方')}
+                        </div>
+                    )}
+
+                    <div className="tutorial-actions">
+                        <button className="tutorial-skip" onClick={closeTutorial}>
+                            {t('Skip Tutorial', '跳过教程')}
+                        </button>
+                        <div className="tutorial-nav">
+                            {tutorialIndex > 0 && (
+                                <button
+                                    className="tutorial-btn tutorial-btn-secondary"
+                                    onClick={() => setTutorialIndex((i) => i - 1)}
+                                >
+                                    {t('Back', '上一步')}
+                                </button>
+                            )}
+                            {tutorialIndex < TUTORIAL_CARDS.length - 1 ? (
+                                <button
+                                    className="tutorial-btn tutorial-btn-primary"
+                                    onClick={() => setTutorialIndex((i) => i + 1)}
+                                >
+                                    {t('Next', '下一步')}
+                                </button>
+                            ) : (
+                                <button
+                                    className="tutorial-btn tutorial-btn-primary"
+                                    onClick={closeTutorial}
+                                >
+                                    {t('Got it', '明白了')}
+                                </button>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* 右侧：虚拟 Stage 预览 */}
+                <div className="tutorial-right-panel">
+
+                    {/* 模拟 TopBar */}
+                    <div className="tutorial-mock-topbar">
+                        <span className="tutorial-mock-topbar-title">
+                            Tutorial Stage — Singularity
+                        </span>
+                        <span className="tutorial-mock-budget">
+                            {t('Budget', '预算')}: £{(200000 - tutorialDeployed.reduce((sum, id) => {
+                                const ctrl = TUTORIAL_MOCK_CONTROLS.find((c) => c.id === id);
+                                return sum + (ctrl ? parseInt(ctrl.cost.replace(/[^0-9]/g, '')) : 0);
+                            }, 0)).toLocaleString()}
+                        </span>
+                    </div>
+
+                    <div className="tutorial-mock-stage">
+
+                        {/* 左侧：Security Measures */}
+                        <div className={`tutorial-mock-panel${TUTORIAL_CARDS[tutorialIndex].highlight === 'left' ? ' tutorial-mock-panel-highlight' : ''}`}>
+                            <div className="tutorial-mock-panel-title">
+                                {t('Security Measures', '安全措施')}
+                            </div>
+                            {TUTORIAL_MOCK_CONTROLS.map((ctrl) => {
+                                const deployed = tutorialDeployed.includes(ctrl.id);
+                                return (
+                                    <div key={ctrl.id} className="tutorial-mock-control-row">
+                                        <button
+                                            className={`tutorial-mock-control-btn${deployed ? ' deployed' : ''}${ctrl.recommended && !deployed ? ' recommended' : ''}`}
+                                            onClick={() => {
+                                                if (deployed) {
+                                                    setTutorialDeployed((prev) => prev.filter((id) => id !== ctrl.id));
+                                                } else {
+                                                    setTutorialDeployed((prev) => [...prev, ctrl.id]);
+                                                }
+                                            }}
+                                        >
+                                            {language === 'zh' ? ctrl.nameZh : ctrl.name}
+                                            {ctrl.recommended && !deployed && ' ⭐'}
+                                            {deployed && ' ✓'}
+                                        </button>
+                                        <span className="tutorial-mock-cost">{ctrl.cost}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* 中央：Threat Status */}
+                        <div className={`tutorial-mock-panel${TUTORIAL_CARDS[tutorialIndex].highlight === 'center' ? ' tutorial-mock-panel-highlight' : ''}`}>
+                            <div className="tutorial-mock-panel-title">
+                                {t('Threat Status', '威胁状态')}
+                            </div>
+                            {TUTORIAL_MOCK_THREATS.map((threat) => {
+                                const mitigated = tutorialDeployed.includes(threat.requiredControlId);
+                                return (
+                                    <div key={threat.id} className={`tutorial-mock-threat ${mitigated ? 'mitigated' : 'unresolved'}`}>
+                                        <span className="tutorial-mock-threat-name">
+                                            {language === 'zh' ? threat.nameZh : threat.name}
+                                        </span>
+                                        <span className={`tutorial-mock-severity severity-${threat.severity.toLowerCase()}`}>
+                                            {threat.severity}
+                                        </span>
+                                        <span className="tutorial-mock-threat-status">
+                                            {mitigated
+                                                ? t('✓ Resolved', '✓ 已缓解')
+                                                : t('⚠ Unresolved', '⚠ 未解决')}
+                                        </span>
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        {/* 右侧：Requirements */}
+                        <div className={`tutorial-mock-panel${TUTORIAL_CARDS[tutorialIndex].highlight === 'right' ? ' tutorial-mock-panel-highlight' : ''}`}>
+                            <div className="tutorial-mock-panel-title">
+                                {t('Security Requirements', '安全要求')}
+                            </div>
+                            {TUTORIAL_MOCK_THREATS.map((threat) => {
+                                const ctrl = TUTORIAL_MOCK_CONTROLS.find((c) => c.id === threat.requiredControlId);
+                                const deployed = tutorialDeployed.includes(threat.requiredControlId);
+                                return (
+                                    <div key={threat.id} className={`tutorial-mock-req ${deployed ? 'req-met' : 'req-unmet'}`}>
+                                        {deployed ? '✓' : '✗'}{' '}
+                                        {ctrl ? (language === 'zh' ? ctrl.nameZh : ctrl.name) : ''}
+                                    </div>
+                                );
+                            })}
+                            <div className="tutorial-mock-score-hint">
+                                {t('High: must resolve. Medium (−15pts) if skipped.',
+                                   '高风险：必须解决。中风险跳过扣15分。')}
+                            </div>
+                        </div>
+
+                    </div>
+
+                    {/* 模拟 BottomBar */}
+                    <div className={`tutorial-mock-bottombar${TUTORIAL_CARDS[tutorialIndex].highlight === 'bottom' ? ' tutorial-mock-panel-highlight' : ''}`}>
+                        <span className="tutorial-mock-bottombar-info">
+                            {t('Chapter Score: 100/100', '章节得分：100/100')}
+                        </span>
+                        <button className="tutorial-mock-submit">
+                            {t('Submit', '提交')}
+                        </button>
+                    </div>
+
+                </div>
             </div>
         );
     }
@@ -1561,66 +1724,6 @@ const App: React.FC = () => {
                     : t('← Chapter Overview', '← 章节概览')}
             />
             {glossaryOpen && <GlossaryPanel language={language} onClose={() => setGlossaryOpen(false)} />}
-            {showTutorial && (
-                <div className="tutorial-stage-overlay">
-                    <div className={`tutorial-spotlight tutorial-spotlight-${TUTORIAL_CARDS[tutorialIndex].highlight ?? 'none'}`} />
-                    <div className={`tutorial-bubble tutorial-bubble-${TUTORIAL_CARDS[tutorialIndex].highlight ?? 'none'}`}>
-                        <div className="tutorial-dots">
-                            {TUTORIAL_CARDS.map((_, i) => (
-                                <div
-                                    key={i}
-                                    className={`tutorial-dot${i === tutorialIndex ? ' active' : ''}${i < tutorialIndex ? ' done' : ''}`}
-                                />
-                            ))}
-                        </div>
-                        <h3 className="tutorial-bubble-title">
-                            {language === 'zh'
-                                ? TUTORIAL_CARDS[tutorialIndex].titleZh
-                                : TUTORIAL_CARDS[tutorialIndex].title}
-                        </h3>
-                        <p className="tutorial-bubble-text">
-                            {language === 'zh'
-                                ? TUTORIAL_CARDS[tutorialIndex].contentZh
-                                : TUTORIAL_CARDS[tutorialIndex].content}
-                        </p>
-                        <div className="tutorial-actions">
-                            <button className="tutorial-skip" onClick={closeTutorial}>
-                                {t('Skip', '跳过')}
-                            </button>
-                            <div className="tutorial-nav">
-                                {tutorialIndex > 0 && (
-                                    <button
-                                        className="tutorial-btn tutorial-btn-secondary"
-                                        onClick={() => setTutorialIndex((i) => i - 1)}
-                                    >
-                                        {t('Back', '上一步')}
-                                    </button>
-                                )}
-                                {tutorialIndex < TUTORIAL_CARDS.length - 1 ? (
-                                    <button
-                                        className="tutorial-btn tutorial-btn-primary"
-                                        onClick={() => setTutorialIndex((i) => i + 1)}
-                                    >
-                                        {t('Next', '下一步')}
-                                    </button>
-                                ) : (
-                                    <button
-                                        className="tutorial-btn tutorial-btn-primary"
-                                        onClick={closeTutorial}
-                                    >
-                                        {t('Got it', '明白了')}
-                                    </button>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                    {TUTORIAL_CARDS[tutorialIndex].highlight === 'bottom' && (
-                        <div className="tutorial-submit-arrow">
-                            ↓ {t('Submit button is here', '提交按钮在这里')}
-                        </div>
-                    )}
-                </div>
-            )}
         </div>
     );
 };

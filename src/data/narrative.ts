@@ -128,6 +128,47 @@ export interface TutorialCard {
     highlight?: 'left' | 'center' | 'right' | 'bottom' | null;
 }
 
+export const TUTORIAL_MOCK_CONTROLS = [
+    {
+        id: 'T-CTRL-01',
+        name: 'Staff Phishing Awareness Training',
+        nameZh: '员工钓鱼攻击安全意识培训',
+        cost: '£20,000',
+        recommended: true,
+    },
+    {
+        id: 'T-CTRL-02',
+        name: 'Email Filtering & Anti-Spam',
+        nameZh: '邮件过滤与反垃圾邮件',
+        cost: '£30,000',
+        recommended: false,
+    },
+    {
+        id: 'T-CTRL-03',
+        name: 'Incident Reporting Procedure',
+        nameZh: '安全事件报告流程',
+        cost: '£20,000',
+        recommended: true,
+    },
+];
+
+export const TUTORIAL_MOCK_THREATS = [
+    {
+        id: 'T-THR-01',
+        name: 'Phishing Email Attack',
+        nameZh: '钓鱼邮件攻击',
+        severity: 'High' as const,
+        requiredControlId: 'T-CTRL-01',
+    },
+    {
+        id: 'T-THR-02',
+        name: 'Unreported Security Incident',
+        nameZh: '未上报的安全事件',
+        severity: 'Medium' as const,
+        requiredControlId: 'T-CTRL-03',
+    },
+];
+
 export const TUTORIAL_CARDS: TutorialCard[] = [
     {
         title: "Your Mission",
