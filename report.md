@@ -2275,3 +2275,432 @@ Width reduced 460 → 320 px; z-index raised 102 → 1501; padding reduced 28 �
     border-color: var(--accent-blue);
     color: var(--accent-blue);
 }
+
+---
+
+## Change Log — 2026-04-04 (Bug Fixes 3/4/6/2/8 + Tutorial Card Text)
+
+### Summary
+
+Five bugs/UI issues fixed across `src/types.ts`, `src/components/BottomBar.tsx`, `src/App.tsx`, and `src/App.css`. Tutorial card Step 2 text updated in `src/data/narrative.ts`.
+
+---
+
+### `src/types.ts`
+
+#### Bug 4 fix — `scoreDeducted` field added to `StageGameState`
+
+```typescript
+export interface StageGameState {
+    stageId: string;
+    status: StageStatus;
+    turn: number;
+    budget: number;
+    sectors: Sector[];
+    logs: string[];
+    isCompleted: boolean;
+    deployedControlIds: string[];
+    scoreDeducted?: number; // actual points deducted from chapter score on submit
+}
+```
+
+**Problem:** `handleInnerReset` recomputed the score refund by re-examining the current `deployedControlIds` against un-mitigated threats. If the player deployed additional controls after first submitting, the recomputed deduction differed from the actual deduction taken, resulting in incorrect refunds. `handleResetStage` (Chapter view) never refunded any score at all.
+
+**Fix:** At submit time, `handleSubmitStage` stores the exact deduction in `newStageState.scoreDeducted`. Both `handleInnerReset` and `handleResetStage` read this field for a precise refund:
+
+```typescript
+const scoreRefund = activeStageState.scoreDeducted ?? 0;
+// or
+const scoreRefund = stageState.scoreDeducted ?? 0;
+score: Math.min(100, chapterState.score + scoreRefund),
+```
+
+---
+
+### `src/components/BottomBar.tsx`
+
+#### Bug 3 fix — Next-stage button
+
+Two new optional props added:
+
+```typescript
+interface BottomBarProps {
+    // ...existing props...
+    onNextStage?: () => void;
+    nextStageLabel?: string;
+}
+```
+
+A green "→ Next Stage" button appears after stage completion:
+
+```tsx
+{isCompleted && onNextStage && (
+    <button className="btn-small btn-green" onClick={onNextStage}>
+        {nextStageLabel ?? t("→ Next", "→ 下一关")}
+    </button>
+)}
+```
+
+The disabled "✓ Stage Complete" button remains alongside it to clearly show stage status.
+
+---
+
+### `src/App.tsx`
+
+#### Bug 3 — Next-stage navigation logic
+
+Before the Stage view return, the current stage index and next stage are computed:
+
+```typescript
+const currentStageIndex = STAGES_BY_CHAPTER[view.chapter]?.findIndex(
+    (s) => s.id === view.stageId
+) ?? -1;
+const nextStage = STAGES_BY_CHAPTER[view.chapter]?.[currentStageIndex + 1];
+const hasNextStage = !!nextStage;
+```
+
+`BottomBar` receives:
+
+```tsx
+onNextStage={() => {
+    if (hasNextStage) {
+        setView({ type: "stage", chapter: view.chapter, stageId: nextStage!.id });
+    } else {
+        setView({ type: "chapter", chapter: view.chapter });
+    }
+}}
+nextStageLabel={hasNextStage
+    ? t(`→ ${nextStage!.name}`, `→ ${nextStage!.name}`)
+    : t("→ Back to Chapter", "→ 返回章节")}
+```
+
+#### Bug 4 — `handleSubmitStage` stores exact deduction
+
+```typescript
+scoreDeducted: stageScoreDeducted
+    ? (activeStageState.scoreDeducted ?? 0)
+    : deduction,
+```
+
+On the first submit (`stageScoreDeducted` is false) the actual `deduction` is stored. On subsequent submits the previously stored value is preserved unchanged.
+
+#### Bug 4 — `handleInnerReset` reads `scoreDeducted`
+
+Old approach (incorrect):
+
+```typescript
+// recomputed based on current deployedControlIds — wrong after extra deploys
+const scoreRefund = unmitigatedMedium * 15 + unmitigatedLow * 5;
+```
+
+New approach:
+
+```typescript
+const scoreRefund = activeStageState.scoreDeducted ?? 0;
+```
+
+#### Bug 4 — `handleResetStage` now refunds score
+
+Previously refunded only budget. Now also refunds score:
+
+```typescript
+const scoreRefund = stageState.scoreDeducted ?? 0;
+// ...
+score: Math.min(100, chapterState.score + scoreRefund),
+```
+
+#### UI Fix 2 — `score-rule-hint` below Security Requirements
+
+A hint line is added below the Security Requirements sidebar title:
+
+```tsx
+<div className="score-rule-hint">
+    {t(
+        "High: must resolve · Medium: −15 pts · Low: −5 pts",
+        "高：必须解决 · 中：−15分 · 低：−5分"
+    )}
+</div>
+```
+
+---
+
+### `src/App.css`
+
+#### UI Fix 6 — Right sidebar status pills no longer interactive
+
+`.sidebar-pill-success`, `.sidebar-pill-danger`, and `div.sidebar-pill` had hover `transform: translateY(-2px)` and `cursor: pointer` which implied interactivity on display-only elements.
+
+Removed:
+
+```css
+/* these hover rules removed from sidebar-pill-success, sidebar-pill-danger, div.sidebar-pill */
+transform: translateY(-2px);
+cursor: pointer;
+```
+
+Added `cursor: default` to confirm non-interactive intent.
+
+#### UI Fix 8 — Deployed controls visually distinguished
+
+`.control-deployed-row .sidebar-pill` updated:
+
+```css
+.control-deployed-row .sidebar-pill {
+    background: rgba(74, 222, 128, 0.12);
+    border-color: var(--accent-green);
+    opacity: 1;
+}
+```
+
+Previously the deployed state used only reduced opacity, making it hard to distinguish from undeployed controls.
+
+#### New: `.btn-green`
+
+```css
+.btn-green {
+    background: rgba(74, 222, 128, 0.15);
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+}
+.btn-green:hover {
+    background: rgba(74, 222, 128, 0.25);
+}
+```
+
+Used by the BottomBar next-stage button.
+
+#### New: `.score-rule-hint`
+
+```css
+.score-rule-hint {
+    font-size: 11px;
+    color: var(--accent-orange);
+    opacity: 0.85;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+```
+
+---
+
+### `src/data/narrative.ts`
+
+#### Tutorial card Step 2 — clearer reset explanation
+
+`TUTORIAL_CARDS[2]` (Step 2 — Deploy Controls) content updated to explicitly mention the undo button (↩) and stage reset (↺), and to clarify that reset only affects the current stage:
+
+**Before:**
+> The LEFT panel is your toolkit. Click any control to deploy it — this deducts its cost from your shared chapter budget. Deployed controls are marked with ✓.
+
+**After:**
+> The LEFT panel is your toolkit. Click any control to deploy it — this deducts its cost from your shared chapter budget. Deployed controls are marked with ✓. Made a mistake? Use ↩ to undo a single control and get a refund, or ↺ Reset This Stage to undo everything in the current stage. Note: resetting only affects the current stage — your progress in other stages is kept.
+
+Chinese (`contentZh`) updated equivalently.
+
+---
+
+## Change Log — 2026-04-04 (Tutorial Fullscreen Refactor)
+
+### Summary
+
+Tutorial completely redesigned from a spotlight overlay on the real L2-1 stage to an independent fullscreen modal containing an interactive virtual Stage preview. The real game state is no longer touched when the tutorial opens.
+
+---
+
+### `src/data/narrative.ts`
+
+#### New: `TUTORIAL_MOCK_CONTROLS`
+
+```typescript
+export const TUTORIAL_MOCK_CONTROLS = [
+    {
+        id: 'T-CTRL-01',
+        name: 'Staff Phishing Awareness Training',
+        nameZh: '员工钓鱼攻击安全意识培训',
+        cost: '£20,000',
+        recommended: true,
+    },
+    {
+        id: 'T-CTRL-02',
+        name: 'Email Filtering & Anti-Spam',
+        nameZh: '邮件过滤与反垃圾邮件',
+        cost: '£30,000',
+        recommended: false,
+    },
+    {
+        id: 'T-CTRL-03',
+        name: 'Incident Reporting Procedure',
+        nameZh: '安全事件报告流程',
+        cost: '£20,000',
+        recommended: true,
+    },
+];
+```
+
+#### New: `TUTORIAL_MOCK_THREATS`
+
+```typescript
+export const TUTORIAL_MOCK_THREATS = [
+    {
+        id: 'T-THR-01',
+        name: 'Phishing Email Attack',
+        nameZh: '钓鱼邮件攻击',
+        severity: 'High' as const,
+        requiredControlId: 'T-CTRL-01',
+    },
+    {
+        id: 'T-THR-02',
+        name: 'Unreported Security Incident',
+        nameZh: '未上报的安全事件',
+        severity: 'Medium' as const,
+        requiredControlId: 'T-CTRL-03',
+    },
+];
+```
+
+Both arrays are static mock data used exclusively by the tutorial's right-panel preview. They are not connected to any real stage data.
+
+---
+
+### `src/App.tsx`
+
+#### `openTutorial` simplified
+
+Old implementation navigated to L2-1, initialised chapter state, and set `activeStageState`:
+
+```typescript
+// old — modified real game state
+const openTutorial = () => {
+    setTutorialIndex(0);
+    setView({ type: "stage", chapter: 2, stageId: "L2-1" });
+    // ...initialise chapterState, activeStageState, deploy list...
+    setShowTutorial(true);
+};
+```
+
+New implementation only sets tutorial-specific state:
+
+```typescript
+const openTutorial = () => {
+    setTutorialIndex(0);
+    setTutorialDeployed([]);
+    setShowTutorial(true);
+};
+```
+
+The tutorial no longer has any side effects on `view`, `chapterState`, or `activeStageState`.
+
+#### New state: `tutorialDeployed`
+
+```typescript
+const [tutorialDeployed, setTutorialDeployed] = useState<string[]>([]);
+```
+
+Tracks which mock controls the user has clicked inside the tutorial's virtual stage. Cleared by both `openTutorial` and `closeTutorial`.
+
+#### Tutorial rendered as early return
+
+The tutorial now renders as a standalone fullscreen early return before any view logic:
+
+```tsx
+if (showTutorial) {
+    return (
+        <div className="tutorial-fullscreen">
+            {/* left panel: card text, progress dots, nav buttons */}
+            {/* right panel: interactive mock stage */}
+        </div>
+    );
+}
+```
+
+This means the tutorial is completely independent of the current view. Previously it was conditionally rendered inside the Stage view JSX and required the user to be in L2-1.
+
+#### Removed old tutorial overlay block
+
+The `{showTutorial && <div className="tutorial-stage-overlay">...</div>}` block was removed from the Stage view JSX.
+
+#### Mock stage — interactive controls
+
+Each mock control in the right panel can be clicked to toggle its deployment:
+
+```tsx
+onClick={() => {
+    setTutorialDeployed(prev =>
+        prev.includes(ctrl.id)
+            ? prev.filter(id => id !== ctrl.id)
+            : [...prev, ctrl.id]
+    );
+}}
+```
+
+Threat mitigation status updates reactively based on `tutorialDeployed`.
+
+---
+
+### `src/App.css`
+
+#### Removed CSS classes
+
+The following classes are no longer used and were deleted:
+
+| Removed class | Reason |
+|---------------|--------|
+| `.tutorial-stage-overlay` | Replaced by `.tutorial-fullscreen` |
+| `.tutorial-spotlight` + 5 variants | No longer using spotlight approach |
+| `.tutorial-bubble` + 5 variants | No longer using bubble approach |
+| `.tutorial-bubble-title` / `.tutorial-bubble-text` | Replaced by left-panel text layout |
+| `.tutorial-submit-arrow` + `@keyframes tutorialBounce` | No longer needed |
+
+#### New: `.tutorial-fullscreen`
+
+```css
+.tutorial-fullscreen {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    background: var(--bg-primary);
+    display: grid;
+    grid-template-columns: 420px 1fr;
+}
+```
+
+Replaces the old transparent overlay. Now a full opaque screen that takes over completely.
+
+#### New: `.tutorial-left-panel` / `.tutorial-right-panel`
+
+`.tutorial-left-panel` — left column containing card title, text, progress dots, and navigation buttons. Uses `display: flex; flex-direction: column` with padding.
+
+`.tutorial-right-panel` — right column containing the virtual stage preview. Has a distinct border-left and slightly different background to visually separate it from the explanation text.
+
+#### New: `.tutorial-mock-*` classes
+
+A set of classes for the virtual stage preview in the right panel:
+
+| Class | Purpose |
+|-------|---------|
+| `.tutorial-mock-topbar` | Top info bar of the mock stage |
+| `.tutorial-mock-topbar-title` | "Tutorial Stage" title text |
+| `.tutorial-mock-budget` | Budget display in mock topbar |
+| `.tutorial-mock-stage` | Three-column grid container |
+| `.tutorial-mock-panel` | Individual panel (left/centre/right) |
+| `.tutorial-mock-panel-highlight` | Active highlight variant — border + background glow |
+| `.tutorial-mock-panel-title` | Panel section header |
+| `.tutorial-mock-control-row` | Row containing a control button |
+| `.tutorial-mock-control-btn` | Clickable control button |
+| `.tutorial-mock-control-btn.recommended` | Orange star accent for recommended controls |
+| `.tutorial-mock-control-btn.deployed` | Green background when deployed |
+| `.tutorial-mock-cost` | Cost label inside control row |
+| `.tutorial-mock-threat` | Threat row |
+| `.tutorial-mock-threat.mitigated` | Green tint when resolved |
+| `.tutorial-mock-threat.unresolved` | Red tint when unresolved |
+| `.tutorial-mock-threat-name` | Threat name text |
+| `.tutorial-mock-severity` | Severity badge (High/Medium colour variants) |
+| `.tutorial-mock-threat-status` | ✓ / ✗ status indicator |
+| `.tutorial-mock-req` | Security requirement row |
+| `.tutorial-mock-req.req-met` | Green ✓ variant |
+| `.tutorial-mock-req.req-unmet` | Red ✗ variant |
+| `.tutorial-mock-score-hint` | Small deduction rule hint in requirements panel |
+| `.tutorial-mock-bottombar` | Mock bottom bar container |
+| `.tutorial-mock-bottombar-info` | Budget/score text in mock bottombar |
+| `.tutorial-mock-submit` | Mock Submit button |
+| `.tutorial-arrow` | Left/right arrow navigation buttons |
