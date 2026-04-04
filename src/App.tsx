@@ -1188,11 +1188,14 @@ const App: React.FC = () => {
                                                 : "Reset all progress? This cannot be undone."
                                         )) {
                                             localStorage.removeItem("completedChapters");
-                                            localStorage.removeItem("chapterStates");
+                                            localStorage.removeItem("chapterState_2");
+                                            localStorage.removeItem("chapterState_3");
+                                            localStorage.removeItem("chapterState_4");
                                             localStorage.removeItem("seenIntro");
                                             localStorage.removeItem("seenEnding");
                                             localStorage.removeItem("seenPromotion_3");
                                             localStorage.removeItem("seenPromotion_4");
+                                            localStorage.removeItem("seenTutorial");
                                             window.location.reload();
                                         }
                                     }}
