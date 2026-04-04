@@ -2704,3 +2704,75 @@ A set of classes for the virtual stage preview in the right panel:
 | `.tutorial-mock-bottombar-info` | Budget/score text in mock bottombar |
 | `.tutorial-mock-submit` | Mock Submit button |
 | `.tutorial-arrow` | Left/right arrow navigation buttons |
+
+---
+
+## Change Log — 2026-04-04 (localStorage Key Audit & Fix)
+
+### Summary
+
+A full audit of all `localStorage` read/write/remove operations in `src/App.tsx` was conducted. One bug was found and fixed: the Reset All Progress handler was removing a key named `chapterStates` (plural, no underscore) which does not exist — the actual keys written are `chapterState_2`, `chapterState_3`, and `chapterState_4`. Additionally `seenTutorial` was not being cleared on full reset.
+
+---
+
+### Bug Found: Wrong key name in Reset All Progress
+
+**Location:** `src/App.tsx` — Settings panel Reset All Progress `onClick`
+
+**Problem:**
+
+```typescript
+// WRONG — this key is never written anywhere
+localStorage.removeItem("chapterStates");
+```
+
+The chapter state persistence uses per-chapter dynamic keys:
+
+```typescript
+// Written in useEffect whenever chapterState changes
+localStorage.setItem(`chapterState_${chapterState.chapterId}`, JSON.stringify(chapterState));
+// Read when entering a chapter
+localStorage.getItem(`chapterState_${chapterId}`);
+```
+
+So removing `chapterStates` removed nothing. After clicking Reset All Progress, all chapter progress (deployed controls, completed stages, remaining budget, score deductions) was silently preserved in `chapterState_2`, `chapterState_3`, `chapterState_4`.
+
+**Fix:**
+
+```typescript
+// Before
+localStorage.removeItem("chapterStates");
+
+// After
+localStorage.removeItem("chapterState_2");
+localStorage.removeItem("chapterState_3");
+localStorage.removeItem("chapterState_4");
+localStorage.removeItem("seenTutorial"); // also added — was missing from reset
+```
+
+---
+
+### Full localStorage Key Audit Results
+
+All `localStorage` operations in `App.tsx` after fix:
+
+| Key | Written (line) | Read (line) | Removed (line) | Category |
+|-----|----------------|-------------|----------------|----------|
+| `completedChapters` | L629, L715 | L249 | L1190 | Game progress |
+| `chapterState_2` | L406 | L427, L454 | L1191 | Game progress |
+| `chapterState_3` | L406 | L427, L454 | L1192 | Game progress |
+| `chapterState_4` | L406 | L427, L454 | L1193 | Game progress |
+| `seenIntro` | L778 | L288 | L1194 | Game progress |
+| `seenEnding` | L783 | L375, L384 | L1195 | Game progress |
+| `seenPromotion_3` | L1228 | L389 | L1197 | Game progress |
+| `seenPromotion_4` | L1228 | L387 | L1196 | Game progress |
+| `seenTutorial` | L770 | L300 | L1168 (Replay) / L1198 (Reset All) | Game progress |
+| `gameMode` | L1109, L1115 | L264 | not removed (by design) | User preference |
+| `language` | L1131, L1137 | L272 | not removed (by design) | User preference |
+| `theme` | L412 | L279 | not removed (by design) | User preference |
+
+**Findings:**
+1. Only-write-never-clear: `gameMode`, `language`, `theme` — intentional (user preferences survive reset).
+2. Key name mismatch: `chapterStates` vs `chapterState_N` — **fixed**.
+3. Only-read-never-write: none.
+4. Keys written but missing from Reset All: `seenTutorial` — **added**.
