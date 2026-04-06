@@ -1,7 +1,9 @@
 // src/utils/dataLoader.ts
 // Async loaders for game data files served from public/data/.
 
-// ─── Interfaces ──────────────────────────────────────────────────────────────
+import Papa from 'papaparse'
+
+// Interfaces
 
 export interface Control {
     controlId: string;
@@ -42,28 +44,6 @@ export interface Level4Scenario {
     cafPrinciples: string[];
 }
 
-// ─── CSV parser ───────────────────────────────────────────────────────────────
-
-/** Splits one CSV line into fields, correctly handling double-quoted commas. */
-function parseCsvLine(line: string): string[] {
-    const fields: string[] = [];
-    let current = "";
-    let inQuotes = false;
-
-    for (const ch of line) {
-        if (ch === '"') {
-            inQuotes = !inQuotes;
-        } else if (ch === "," && !inQuotes) {
-            fields.push(current.trim());
-            current = "";
-        } else {
-            current += ch;
-        }
-    }
-    fields.push(current.trim());
-    return fields;
-}
-
 /** Fetches a text file from public/data/ and returns its raw content. */
 async function fetchText(filename: string): Promise<string> {
     const res = await fetch(`/data/${filename}`);
@@ -71,7 +51,7 @@ async function fetchText(filename: string): Promise<string> {
     return res.text();
 }
 
-// ─── Loaders ─────────────────────────────────────────────────────────────────
+// Data loaders
 
 /**
  * Load all security controls from the CSV file.
@@ -84,38 +64,38 @@ export async function loadControls(lang?: "en" | "zh"): Promise<Control[]> {
         ? "controls_library_level2_4_bilingual.csv"
         : "controls_library_level2_4.csv";
     const raw = await fetchText(filename);
-    const lines = raw.trim().split(/\r?\n/).slice(1); // skip header
+    const result = Papa.parse<string[]>(raw, { skipEmptyLines: true });
+    const rows = result.data.slice(1); // skip header row
 
-    return lines.filter((l) => l.trim()).map((line) => {
-        const f = parseCsvLine(line);
+    return rows.map((row) => {
         if (bilingual) {
-            // f[0]=ControlID  f[1]=Name     f[2]=Name_ZH
-            // f[3]=Description f[4]=Description_ZH f[5]=Cost
-            // f[6]=Category   f[7]=ApplicableRiskTypes f[8]=CAF_Principle
+            // row[0]=ControlID  row[1]=Name     row[2]=Name_ZH
+            // row[3]=Description row[4]=Description_ZH row[5]=Cost
+            // row[6]=Category   row[7]=ApplicableRiskTypes row[8]=CAF_Principle
             return {
-                controlId:            f[0],
-                name:                 f[1],
-                nameZh:               f[2],
-                description:          f[3],
-                descriptionZh:        f[4],
-                cost:                 Number(f[5]),
-                category:             f[6],
-                applicableRiskTypes:  f[7].split(";"),
-                cafPrinciple:         f[8],
+                controlId:            row[0],
+                name:                 row[1],
+                nameZh:               row[2],
+                description:          row[3],
+                descriptionZh:        row[4],
+                cost:                 Number(row[5]),
+                category:             row[6],
+                applicableRiskTypes:  row[7].split(";"),
+                cafPrinciple:         row[8],
             };
         } else {
-            // f[0]=ControlID f[1]=Name f[2]=Description f[3]=Cost
-            // f[4]=Category  f[5]=ApplicableRiskTypes f[6]=CAF_Principle
+            // row[0]=ControlID row[1]=Name row[2]=Description row[3]=Cost
+            // row[4]=Category  row[5]=ApplicableRiskTypes row[6]=CAF_Principle
             return {
-                controlId:            f[0],
-                name:                 f[1],
-                nameZh:               "",
-                description:          f[2],
-                descriptionZh:        "",
-                cost:                 Number(f[3]),
-                category:             f[4],
-                applicableRiskTypes:  f[5].split(";"),
-                cafPrinciple:         f[6],
+                controlId: row[0],
+                name: row[1],
+                nameZh: "",
+                description: row[2],
+                descriptionZh: "",
+                cost: Number(row[3]),
+                category: row[4],
+                applicableRiskTypes: row[5].split(";"),
+                cafPrinciple: row[6],
             };
         }
     });
@@ -132,41 +112,41 @@ export async function loadThreats(level: 2 | 3 | 4, lang?: "en" | "zh"): Promise
         ? `level${level}_threats_bilingual.csv`
         : `level${level}_threats.csv`;
     const raw = await fetchText(filename);
-    const lines = raw.trim().split(/\r?\n/).slice(1); // skip header
+    const result = Papa.parse<string[]>(raw, { skipEmptyLines: true });
+    const rows = result.data.slice(1); // skip header row
 
-    return lines.filter((l) => l.trim()).map((line) => {
-        const f = parseCsvLine(line);
+    return rows.map((row) => {
         if (bilingual) {
-            // f[0]=ThreatID    f[1]=Level       f[2]=RiskType
-            // f[3]=ScenarioName f[4]=ScenarioName_ZH f[5]=Severity
-            // f[6]=Description  f[7]=Description_ZH  f[8]=RecommendedControlID
-            // f[9]=CAF_Principle
+            // row[0]=ThreatID    row[1]=Level       row[2]=RiskType
+            // row[3]=ScenarioName row[4]=ScenarioName_ZH row[5]=Severity
+            // row[6]=Description  row[7]=Description_ZH  row[8]=RecommendedControlID
+            // row[9]=CAF_Principle
             return {
-                threatId:              f[0],
-                level:                 Number(f[1]),
-                riskType:              f[2],
-                scenarioName:          f[3],
-                scenarioNameZh:        f[4],
-                severity:              f[5] as "Low" | "Medium" | "High",
-                description:           f[6],
-                descriptionZh:         f[7],
-                recommendedControlIds: f[8].split(";"),
-                cafPrinciple:          f[9],
+                threatId:              row[0],
+                level:                 Number(row[1]),
+                riskType:              row[2],
+                scenarioName:          row[3],
+                scenarioNameZh:        row[4],
+                severity:              row[5] as "Low" | "Medium" | "High",
+                description:           row[6],
+                descriptionZh:         row[7],
+                recommendedControlIds: row[8].split(";"),
+                cafPrinciple:          row[9],
             };
         } else {
-            // f[0]=ThreatID f[1]=Level    f[2]=RiskType f[3]=ScenarioName
-            // f[4]=Severity f[5]=Description f[6]=RecommendedControlID f[7]=CAF_Principle
+            // row[0]=ThreatID row[1]=Level    row[2]=RiskType row[3]=ScenarioName
+            // row[4]=Severity row[5]=Description row[6]=RecommendedControlID row[7]=CAF_Principle
             return {
-                threatId:              f[0],
-                level:                 Number(f[1]),
-                riskType:              f[2],
-                scenarioName:          f[3],
-                scenarioNameZh:        "",
-                severity:              f[4] as "Low" | "Medium" | "High",
-                description:           f[5],
-                descriptionZh:         "",
-                recommendedControlIds: f[6].split(";"),
-                cafPrinciple:          f[7],
+                threatId: row[0],
+                level: Number(row[1]),
+                riskType: row[2],
+                scenarioName: row[3],
+                scenarioNameZh: "",
+                severity: row[4] as "Low" | "Medium" | "High",
+                description: row[5],
+                descriptionZh: "",
+                recommendedControlIds: row[6].split(";"),
+                cafPrinciple: row[7],
             };
         }
     });

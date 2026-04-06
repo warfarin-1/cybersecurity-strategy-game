@@ -38,7 +38,7 @@ function makeStageGameState(stageId: string): StageGameState {
         stageId,
         status: "in_progress",
         turn: 1,
-        budget: 200_000,
+        budget: 200000,
         sectors: BASE_SECTORS.map((s) => ({ ...s })),
         logs: [],
         isCompleted: false,
@@ -49,8 +49,8 @@ function makeStageGameState(stageId: string): StageGameState {
 function makeChapterState(chapterId: number): ChapterState {
     return {
         chapterId,
-        totalBudget: 1_000_000,
-        remainingBudget: 1_000_000,
+        totalBudget: 1000000,
+        remainingBudget: 1000000,
         score: 100,
         stageStates: {},
     };
@@ -67,7 +67,7 @@ function getRiskTypeLabel(stageId: string): string {
     return "Mixed";
 }
 
-// ─── GlossaryPanel ────────────────────────────────────────────────────────────
+// GlossaryPanel component
 
 interface GlossaryPanelProps {
     language: "en" | "zh";
@@ -152,7 +152,7 @@ const GlossaryPanel: React.FC<GlossaryPanelProps> = ({ language, onClose }) => {
                                     <span className="glossary-item-id">{control.controlId}</span>
                                     <span className="glossary-item-category">{control.category}</span>
                                     <span className="glossary-item-cost">
-                                        £{(control.cost * 10_000).toLocaleString()}
+                                        £{(control.cost * 10000).toLocaleString()}
                                     </span>
                                 </div>
                                 <div className="glossary-item-name">
@@ -194,7 +194,6 @@ const GlossaryPanel: React.FC<GlossaryPanelProps> = ({ language, onClose }) => {
     );
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
 
 type ChapterLevel = 2 | 3 | 4;
 
@@ -204,11 +203,6 @@ interface ChapterMeta {
     subtitle: string;
 }
 
-interface StageMeta {
-    id: string;
-    name: string;
-    description: string;
-}
 
 const CHAPTERS: ChapterMeta[] = [
     { id: 2, title: "Level 2 – Basic Protection", subtitle: "Essential cyber hygiene" },
@@ -216,7 +210,7 @@ const CHAPTERS: ChapterMeta[] = [
     { id: 4, title: "Level 4 – Key Infrastructure", subtitle: "High assurance environment" },
 ];
 
-const STAGES_BY_CHAPTER: Record<ChapterLevel, StageMeta[]> = {
+const STAGES_BY_CHAPTER = {
     2: [
         { id: "L2-1", name: "L2-1 Phishing Basics", description: "Introductory social engineering risks" },
         { id: "L2-2", name: "L2-2 Identity & Access", description: "Passwords and basic account controls" },
@@ -236,10 +230,13 @@ const STAGES_BY_CHAPTER: Record<ChapterLevel, StageMeta[]> = {
     ],
 };
 
-type View =
-    | { type: "map" }
-    | { type: "chapter"; chapter: ChapterLevel }
-    | { type: "stage"; chapter: ChapterLevel; stageId: string };
+type ViewType = "map" | "chapter" | "stage";
+
+interface View {
+    type: ViewType;
+    chapter?: ChapterLevel;
+    stageId?: string;
+}
 
 const App: React.FC = () => {
     const [view, setView] = useState<View>({ type: "map" });
@@ -306,17 +303,17 @@ const App: React.FC = () => {
     const controlName = (c: Control) => language === "zh" && c.nameZh ? c.nameZh : c.name;
     const threatName  = (th: Threat) => language === "zh" && th.scenarioNameZh ? th.scenarioNameZh : th.scenarioName;
 
-    const dataLoading = view.type === "stage" && loadedForStageId !== `${view.stageId}:${language}`;
+    const dataLoading = view.type === "stage" && loadedForStageId !== `${view.stageId!}:${language}`;
 
     // Load threats and controls whenever the active stage changes
     useEffect(() => {
         if (view.type !== "stage") return;
         setTimeout(() => { setBriefingOpen(true); setStageScoreDeducted(false); }, 0);
-        const config = getStageConfig(view.stageId);
+        const config = getStageConfig(view.stageId!);
         if (!config) return;
 
-        const stageId = view.stageId;
-        const chapter = view.chapter;
+        const stageId = view.stageId!;
+        const chapter = view.chapter!;
 
         if (chapter === 4) {
             const SCENARIO_MAP: Record<string, string> = {
@@ -412,7 +409,7 @@ const App: React.FC = () => {
         localStorage.setItem("theme", theme);
     }, [theme]);
 
-    const isChapterUnlocked = (chapter: ChapterLevel): boolean => {
+    const isChapterUnlocked = (chapter: ChapterLevel) => {
         if (chapter === 2) return true;
         if (chapter === 3) return completedChapters.has(2);
         if (chapter === 4) return completedChapters.has(3);
@@ -432,9 +429,9 @@ const App: React.FC = () => {
         setView({ type: "chapter", chapter: chapterId });
     };
 
-    const isStageUnlocked = (stageId: string): boolean => {
+    const isStageUnlocked = (stageId: string) => {
         // Find which chapter this stage belongs to
-        for (const [, stages] of Object.entries(STAGES_BY_CHAPTER) as [string, StageMeta[]][]) {
+        for (const stages of Object.values(STAGES_BY_CHAPTER)) {
             const index = stages.findIndex((s) => s.id === stageId);
             if (index === -1) continue;
             if (index === 0) return true;
@@ -490,7 +487,7 @@ const App: React.FC = () => {
             return;
         }
 
-        const cost = control.cost * 10_000;
+        const cost = control.cost * 10000;
 
         if (activeStageState.budget < cost) {
             const newStageState: StageGameState = {
@@ -541,9 +538,7 @@ const App: React.FC = () => {
         const control = stageControls.find((c) => c.controlId === controlId);
         if (!control) return;
 
-        if (!deployedControlIds.includes(controlId)) return;
-
-        const refund = control.cost * 10_000;
+        const refund = control.cost * 10000;
         const newDeployedIds = deployedControlIds.filter((id) => id !== controlId);
 
         const undoName = language === "zh" && control.nameZh ? control.nameZh : control.name;
@@ -638,10 +633,12 @@ const App: React.FC = () => {
         if (!config) return;
 
         // Block if any High threats are unresolved
-        const unresolvedHigh = stageThreats.filter((threat) => {
-            if (threat.severity !== "High") return false;
-            return !threat.recommendedControlIds.some((id) => deployedControlIds.includes(id));
-        });
+        const unresolvedHigh: Threat[] = [];
+        for (const threat of stageThreats) {
+            if (threat.severity !== "High") continue;
+            const mitigated = threat.recommendedControlIds.some((id) => deployedControlIds.includes(id));
+            if (!mitigated) unresolvedHigh.push(threat);
+        }
 
         if (unresolvedHigh.length > 0) {
             const firstName = language === "zh" && unresolvedHigh[0].scenarioNameZh
@@ -674,10 +671,7 @@ const App: React.FC = () => {
 
         // Fail if chapter score is below passing threshold
         if (newScore < config.passingScore) {
-            setChapterState((prev) => {
-                if (!prev) return prev;
-                return { ...prev, score: newScore };
-            });
+            setChapterState({ ...chapterState, score: newScore });
             setFeedbackMsg(
                 language === "zh"
                     ? `章节得分不足（${newScore}/${config.passingScore}）。请回顾之前的关卡，重置并重新部署措施。`
@@ -706,12 +700,12 @@ const App: React.FC = () => {
 
         // Check whether all stages in the chapter are now complete
         if (view.type === "stage") {
-            const chapterStages = STAGES_BY_CHAPTER[view.chapter];
+            const chapterStages = STAGES_BY_CHAPTER[view.chapter!];
             const newStageStates = { ...chapterState.stageStates, [activeStageState.stageId]: newStageState };
             const allChapterDone = chapterStages.every((s) => newStageStates[s.id]?.status === "completed");
             if (allChapterDone) {
                 setCompletedChapters((prev) => {
-                    const next = new Set([...prev, view.chapter]);
+                    const next = new Set([...prev, view.chapter!]);
                     localStorage.setItem("completedChapters", JSON.stringify([...next]));
                     return next;
                 });
@@ -767,7 +761,7 @@ const App: React.FC = () => {
     };
 
     const closeTutorial = () => {
-        try { localStorage.setItem("seenTutorial", "1"); } catch { /* ignore */ }
+        localStorage.setItem("seenTutorial", "1");
         setForceTutorialSeen(true);
         setShowTutorial(false);
         setTutorialIndex(0);
@@ -775,12 +769,12 @@ const App: React.FC = () => {
     };
 
     const dismissIntro = () => {
-        try { localStorage.setItem("seenIntro", "1"); } catch { /* ignore */ }
+        localStorage.setItem("seenIntro", "1");
         setShowIntro(false);
     };
 
     const dismissEnding = () => {
-        try { localStorage.setItem("seenEnding", "1"); } catch { /* ignore */ }
+        localStorage.setItem("seenEnding", "1");
         setShowEnding(false);
         setEndingLineIndex(0);
         setEndingReady(false);
@@ -1239,8 +1233,8 @@ const App: React.FC = () => {
     }
 
     if (view.type === "chapter") {
-        const meta = CHAPTERS.find((c) => c.id === view.chapter)!;
-        const stages = STAGES_BY_CHAPTER[view.chapter];
+        const meta = CHAPTERS.find((c) => c.id === view.chapter!)!;
+        const stages = STAGES_BY_CHAPTER[view.chapter!];
 
         // Panel 1: control IDs from all completed stages (deduplicated)
         const knownControlIds: string[] = [];
@@ -1256,15 +1250,16 @@ const App: React.FC = () => {
         }
 
         // Panel 2: unique risk type labels across all stages in this chapter
-        const knownThreatTypes = [
-            ...new Set(
-                stages.map((s) => getRiskTypeLabel(s.id)).filter((t) => t !== "TBD")
-            ),
-        ];
+        const knownThreatTypeSet = new Set<string>();
+        for (const s of stages) {
+            const label = getRiskTypeLabel(s.id);
+            if (label !== "TBD") knownThreatTypeSet.add(label);
+        }
+        const knownThreatTypes = [...knownThreatTypeSet];
 
         // Panel 3: budget figures
-        const totalBudget      = chapterState?.totalBudget      ?? 1_000_000;
-        const remainingBudget  = chapterState?.remainingBudget  ?? 1_000_000;
+        const totalBudget      = chapterState?.totalBudget      ?? 1000000;
+        const remainingBudget  = chapterState?.remainingBudget  ?? 1000000;
         const spentBudget      = totalBudget - remainingBudget;
 
         // Panel 4: score figures
@@ -1284,7 +1279,7 @@ const App: React.FC = () => {
                         <div className="top-bar-stat">
                             <span className="stat-label">{t("Budget Left", "剩余预算")}</span>
                             <span className="stat-value">
-                                £ {(chapterState?.remainingBudget ?? 1_000_000).toLocaleString()}
+                                £ {(chapterState?.remainingBudget ?? 1000000).toLocaleString()}
                             </span>
                         </div>
                         <div className="top-bar-stat">
@@ -1366,16 +1361,24 @@ const App: React.FC = () => {
                             const stageState = chapterState?.stageStates[stage.id];
                             const status = stageState?.status ?? "not_started";
                             const unlocked = isStageUnlocked(stage.id);
-                            const statusLabel =
-                                !unlocked                ? t("🔒 Locked", "🔒 已锁定")    :
-                                status === "completed"   ? t("✓ Completed", "✓ 已完成")  :
-                                status === "in_progress" ? t("In progress", "进行中")    :
-                                                           t("Not started", "未开始");
-                            const statusColor =
-                                !unlocked                ? "#6b7280"  :
-                                status === "completed"   ? "#4ade80"  :
-                                status === "in_progress" ? "#ffb84d"  :
-                                                           undefined;
+                            let statusLabel;
+                            if (!unlocked) {
+                                statusLabel = t("🔒 Locked", "🔒 已锁定");
+                            } else if (status === "completed") {
+                                statusLabel = t("✓ Completed", "✓ 已完成");
+                            } else if (status === "in_progress") {
+                                statusLabel = t("In progress", "进行中");
+                            } else {
+                                statusLabel = t("Not started", "未开始");
+                            }
+                            let statusColor: string | undefined;
+                            if (!unlocked) {
+                                statusColor = "#6b7280";
+                            } else if (status === "completed") {
+                                statusColor = "#4ade80";
+                            } else if (status === "in_progress") {
+                                statusColor = "#ffb84d";
+                            }
                             const cardClass = [
                                 "stage-card",
                                 !unlocked              ? "stage-card-locked"    : "",
@@ -1386,7 +1389,7 @@ const App: React.FC = () => {
                                 <button
                                     key={stage.id}
                                     className={cardClass}
-                                    onClick={() => handleStageClick(view.chapter, stage.id)}
+                                    onClick={() => handleStageClick(view.chapter!, stage.id)}
                                     style={!unlocked ? { cursor: "not-allowed" } : undefined}
                                 >
                                     <div className="stage-title">{stage.name}</div>
@@ -1421,20 +1424,20 @@ const App: React.FC = () => {
     }
 
     // view.type === "stage"
-    const chapterMeta = CHAPTERS.find((c) => c.id === view.chapter)!;
-    const stageMeta = STAGES_BY_CHAPTER[view.chapter].find(
-        (s) => s.id === view.stageId
+    const chapterMeta = CHAPTERS.find((c) => c.id === view.chapter!)!;
+    const stageMeta = STAGES_BY_CHAPTER[view.chapter!].find(
+        (s) => s.id === view.stageId!
     )!;
-    const stageConfig = getStageConfig(view.stageId);
+    const stageConfig = getStageConfig(view.stageId!);
 
-    const currentStageIndex = STAGES_BY_CHAPTER[view.chapter]?.findIndex((s) => s.id === view.stageId) ?? -1;
-    const nextStage = STAGES_BY_CHAPTER[view.chapter]?.[currentStageIndex + 1];
+    const currentStageIndex = STAGES_BY_CHAPTER[view.chapter!]?.findIndex((s) => s.id === view.stageId!) ?? -1;
+    const nextStage = STAGES_BY_CHAPTER[view.chapter!]?.[currentStageIndex + 1];
     const hasNextStage = !!nextStage;
 
     return (
         <div className="app-root">
             <header className="top-bar">
-                <button className="back-button" onClick={() => goBackToChapter(view.chapter)}>
+                <button className="back-button" onClick={() => goBackToChapter(view.chapter!)}>
                     ← Chapter
                 </button>
                 <div className="top-bar-title">{stageMeta.name}</div>
@@ -1476,9 +1479,13 @@ const App: React.FC = () => {
                                     th.recommendedControlIds.includes(control.controlId)
                                 );
                                 const cName = controlName(control);
-                                const label = deployed
-                                    ? `${cName} ✓`
-                                    : `${gameMode === "beginner" && isRecommended ? "⭐ " : ""}${cName}`;
+                                let label;
+                                if (deployed) {
+                                    label = `${cName} ✓`;
+                                } else {
+                                    const prefix = gameMode === "beginner" && isRecommended ? "⭐ " : "";
+                                    label = `${prefix}${cName}`;
+                                }
                                 if (deployed) {
                                     return (
                                         <div key={control.controlId} className="control-deployed-row">
@@ -1487,7 +1494,7 @@ const App: React.FC = () => {
                                                 disabled
                                             >
                                                 {label}
-                                                <span>£{(control.cost * 10_000).toLocaleString()}</span>
+                                                <span>£{(control.cost * 10000).toLocaleString()}</span>
                                             </button>
                                             <button
                                                 className="undo-btn"
@@ -1506,7 +1513,7 @@ const App: React.FC = () => {
                                         onClick={() => handleDeployControl(control.controlId)}
                                     >
                                         {label}
-                                        <span>£{(control.cost * 10_000).toLocaleString()}</span>
+                                        <span>£{(control.cost * 10000).toLocaleString()}</span>
                                     </button>
                                 );
                             })
@@ -1711,7 +1718,7 @@ const App: React.FC = () => {
                 </aside>
             </main>
             <BottomBar
-                budget={activeStageState?.budget ?? 200_000}
+                budget={activeStageState?.budget ?? 200000}
                 score={chapterState?.score}
                 isCompleted={activeStageState?.isCompleted ?? false}
                 isLoading={dataLoading}
@@ -1720,8 +1727,8 @@ const App: React.FC = () => {
                 language={language}
                 feedbackMsg={feedbackMsg}
                 onNextStage={hasNextStage
-                    ? () => handleStageClick(view.chapter, nextStage!.id)
-                    : () => goBackToChapter(view.chapter)}
+                    ? () => handleStageClick(view.chapter!, nextStage!.id)
+                    : () => goBackToChapter(view.chapter!)}
                 nextStageLabel={hasNextStage
                     ? t(`→ ${nextStage!.name}`, `→ ${nextStage!.name}`)
                     : t('← Chapter Overview', '← 章节概览')}

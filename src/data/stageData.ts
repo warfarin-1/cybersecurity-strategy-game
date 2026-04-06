@@ -1,7 +1,7 @@
 // src/data/stageData.ts
 // Static per-stage configuration: which threats appear and which controls are available.
 
-// ─── Interface ────────────────────────────────────────────────────────────────
+// StageConfig interface
 
 export interface StageConfig {
     stageId: string;
@@ -16,13 +16,13 @@ export interface StageConfig {
     briefingZh?: string;             // narrative briefing (Chinese)
 }
 
-// ─── Level 2 — Basic Protection ──────────────────────────────────────────────
+// Level 2 — Basic Protection
 
 const L2_1: StageConfig = {
     stageId: "L2-1",
     stageName: "Phishing Basics",
     chapter: 2,
-    budgetAllocation: 200_000,
+    budgetAllocation: 200000,
     // Phishing threats: Low × 2, Medium × 2, High × 1
     // L2-PH-05 added to give C-GOV-03 (required) a direct threat recommendation
     threatIds: ["L2-PH-01", "L2-PH-02", "L2-PH-04", "L2-PH-05", "L2-PH-07"],
@@ -48,7 +48,7 @@ const L2_2: StageConfig = {
     stageId: "L2-2",
     stageName: "Identity & Access",
     chapter: 2,
-    budgetAllocation: 200_000,
+    budgetAllocation: 200000,
     // IAM threats: Low → Low → Medium → High
     threatIds: ["L2-IAM-01", "L2-IAM-03", "L2-IAM-05", "L2-IAM-07"],
     availableControlIds: [
@@ -73,7 +73,7 @@ const L2_3: StageConfig = {
     stageId: "L2-3",
     stageName: "Data Handling",
     chapter: 2,
-    budgetAllocation: 200_000,
+    budgetAllocation: 200000,
     // Data threats: Low → Low → Medium → High
     threatIds: ["L2-DATA-01", "L2-DATA-03", "L2-DATA-05", "L2-DATA-07"],
     availableControlIds: [
@@ -98,7 +98,7 @@ const L2_4: StageConfig = {
     stageId: "L2-4",
     stageName: "Network Hygiene",
     chapter: 2,
-    budgetAllocation: 200_000,
+    budgetAllocation: 200000,
     // Network threats: Low → Low → Medium → High
     threatIds: ["L2-NET-01", "L2-NET-03", "L2-NET-04", "L2-NET-07"],
     availableControlIds: [
@@ -119,7 +119,7 @@ const L2_4: StageConfig = {
     briefingZh: "销售终端、仓库扫描仪、员工笔记本、访客 Wi-Fi——全在同一个网络上。一台被入侵的设备就是进入其他所有系统的跳板。Singularity 的基础设施扩张太快，没有人停下来考虑过网络分段。",
 };
 
-// ─── Level 3 — Critical Business ─────────────────────────────────────────────
+// Level 3 — Critical Business
 // Note: L3 threat CSV contains no Low-severity threats (all Medium/High),
 // so each stage uses Medium×3 + High×1 rather than the L2 Low×2/Med×1/High×1 mix.
 
@@ -127,13 +127,13 @@ const L3_1: StageConfig = {
     stageId: "L3-1",
     stageName: "Targeted Phishing",
     chapter: 3,
-    budgetAllocation: 250_000,
+    budgetAllocation: 250000,
     // Phishing threats: Medium×4 + High×2
-    // L3-PH-01 Medium — Spear Phishing to Finance Team         → C-AWARE-03
+    // L3-PH-01 Medium — Spear Phishing to Finance Team → C-AWARE-03
     // L3-PH-03 Medium — Link to Convincing Fake Login Page     → C-IAM-03
-    // L3-PH-04 Medium — Multiple Unreported Phishing Attempts  → C-GOV-03
+    // L3-PH-04 Medium — Multiple Unreported Phishing Attempts → C-GOV-03
     // L3-PH-05 Medium — Phishing Bypass of Simple Filters      → C-MON-01
-    // L3-PH-06 High   — Credential Theft → Mailbox Rule Abuse  → C-MON-02
+    // L3-PH-06 High   — Credential Theft → Mailbox Rule Abuse → C-MON-02
     // L3-PH-07 High   — Phishing Used to Access Cloud Admin    → C-IAM-04
     threatIds: ["L3-PH-01", "L3-PH-03", "L3-PH-04", "L3-PH-05", "L3-PH-06", "L3-PH-07"],
     availableControlIds: [
@@ -159,7 +159,7 @@ const L3_2: StageConfig = {
     stageId: "L3-2",
     stageName: "Cloud Identity",
     chapter: 3,
-    budgetAllocation: 250_000,
+    budgetAllocation: 250000,
     // IAM threats: Medium×4 + High×2
     // L3-IAM-01 Medium — Common Password Reuse Across Systems          → C-IAM-01
     // L3-IAM-02 Medium — No Regular Access Review                      → C-IAM-05
@@ -191,7 +191,7 @@ const L3_3: StageConfig = {
     stageId: "L3-3",
     stageName: "Data at Scale",
     chapter: 3,
-    budgetAllocation: 250_000,
+    budgetAllocation: 250000,
     // Data threats: Medium×4 + High×2
     // L3-DATA-02 Medium — Large Sensitive Dataset in Personal OneDrive  → C-DATA-02
     // L3-DATA-03 Medium — Unencrypted Backups Taken Offsite on USB      → C-DATA-04
@@ -222,7 +222,7 @@ const L3_4: StageConfig = {
     stageId: "L3-4",
     stageName: "Network Exposure",
     chapter: 3,
-    budgetAllocation: 250_000,
+    budgetAllocation: 250000,
     // Network + Endpoint threats: Medium×4 + High×2
     // L3-NET-02 Medium — Flat Network with Exposed Management Interfaces → C-NET-02
     // L3-NET-06 Medium — No Central Logging for Firewall or VPN          → C-MON-01
@@ -250,7 +250,7 @@ const L3_4: StageConfig = {
     briefingZh: "Polarized Light 的网络从未为它现在承载的设备而设计。诊断设备、行政终端和面向公众的基础设施共用同一底层网络。设施团队多年来在未咨询 IT 部门的情况下添加设备。没有人有完整的连接关系图。",
 };
 
-// ─── Level 4 — Key Infrastructure ────────────────────────────────────────────
+// Level 4 — Key Infrastructure
 // Scenario: L4-B2-SCENARIO-01 (IAM)
 // The threat tree uses linked sub-threats; L4-IAM-01/02 are extra standalone threats also shown in the stage.
 
@@ -258,7 +258,7 @@ const L4_1: StageConfig = {
     stageId: "L4-1",
     stageName: "High-Risk Identity Chain",
     chapter: 4,
-    budgetAllocation: 300_000,
+    budgetAllocation: 300000,
     // Scenario sub-threats (tree nodes) + 2 standalone threats
     // L4-IAM-C1-R1 Medium — No MFA on Critical Cloud Admin Accounts → C-IAM-04
     // L4-IAM-C1-R2 Medium — Password Reuse with External Services   → C-IAM-01
@@ -290,11 +290,11 @@ const L4_2: StageConfig = {
     stageId: "L4-2",
     stageName: "Large Data Exposure",
     chapter: 4,
-    budgetAllocation: 300_000,
-    // L4-DATA-C2-R1 High   — Publicly Accessible Cloud Storage       → C-DATA-08
+    budgetAllocation: 300000,
+    // L4-DATA-C2-R1 High   — Publicly Accessible Cloud Storage → C-DATA-08
     // L4-DATA-C2-R2 Medium — No Encryption for Database at Rest       → C-DATA-03
     // L4-DATA-C2-R3 Medium — Over-Broad Access to Reporting System    → C-DATA-06
-    // L4-DATA-01   High    — Large-Scale Exposure of Personal Data    → C-DATA-06
+    // L4-DATA-01   High    — Large-Scale Exposure of Personal Data → C-DATA-06
     // L4-DATA-03   Medium  — Untracked Copies of Highly Confidential Data → C-DATA-02
     threatIds: ["L4-DATA-C2-R1", "L4-DATA-C2-R2", "L4-DATA-C2-R3", "L4-DATA-01", "L4-DATA-03"],
     availableControlIds: [
@@ -321,7 +321,7 @@ const L4_3: StageConfig = {
     stageId: "L4-3",
     stageName: "Critical Service Compromise",
     chapter: 4,
-    budgetAllocation: 300_000,
+    budgetAllocation: 300000,
     // L4-NET-C3-R1 Medium — Critical Vulnerability on Internet-Facing Service → C-SYS-02
     // L4-NET-C3-R2 Medium — Weak Segmentation Around Critical System          → C-NET-02
     // L4-NET-C3-R3 Low    — Limited Logging of Access to Critical System       → C-MON-01
@@ -346,7 +346,7 @@ const L4_3: StageConfig = {
     briefingZh: "网络边界检测到一次入侵尝试。行为特征与侦察一致——他们还没有试图提取数据，他们在绘图。一旦他们掌握了内部拓扑的完整图景，下一步行动将会很快。你需要在此之前遏制它。",
 };
 
-// ─── Exports ──────────────────────────────────────────────────────────────────
+// Exports
 
 export const STAGE_CONFIGS: Record<string, StageConfig> = {
     "L2-1": L2_1,
