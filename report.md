@@ -2776,3 +2776,229 @@ All `localStorage` operations in `App.tsx` after fix:
 2. Key name mismatch: `chapterStates` vs `chapterState_N` — **fixed**.
 3. Only-read-never-write: none.
 4. Keys written but missing from Reset All: `seenTutorial` — **added**.
+
+---
+
+## Change Log — 2026-04-07 (Code Naturalisation Refactor)
+
+### Summary
+
+A "naturalisation" pass was made across `dataLoader.ts` and `App.tsx` to bring the code style closer to typical undergraduate-level TypeScript. No game logic was changed.
+
+---
+
+### 1. `src/utils/dataLoader.ts` — papaparse replaces hand-rolled CSV parser
+
+The custom `parseCsvLine` function (~18 lines of character-by-character state machine) was deleted and replaced with the `papaparse` library.
+
+**Before:**
+
+```typescript
+function parseCsvLine(line: string): string[] { /* manual quote-aware loop */ }
+
+const lines = raw.trim().split(/\r?\n/).slice(1);
+return lines.filter((l) => l.trim()).map((line) => {
+    const f = parseCsvLine(line);
+    ...
+});
+```
+
+**After:**
+
+```typescript
+import Papa from 'papaparse'
+
+const result = Papa.parse<string[]>(raw, { skipEmptyLines: true });
+const rows = result.data.slice(1); // skip header row
+return rows.map((row) => { ... });
+```
+
+Field access changes from `f[0]` → `row[0]` etc. (same indices, renamed variable). Applied to both `loadControls` and `loadThreats`. `loadLevel4Tree` was already JSON-based and unchanged.
+
+**Packages added:** `papaparse` (runtime), `@types/papaparse` (dev).
+
+---
+
+### 2. `src/App.tsx` — TypeScript type annotation simplifications
+
+Three explicit type annotations removed; one type cast replaced:
+
+| Location | Before | After | Reason |
+|----------|--------|-------|--------|
+| `STAGES_BY_CHAPTER` declaration | `: Record<ChapterLevel, StageMeta[]>` | *(inferred)* | TypeScript infers `{ 2: …, 3: …, 4: … }` correctly |
+| `isChapterUnlocked` return type | `: boolean` | *(inferred)* | Return type obvious from `if/return` branches |
+| `isStageUnlocked` return type | `: boolean` | *(inferred)* | Same |
+| `Object.entries(…) as [string, StageMeta[]][]` | Explicit cast | `Object.values(…)` | Key not used; values gives correct type without cast |
+
+As a side-effect, `StageMeta` interface became unreferenced and was deleted.
+
+---
+
+### 3. `src/App.tsx` — `.filter()/.map()` chains converted to `for` loops
+
+| Location | Before | After |
+|----------|--------|-------|
+| `handleSubmitStage` — `unresolvedHigh` | `.filter()` with nested predicate | `for...of` + `push` |
+| Chapter view — `knownThreatTypes` | `.map().filter()` wrapped in `new Set(…)` spread | `for...of` + `Set.add` |
+
+---
+
+### 4. `src/App.tsx` — nested ternary expressions converted to `if/else`
+
+| Variable | Ternary depth | Converted to |
+|----------|--------------|--------------|
+| `statusLabel` (stage card) | 4-way chain | `if / else if / else if / else` |
+| `statusColor` (stage card) | 4-way chain | `if / else if / else if` (undefined default) |
+| `label` (control button text) | Nested (2 levels) | `if/else` with intermediate `prefix` variable |
+
+---
+
+### 5. `src/App.tsx` — `View` discriminated union simplified to interface
+
+**Before:**
+
+```typescript
+type View =
+    | { type: "map" }
+    | { type: "chapter"; chapter: ChapterLevel }
+    | { type: "stage"; chapter: ChapterLevel; stageId: string };
+```
+
+**After:**
+
+```typescript
+type ViewType = "map" | "chapter" | "stage";
+
+interface View {
+    type: ViewType;
+    chapter?: ChapterLevel;
+    stageId?: string;
+}
+```
+
+`chapter` and `stageId` become optional fields. All sites that access them within a guarded `view.type === "stage"` or `"chapter"` branch use the non-null assertion `!` (e.g. `view.chapter!`, `view.stageId!`). Approximately 12 call sites updated.
+
+---
+
+## Change Log — 2026-04-07 (Japanese-Inspired Visual Theme)
+
+### Summary
+
+A visual redesign was applied to `index.html`, `src/App.css`, targeting a Japanese tactical-game aesthetic: deep indigo palette, angular corners, Rajdhani display font, corner bracket decorations, and scanline background.
+
+No game logic or component structure was changed.
+
+---
+
+### `index.html`
+
+Added Google Fonts import for **Rajdhani** (weights 400/500/600/700) alongside the existing Inter import.
+
+---
+
+### `src/App.css` — colour variable system
+
+Both `:root` (dark) and `[data-theme="light"]` variable blocks replaced:
+
+**Dark theme changes (`/root`):**
+
+| Variable | Old value | New value | Effect |
+|----------|-----------|-----------|--------|
+| `--bg-primary` | `#05070d` | `#0a0e1a` | Slightly lighter deep indigo |
+| `--accent-blue` | `#7dd3fc` (sky blue) | `#00d4ff` (cyan) | Brighter, more saturated |
+| `--accent-orange` | `#ffb84d` | `#ff9500` | Deeper amber |
+| `--accent-green` | `#4ade80` | `#2ed573` | Slightly richer green |
+| `--accent-red` | `#f87171` | `#ff4757` | Punchier red |
+| `--shadow` | `rgba(0,0,0,0.4)` | `rgba(0,212,255,0.08)` | Cyan glow instead of black drop shadow |
+
+**Light theme changes (`[data-theme="light"]`):**
+
+Replaced warm-beige palette with a cooler indigo-tinted palette (`#c8d0e8` base). All accent colours darkened for legibility on the lighter background. Card shadows added via a separate rule.
+
+---
+
+### `src/App.css` — typography
+
+New rule block added before `.app-root`:
+
+```css
+.top-bar-title, .sidebar-title, .stage-main-title,
+.chapter-card .chapter-text-main, .control-center-header,
+.stage-title, .glossary-header h2, .settings-header h2,
+.tutorial-bubble-title, .promotion-title-new {
+    font-family: 'Rajdhani', 'Inter', sans-serif;
+    letter-spacing: 0.04em;
+}
+```
+
+`.top-bar-title` additionally gains `font-size: 22px`, `font-weight: 700`, `text-transform: uppercase`, `letter-spacing: 0.06em`.
+
+`.btn-outline` (Submit button) gains Rajdhani, `text-transform: uppercase`, `letter-spacing: 0.06em`.
+
+---
+
+### `src/App.css` — border radius (angular style)
+
+All major containers changed from rounded to sharp/minimal corners:
+
+| Element | Before | After |
+|---------|--------|-------|
+| `.chapter-card` | 18px | 4px |
+| `.stage-card` | 12px | 4px |
+| `.stage-sidebar-left/right` | 14px | 4px |
+| `.stage-main-area` | 14px | 4px |
+| `.control-center` | 16px | 4px |
+| `.control-room-box` | 10px | 2px |
+| `.sidebar-pill` | 999px (pill) | 2px (rectangular) |
+| `.glossary-panel` | 12px | 6px |
+| `.settings-panel` | 12px | 6px |
+| `.promotion-panel` | 16px | 6px |
+| `.chapter-icon` | 16px | 4px |
+| `.threat-node` | 8px | 2px |
+
+---
+
+### `src/App.css` — corner bracket decorations (CSS `::before`/`::after`)
+
+`position: relative` added to `.chapter-card` and `.stage-card`. Absolute-positioned pseudo-elements draw L-shaped corner brackets:
+
+- **Chapter cards:** 12×12 px brackets, 2px border, `var(--accent-blue)`; completed/tutorial cards use `var(--accent-green)`.
+- **Stage cards:** 8×8 px brackets, 1px border, `var(--accent-blue)`.
+
+---
+
+### `src/App.css` — title bracket decorations (`::before`/`::after` content)
+
+| Selector | Decoration | Colour |
+|----------|-----------|--------|
+| `.sidebar-title` | `[ … ]` | `var(--accent-blue)` |
+| `.control-center-header` | `[ … ]` | `var(--accent-orange)` |
+| `.box-title` | `// ` prefix | `var(--accent-blue)` at 60% opacity |
+
+---
+
+### `src/App.css` — scanline background (`.map-container`)
+
+Subtle repeating horizontal gradient overlay added to the map/level-select page:
+
+```css
+background-image: repeating-linear-gradient(
+    0deg, transparent, transparent 2px,
+    rgba(0,212,255,0.015) 2px, rgba(0,212,255,0.015) 4px
+);
+```
+
+Light theme variant uses `rgba(0,102,204,0.02)`.
+
+---
+
+### `src/App.css` — miscellaneous
+
+| Change | Detail |
+|--------|--------|
+| `.top-bar` border | `var(--border-color)` → `var(--accent-blue)` + `box-shadow` cyan glow |
+| `.bottombar` border | `var(--border-color)` → `var(--accent-blue)` + `box-shadow` cyan glow |
+| `.chapter-icon` | Added `border: 1px solid var(--accent-blue)` and cyan `box-shadow` |
+| `.threat-node` | Changed from full border to `border-left: 3px solid` accent; unresolved/mitigated use red/green left strip |
+| `.control-deployed-row .sidebar-pill` | Added `border-left: 3px solid var(--accent-green)` for visual emphasis |
+| Light-mode card shadow | New rule: `box-shadow: 0 2px 8px rgba(0,85,187,0.12)` on 6 container elements |
