@@ -397,7 +397,7 @@ const App: React.FC = () => {
     // Auto-trigger tutorial on first map visit (after intro, if not yet seen)
     useEffect(() => {
         if (view.type === "map" && !forceTutorialSeen && !showIntro) {
-            openTutorial();
+            setTimeout(() => openTutorial(), 0);
         }
     }, [view.type, forceTutorialSeen, showIntro]);
 
