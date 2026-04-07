@@ -388,6 +388,12 @@ const App: React.FC = () => {
         }
     }, [view, completedChapters]);
 
+    const openTutorial = () => {
+        setTutorialIndex(0);
+        setTutorialDeployed([]);
+        setShowTutorial(true);
+    };
+
     // Auto-trigger tutorial on first map visit (after intro, if not yet seen)
     useEffect(() => {
         if (view.type === "map" && !forceTutorialSeen && !showIntro) {
@@ -751,12 +757,6 @@ const App: React.FC = () => {
                 },
             };
         });
-    };
-
-    const openTutorial = () => {
-        setTutorialIndex(0);
-        setTutorialDeployed([]);
-        setShowTutorial(true);
     };
 
     const closeTutorial = () => {
