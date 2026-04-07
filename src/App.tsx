@@ -393,7 +393,6 @@ const App: React.FC = () => {
         if (view.type === "map" && !forceTutorialSeen && !showIntro) {
             openTutorial();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [view.type, forceTutorialSeen, showIntro]);
 
     // Save chapter state to localStorage whenever it changes, so stage progress survives a page refresh
